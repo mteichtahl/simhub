@@ -13,6 +13,8 @@
 #include <map>
 #include <string>
 
+#include "../log/CLog.h"
+
 using namespace std;
 
 /**

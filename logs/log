@@ -1,0 +1,27 @@
+04-25-2017 16:48:54.240 INFO [29819:src/log/CLog.cpp:26] hello, zlog
+04-25-2017 16:50:58.340 INFO [30331:src/log/CLog.cpp:22] hello, zlog
+04-25-2017 17:10:01.509 INFO [35107:src/log/CLog.cpp:48] 
+ok test
+04-25-2017 17:10:01.509 INFO [35107:src/log/CLog.cpp:48] *shutting down logging
+04-25-2017 17:12:32.933 INFO [35722:src/log/CLog.cpp:49] ok test
+04-25-2017 17:12:32.934 INFO [35722:src/log/CLog.cpp:49] shutting down logging
+04-25-2017 17:12:34.765 INFO [35778:src/log/CLog.cpp:49] ok test
+04-25-2017 17:12:34.765 INFO [35778:src/log/CLog.cpp:49] shutting down logging
+04-25-2017 17:13:13.969 INFO [36016:src/log/CLog.cpp:49] ok test 247926341
+04-25-2017 17:13:13.970 INFO [36016:src/log/CLog.cpp:49] shutting down logging
+04-25-2017 17:13:49.781 INFO [36449:src/log/CLog.cpp:49] ok test 211570245
+04-25-2017 17:13:49.781 INFO [36449:src/log/CLog.cpp:49] shutting down logging
+04-25-2017 17:15:20.552 INFO [36775:src/log/CLog.cpp:49] ok test 1642053
+04-25-2017 17:15:20.552 INFO [36775:src/log/CLog.cpp:49] shutting down logging
+04-25-2017 17:34:23.870 INFO [41359:src/log/CLog.cpp:49] LŽå	
+04-25-2017 17:34:23.872 INFO [41359:src/log/CLog.cpp:49] ZŽå	
+04-25-2017 17:40:09.192 INFO [44187:src/log/CLog.cpp:50] shutting down logging
+04-25-2017 17:40:11.570 INFO [44240:src/log/CLog.cpp:50] shutting down logging
+04-25-2017 17:40:54.525 INFO [44427:src/log/CLog.cpp:50] shutting down logging
+04-25-2017 17:40:57.935 INFO [44486:src/log/CLog.cpp:50] shutting down logging
+04-25-2017 17:42:27.321 INFO [44861:src/log/CLog.cpp:50] shutting down logging
+04-25-2017 17:43:05.499 INFO [45024:src/log/CLog.cpp:50] shutting down logging
+04-26-2017 17:26:35.376 INFO [36285:src/log/CLog.cpp:57] ok test config/config.cfg
+04-26-2017 17:26:35.381 INFO [36285:src/log/CLog.cpp:57] shutting down logging
+04-26-2017 17:27:48.325 INFO [36685:src/log/CLog.cpp:56] ok test 
+04-26-2017 17:27:48.325 INFO [36685:src/log/CLog.cpp:56] shutting down logging

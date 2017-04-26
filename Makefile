@@ -5,19 +5,19 @@ CFLAGS = -I. -I./src $(DEBUG) -stdlib=libc++
 CXXFLAGS = $(DEBUG) -stdlib=libc++ -std=c++14 
 CDFLAGS = -arch x86_64
 OUT = bin
+LOG = logs
 
 LDFLAGS = -L./src -L/usr/local/include -L./src/libs \
-		 	 		-lconfig++ -stdlib=libc++ -lc++
-
-
-		 
+		 	 		-lconfig++ -stdlib=libc++ -lc++ \
+					-lzlog -lpthread
 
 CXXSOURCES = 	$(wildcard src/*.cpp) \
 							$(wildcard src/configManager/*.cpp) \
+							$(wildcard src/log/*.cpp) \
 
 OBJECTS = $(SOURCES:.c=.o) $(CXXSOURCES:.cpp=.o)
 
-pokey: $(OBJECTS) 	 
+simhub: $(OBJECTS) 	 
 	@mkdir -p $(OUT)
 	$(CXX) $(CXXSOURCES) -o $(OUT)/simhub $(CXXFLAGS) $(LDFLAGS) $(CDFLAGS)
 	dsymutil $(OUT)/simhub
@@ -31,11 +31,9 @@ clean:
 	-rm -f src/device/pokey/pokey.o
 	-rm -f src/config/config.o
 
-all: clean pokey
+all: clean simhub
 
 install: clean all
-	mkdir -p logs
-	touch logs/log
-	brew install --HEAD libuv
-	brew install libcli
 	$(shell mkdir -p $(OUT))
+	$(shell mkdir -p $(LOGS))
+	touch logs/log

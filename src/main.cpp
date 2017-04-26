@@ -4,12 +4,13 @@
 #include <vector>
 
 #include "configManager/CConfigManager.h"
+#include "log/CLog.h"
 
 using namespace std;
 
 int main()
 {
-    CConfigManager config("bin/config/config.cfg");
+    CConfigManager config("config/config.cfg");
 
     return 0;
 }

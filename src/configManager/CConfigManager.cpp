@@ -2,10 +2,11 @@
 
 CConfigManager::CConfigManager(string filename)
 {
-    if (this->fileExists(filename))
+    if (this->fileExists(filename)) {
         this->configFileName = filename;
+    }
     else {
-        cout << "No config file found";
+        logger.log(LOG_INFO, "log file does not exist");
     }
 }
 
