@@ -15,22 +15,20 @@
 
 #include "../log/CLog.h"
 
-using namespace std;
-
 /**
-Base class for all pin based classes
-**/
-class CConfigManager {
-    libconfig::Config config;
+ * Base class for all pin based classes
+ **/
+class CConfigManager
+{
+protected:
+    libconfig::Config _config;
+	std::string _configFilename;
+
+    bool fileExists(std::string filename);
 
 public:
-    CConfigManager(string);
-    string getConfigFilename();
-
-protected:
-    string configFilename;
-    bool fileExists(const string& filename);
-
-private:
+    CConfigManager(std::string);
+	std::string getConfigFilename(void);
 };
+
 #endif

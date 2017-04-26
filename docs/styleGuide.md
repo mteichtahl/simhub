@@ -81,6 +81,7 @@ void some_function()
 ### C++
 * Class names camel case, proper case
 * non-static member variables should have leading underbar ("_") with regular camel case after that
+* avoid the use of ```using namespace ...```
 
 ### Example
 #### Header File
@@ -104,32 +105,35 @@ void some_function()
 class BaseClass
 {
 protected:
-	 //! this is a trivial inline method without an interesting name...note the inline doxygen comment style
-	 virtual void trivialInlineMethod(void) { std::cout << "this doesn't do much" << std::endl; };
+	//! this is a trivial inline method...note the inline doxygen comment style
+	virtual void trivialInlineMethod(void)
+	{
+       std::cout << "this doesn't do much" << std::endl; };
+	}
 
-	 std::string _protectedStringAttribute;
-	 static char _StaticCharacterAttribute; //! note the _CapitalisationOfTheName
-	 
+	std::string _protectedStringAttribute;
+	static char _StaticCharacterAttribute; ///< note the _CapitalisationOfTheName
+	
 public:
-	 //! you may think this is because we have a derived class
-	 virtual ~BaseClass(void);
-	 BaseClass(void);
+	//! you may think this is because we have a derived class
+	virtual ~BaseClass(void);
+	BaseClass(void);
 
-	 //! note newline above to separate constructors/desstructors from other methods
-	 virtual void setProtectedStringAttribute(std::string attributeValue);
-	 virtual std::string getProtectedStringAttribute(void);
+	//! note newline above to separate constructors/destructors from other methods
+	virtual void setProtectedStringAttribute(std::string attributeValue);
+	virtual std::string getProtectedStringAttribute(void);
 
-	 static int32_t SomeStaticMethod() { return 42; }; //! use explicit size types
-	 static char GetStaticCharacterAttribute(void);
+	static int32_t SomeStaticMethod() { return 42; }; ///< use explicit size types
+	static char GetStaticCharacterAttribute(void);
 };
 
 class DerivedClass : public BaseClass
 {
 public:
-	 virtual ~DerivedClass(void);
-	 DerivedClass(void);
+	virtual ~DerivedClass(void);
+	DerivedClass(void);
 
-	 virtual void setProtectedStringAttribute(std::string attributeValue);
+	virtual void setProtectedStringAttribute(std::string attributeValue);
 };
 
 /**
@@ -139,7 +143,7 @@ public:
 class UnrelatedClass
 {
 public:
-	void UnrelatedClass();
+	void UnrelatedClass(void);
 	virtual ~UnrelatedClass(void);
 };
 
@@ -196,11 +200,11 @@ void DerivedClass::setProtectedStringAttribute(std::string attributeValue)
 
 // -- UnrelatedClass
 
-UnrelatedClass::UnrelatedClass()
+UnrelatedClass::UnrelatedClass(void)
 {
 }
 
-UnrelatedClass::~UnrelatedClass()
+UnrelatedClass::~UnrelatedClass(void)
 {
 }
 
