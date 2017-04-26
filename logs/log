@@ -161,3 +161,69 @@ ok test
 2017-04-27 02:41:26 INFO [75689:src/log/CLog.cpp:84] Logging engine started.
 2017-04-27 02:41:26 INFO [75689:src/log/CLog.cpp:84] Logging engine stopped.
 2017-04-27 02:41:26 INFO [75689:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 02:51:21 INFO [80403:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:51:21 INFO [80403:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:51:21 INFO [80403:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 02:51:21 INFO [80403:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 02:51:31 INFO [80527:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:51:31 INFO [80527:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:51:31 INFO [80527:src/log/CLog.cpp:84] log file does not exist
+2017-04-27 02:51:31 INFO [80527:src/log/CLog.cpp:84] log file does not exist
+2017-04-27 02:51:31 INFO [80527:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 02:51:31 INFO [80527:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 02:51:58 INFO [80781:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:51:58 INFO [80781:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:51:58 ERROR [80781:src/log/CLog.cpp:87] Config file does not exist
+2017-04-27 02:51:58 ERROR [80781:src/log/CLog.cpp:87] Config file does not exist
+2017-04-27 02:51:58 ERROR [80781:src/log/CLog.cpp:87] Config file does not exist
+2017-04-27 02:51:58 INFO [80781:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 02:51:58 INFO [80781:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 02:52:00 INFO [80840:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:52:00 INFO [80840:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:52:00 ERROR [80840:src/log/CLog.cpp:87] Config file does not exist
+2017-04-27 02:52:00 ERROR [80840:src/log/CLog.cpp:87] Config file does not exist
+2017-04-27 02:52:00 ERROR [80840:src/log/CLog.cpp:87] Config file does not exist
+2017-04-27 02:52:00 INFO [80840:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 02:52:00 INFO [80840:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 02:53:37 INFO [81407:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:53:37 INFO [81407:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:53:37 ERROR [81407:src/log/CLog.cpp:87] Config file  does not exist
+2017-04-27 02:53:37 ERROR [81407:src/log/CLog.cpp:87] Config file  does not exist
+2017-04-27 02:53:37 ERROR [81407:src/log/CLog.cpp:87] Config file  does not exist
+2017-04-27 02:53:37 INFO [81407:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 02:53:37 INFO [81407:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 02:54:08 INFO [81640:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:54:08 INFO [81640:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:54:08 ERROR [81640:src/log/CLog.cpp:87] Config file config/config.cfg does not exist
+2017-04-27 02:54:08 ERROR [81640:src/log/CLog.cpp:87] Config file config/config.cfg does not exist
+2017-04-27 02:54:08 ERROR [81640:src/log/CLog.cpp:87] Config file config/config.cfg does not exist
+2017-04-27 02:54:08 INFO [81640:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 02:54:08 INFO [81640:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 02:56:07 INFO [82131:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:56:07 INFO [82131:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:56:07 INFO [82131:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 02:56:07 INFO [82131:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 02:56:08 INFO [82185:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:56:08 INFO [82185:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:56:08 INFO [82185:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 02:56:08 INFO [82185:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 03:16:32 INFO [86361:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 03:16:32 INFO [86361:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 03:16:32 INFO [86361:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 03:16:32 INFO [86361:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 03:16:49 INFO [86481:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 03:16:49 INFO [86481:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 03:18:03 INFO [86881:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 03:18:03 INFO [86881:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 03:18:03 ERROR [86881:src/log/CLog.cpp:87] Config file  does not exist
+2017-04-27 03:18:03 ERROR [86881:src/log/CLog.cpp:87] Config file  does not exist
+2017-04-27 03:18:03 ERROR [86881:src/log/CLog.cpp:87] Config file  does not exist
+2017-04-27 03:18:03 INFO [86881:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 03:18:03 INFO [86881:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 03:18:26 INFO [87085:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 03:18:26 INFO [87085:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 03:18:26 ERROR [87085:src/log/CLog.cpp:87] Config file config/config.cfg does not exist
+2017-04-27 03:18:26 ERROR [87085:src/log/CLog.cpp:87] Config file config/config.cfg does not exist
+2017-04-27 03:18:26 ERROR [87085:src/log/CLog.cpp:87] Config file config/config.cfg does not exist
+2017-04-27 03:18:26 INFO [87085:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 03:18:26 INFO [87085:src/log/CLog.cpp:84] Logging engine stopped.
