@@ -27,3 +27,14 @@
 *.exe
 *.out
 *.app
+
+.DS_Store
+**/*.
+**/*.o
+bin/
+.vscode/
+logs/*
+GPATH
+GRTAGS
+GTAGS
+

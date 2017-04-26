@@ -1,0 +1,229 @@
+04-25-2017 16:48:54.240 INFO [29819:src/log/CLog.cpp:26] hello, zlog
+04-25-2017 16:50:58.340 INFO [30331:src/log/CLog.cpp:22] hello, zlog
+04-25-2017 17:10:01.509 INFO [35107:src/log/CLog.cpp:48] 
+ok test
+04-25-2017 17:10:01.509 INFO [35107:src/log/CLog.cpp:48] *shutting down logging
+04-25-2017 17:12:32.933 INFO [35722:src/log/CLog.cpp:49] ok test
+04-25-2017 17:12:32.934 INFO [35722:src/log/CLog.cpp:49] shutting down logging
+04-25-2017 17:12:34.765 INFO [35778:src/log/CLog.cpp:49] ok test
+04-25-2017 17:12:34.765 INFO [35778:src/log/CLog.cpp:49] shutting down logging
+04-25-2017 17:13:13.969 INFO [36016:src/log/CLog.cpp:49] ok test 247926341
+04-25-2017 17:13:13.970 INFO [36016:src/log/CLog.cpp:49] shutting down logging
+04-25-2017 17:13:49.781 INFO [36449:src/log/CLog.cpp:49] ok test 211570245
+04-25-2017 17:13:49.781 INFO [36449:src/log/CLog.cpp:49] shutting down logging
+04-25-2017 17:15:20.552 INFO [36775:src/log/CLog.cpp:49] ok test 1642053
+04-25-2017 17:15:20.552 INFO [36775:src/log/CLog.cpp:49] shutting down logging
+04-25-2017 17:34:23.870 INFO [41359:src/log/CLog.cpp:49] LŽå	
+04-25-2017 17:34:23.872 INFO [41359:src/log/CLog.cpp:49] ZŽå	
+04-25-2017 17:40:09.192 INFO [44187:src/log/CLog.cpp:50] shutting down logging
+04-25-2017 17:40:11.570 INFO [44240:src/log/CLog.cpp:50] shutting down logging
+04-25-2017 17:40:54.525 INFO [44427:src/log/CLog.cpp:50] shutting down logging
+04-25-2017 17:40:57.935 INFO [44486:src/log/CLog.cpp:50] shutting down logging
+04-25-2017 17:42:27.321 INFO [44861:src/log/CLog.cpp:50] shutting down logging
+04-25-2017 17:43:05.499 INFO [45024:src/log/CLog.cpp:50] shutting down logging
+04-26-2017 17:26:35.376 INFO [36285:src/log/CLog.cpp:57] ok test config/config.cfg
+04-26-2017 17:26:35.381 INFO [36285:src/log/CLog.cpp:57] shutting down logging
+04-26-2017 17:27:48.325 INFO [36685:src/log/CLog.cpp:56] ok test 
+04-26-2017 17:27:48.325 INFO [36685:src/log/CLog.cpp:56] shutting down logging
+04-27-2017 00:51:39.716 INFO [47251:src/log/CLog.cpp:57] ok test 
+04-27-2017 00:51:39.717 INFO [47251:src/log/CLog.cpp:57] shutting down logging
+04-27-2017 00:54:14.523 INFO [47822:src/log/CLog.cpp:54] ok test 
+04-27-2017 00:54:14.524 INFO [47822:src/log/CLog.cpp:54] shutting down logging
+04-27-2017 00:58:35.219 INFO [48818:src/log/CLog.cpp:59] ok test config/config.cfg
+04-27-2017 00:58:59.387 INFO [49119:src/log/CLog.cpp:59] ok test 
+04-27-2017 00:58:59.387 INFO [49119:src/log/CLog.cpp:55] shutting down logging
+2017-04-27 01:00:36 INFO [49427:src/log/CLog.cpp:59] ok test 
+2017-04-27 01:00:36 INFO [49427:src/log/CLog.cpp:55] shutting down logging
+2017-04-27 01:01:07 ERROR [49598:src/log/CLog.cpp:59] ok test
+2017-04-27 01:01:07 ERROR [49598:src/log/CLog.cpp:59] ok test
+2017-04-27 01:01:07 INFO [49598:src/log/CLog.cpp:55] shutting down logging
+2017-04-27 01:02:34 ERROR [50047:src/log/CLog.cpp:60] ok error
+2017-04-27 01:02:34 ERROR [50047:src/log/CLog.cpp:60] ok error
+2017-04-27 01:02:34 ERROR [50047:src/log/CLog.cpp:60] ok error
+2017-04-27 01:02:36 ERROR [50103:src/log/CLog.cpp:60] ok error
+2017-04-27 01:02:36 ERROR [50103:src/log/CLog.cpp:60] ok error
+2017-04-27 01:02:36 ERROR [50103:src/log/CLog.cpp:60] ok error
+2017-04-27 01:04:45 ERROR [50628:src/log/CLog.cpp:61] ok error
+2017-04-27 01:04:45 ERROR [50628:src/log/CLog.cpp:61] ok error
+2017-04-27 01:04:45 ERROR [50628:src/log/CLog.cpp:61] ok error
+2017-04-27 01:04:45 ERROR [50628:src/log/CLog.cpp:65] ok debugb
+2017-04-27 01:04:45 ERROR [50628:src/log/CLog.cpp:65] ok debugb
+2017-04-27 01:04:45 ERROR [50628:src/log/CLog.cpp:65] ok debugb
+2017-04-27 01:04:45 INFO [50628:src/log/CLog.cpp:57] shutting down logging
+2017-04-27 01:04:45 INFO [50628:src/log/CLog.cpp:57] shutting down logging
+2017-04-27 01:06:11 ERROR [50911:src/log/CLog.cpp:61] ok error
+2017-04-27 01:06:11 ERROR [50911:src/log/CLog.cpp:61] ok error
+2017-04-27 01:06:11 ERROR [50911:src/log/CLog.cpp:61] ok error
+2017-04-27 01:06:11 ERROR [50911:src/log/CLog.cpp:65] ok debugb
+2017-04-27 01:06:11 ERROR [50911:src/log/CLog.cpp:65] ok debugb
+2017-04-27 01:06:11 ERROR [50911:src/log/CLog.cpp:65] ok debugb
+2017-04-27 01:06:11 INFO [50911:src/log/CLog.cpp:57] shutting down logging
+2017-04-27 01:06:11 INFO [50911:src/log/CLog.cpp:57] shutting down logging
+2017-04-27 01:08:06 ERROR [51321:src/log/CLog.cpp:61] ok error
+2017-04-27 01:08:06 ERROR [51321:src/log/CLog.cpp:61] ok error
+2017-04-27 01:08:06 ERROR [51321:src/log/CLog.cpp:61] ok error
+2017-04-27 01:08:06 ERROR [51321:src/log/CLog.cpp:65] ok debugb
+2017-04-27 01:08:06 ERROR [51321:src/log/CLog.cpp:65] ok debugb
+2017-04-27 01:08:06 ERROR [51321:src/log/CLog.cpp:65] ok debugb
+2017-04-27 01:08:06 INFO [51321:src/log/CLog.cpp:57] shutting down logging
+2017-04-27 01:08:06 INFO [51321:src/log/CLog.cpp:57] shutting down logging
+2017-04-27 01:09:20 ERROR [51738:src/log/CLog.cpp:61] ok error
+2017-04-27 01:09:20 ERROR [51738:src/log/CLog.cpp:61] ok error
+2017-04-27 01:09:20 ERROR [51738:src/log/CLog.cpp:61] ok error
+2017-04-27 01:09:20 ERROR [51738:src/log/CLog.cpp:65] ok debug
+2017-04-27 01:09:20 ERROR [51738:src/log/CLog.cpp:65] ok debug
+2017-04-27 01:09:20 ERROR [51738:src/log/CLog.cpp:65] ok debug
+2017-04-27 01:09:20 INFO [51738:src/log/CLog.cpp:57] shutting down logging
+2017-04-27 01:09:20 INFO [51738:src/log/CLog.cpp:57] shutting down logging
+2017-04-27 01:09:41 ERROR [51886:src/log/CLog.cpp:61] ok error
+2017-04-27 01:09:41 ERROR [51886:src/log/CLog.cpp:61] ok error
+2017-04-27 01:09:41 ERROR [51886:src/log/CLog.cpp:61] ok error
+2017-04-27 01:09:41 DEBUG [51886:src/log/CLog.cpp:65] ok debug
+2017-04-27 01:09:41 INFO [51886:src/log/CLog.cpp:57] shutting down logging
+2017-04-27 01:09:41 INFO [51886:src/log/CLog.cpp:57] shutting down logging
+2017-04-27 01:13:50 ERROR [52774:src/log/CLog.cpp:61] ok error
+2017-04-27 01:13:50 ERROR [52774:src/log/CLog.cpp:61] ok error
+2017-04-27 01:13:50 ERROR [52774:src/log/CLog.cpp:61] ok error
+2017-04-27 01:13:50 DEBUG [52774:src/log/CLog.cpp:65] ok debug
+2017-04-27 01:13:50 INFO [52774:src/log/CLog.cpp:57] shutting down logging
+2017-04-27 01:13:50 INFO [52774:src/log/CLog.cpp:57] shutting down logging
+2017-04-27 01:24:24 ERROR [54940:src/log/CLog.cpp:59] 
+2017-04-27 01:24:24 ERROR [54940:src/log/CLog.cpp:59] 
+2017-04-27 01:24:24 ERROR [54940:src/log/CLog.cpp:59] 
+2017-04-27 01:24:24 DEBUG [54940:src/log/CLog.cpp:63] 
+2017-04-27 01:24:24 INFO [54940:src/log/CLog.cpp:55] 
+2017-04-27 01:24:24 INFO [54940:src/log/CLog.cpp:55] 
+2017-04-27 01:24:59 ERROR [55125:src/log/CLog.cpp:59] ok error
+2017-04-27 01:24:59 ERROR [55125:src/log/CLog.cpp:59] ok error
+2017-04-27 01:24:59 ERROR [55125:src/log/CLog.cpp:59] ok error
+2017-04-27 01:24:59 DEBUG [55125:src/log/CLog.cpp:63] ok debug
+2017-04-27 01:24:59 INFO [55125:src/log/CLog.cpp:55] shutting down logging
+2017-04-27 01:24:59 INFO [55125:src/log/CLog.cpp:55] shutting down logging
+2017-04-27 01:45:50 ERROR [60596:src/log/CLog.cpp:61] ok error
+2017-04-27 01:45:50 ERROR [60596:src/log/CLog.cpp:61] ok error
+2017-04-27 01:45:50 ERROR [60596:src/log/CLog.cpp:61] ok error
+2017-04-27 01:45:50 DEBUG [60596:src/log/CLog.cpp:65] ok debug
+2017-04-27 01:45:50 INFO [60596:src/log/CLog.cpp:57] shutting down logging
+2017-04-27 01:45:50 INFO [60596:src/log/CLog.cpp:57] shutting down logging
+2017-04-27 01:47:29 ERROR [60942:src/log/CLog.cpp:63] ok error
+2017-04-27 01:47:29 ERROR [60942:src/log/CLog.cpp:63] ok error
+2017-04-27 01:47:29 ERROR [60942:src/log/CLog.cpp:63] ok error
+2017-04-27 01:47:29 DEBUG [60942:src/log/CLog.cpp:67] ok debug
+2017-04-27 01:47:29 INFO [60942:src/log/CLog.cpp:59] shutting down logging
+2017-04-27 01:47:29 INFO [60942:src/log/CLog.cpp:59] shutting down logging
+2017-04-27 01:49:55 INFO [61781:src/log/CLog.cpp:69] Shutting down logging
+2017-04-27 01:49:55 INFO [61781:src/log/CLog.cpp:69] Shutting down logging
+2017-04-27 01:50:53 INFO [62049:src/log/CLog.cpp:72] INFO
+2017-04-27 01:50:53 INFO [62049:src/log/CLog.cpp:72] INFO
+2017-04-27 01:50:53 DEBUG [62049:src/log/CLog.cpp:80] DEBUG
+2017-04-27 01:50:53 ERROR [62049:src/log/CLog.cpp:76] ERROR
+2017-04-27 01:50:53 ERROR [62049:src/log/CLog.cpp:76] ERROR
+2017-04-27 01:50:53 ERROR [62049:src/log/CLog.cpp:76] ERROR
+2017-04-27 01:50:53 INFO [62049:src/log/CLog.cpp:72] Shutting down logging
+2017-04-27 01:50:53 INFO [62049:src/log/CLog.cpp:72] Shutting down logging
+2017-04-27 01:56:31 INFO [63351:src/log/CLog.cpp:74] Shutting down logging
+2017-04-27 01:56:31 INFO [63351:src/log/CLog.cpp:74] Shutting down logging
+2017-04-27 01:56:32 INFO [63405:src/log/CLog.cpp:74] Shutting down logging
+2017-04-27 01:56:32 INFO [63405:src/log/CLog.cpp:74] Shutting down logging
+2017-04-27 01:56:33 INFO [63457:src/log/CLog.cpp:74] Shutting down logging
+2017-04-27 01:56:33 INFO [63457:src/log/CLog.cpp:74] Shutting down logging
+2017-04-27 02:39:11 INFO [74593:src/log/CLog.cpp:83] Shutting down logging
+2017-04-27 02:39:11 INFO [74593:src/log/CLog.cpp:83] Shutting down logging
+2017-04-27 02:39:13 INFO [74647:src/log/CLog.cpp:83] Shutting down logging
+2017-04-27 02:39:13 INFO [74647:src/log/CLog.cpp:83] Shutting down logging
+2017-04-27 02:39:13 INFO [74704:src/log/CLog.cpp:83] Shutting down logging
+2017-04-27 02:39:13 INFO [74704:src/log/CLog.cpp:83] Shutting down logging
+2017-04-27 02:39:14 INFO [74756:src/log/CLog.cpp:83] Shutting down logging
+2017-04-27 02:39:14 INFO [74756:src/log/CLog.cpp:83] Shutting down logging
+2017-04-27 02:40:03 INFO [75002:src/log/CLog.cpp:83] Shutting down logging
+2017-04-27 02:40:03 INFO [75002:src/log/CLog.cpp:83] Shutting down logging
+2017-04-27 02:41:19 INFO [75413:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:41:19 INFO [75413:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:41:19 INFO [75413:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 02:41:19 INFO [75413:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 02:41:22 INFO [75471:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:41:22 INFO [75471:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:41:22 INFO [75471:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 02:41:22 INFO [75471:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 02:41:24 INFO [75533:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:41:24 INFO [75533:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:41:24 INFO [75533:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 02:41:24 INFO [75533:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 02:41:25 INFO [75587:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:41:25 INFO [75587:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:41:25 INFO [75587:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 02:41:25 INFO [75587:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 02:41:26 INFO [75639:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:41:26 INFO [75639:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:41:26 INFO [75639:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 02:41:26 INFO [75639:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 02:41:26 INFO [75689:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:41:26 INFO [75689:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:41:26 INFO [75689:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 02:41:26 INFO [75689:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 02:51:21 INFO [80403:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:51:21 INFO [80403:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:51:21 INFO [80403:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 02:51:21 INFO [80403:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 02:51:31 INFO [80527:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:51:31 INFO [80527:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:51:31 INFO [80527:src/log/CLog.cpp:84] log file does not exist
+2017-04-27 02:51:31 INFO [80527:src/log/CLog.cpp:84] log file does not exist
+2017-04-27 02:51:31 INFO [80527:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 02:51:31 INFO [80527:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 02:51:58 INFO [80781:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:51:58 INFO [80781:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:51:58 ERROR [80781:src/log/CLog.cpp:87] Config file does not exist
+2017-04-27 02:51:58 ERROR [80781:src/log/CLog.cpp:87] Config file does not exist
+2017-04-27 02:51:58 ERROR [80781:src/log/CLog.cpp:87] Config file does not exist
+2017-04-27 02:51:58 INFO [80781:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 02:51:58 INFO [80781:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 02:52:00 INFO [80840:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:52:00 INFO [80840:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:52:00 ERROR [80840:src/log/CLog.cpp:87] Config file does not exist
+2017-04-27 02:52:00 ERROR [80840:src/log/CLog.cpp:87] Config file does not exist
+2017-04-27 02:52:00 ERROR [80840:src/log/CLog.cpp:87] Config file does not exist
+2017-04-27 02:52:00 INFO [80840:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 02:52:00 INFO [80840:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 02:53:37 INFO [81407:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:53:37 INFO [81407:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:53:37 ERROR [81407:src/log/CLog.cpp:87] Config file  does not exist
+2017-04-27 02:53:37 ERROR [81407:src/log/CLog.cpp:87] Config file  does not exist
+2017-04-27 02:53:37 ERROR [81407:src/log/CLog.cpp:87] Config file  does not exist
+2017-04-27 02:53:37 INFO [81407:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 02:53:37 INFO [81407:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 02:54:08 INFO [81640:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:54:08 INFO [81640:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:54:08 ERROR [81640:src/log/CLog.cpp:87] Config file config/config.cfg does not exist
+2017-04-27 02:54:08 ERROR [81640:src/log/CLog.cpp:87] Config file config/config.cfg does not exist
+2017-04-27 02:54:08 ERROR [81640:src/log/CLog.cpp:87] Config file config/config.cfg does not exist
+2017-04-27 02:54:08 INFO [81640:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 02:54:08 INFO [81640:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 02:56:07 INFO [82131:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:56:07 INFO [82131:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:56:07 INFO [82131:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 02:56:07 INFO [82131:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 02:56:08 INFO [82185:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:56:08 INFO [82185:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 02:56:08 INFO [82185:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 02:56:08 INFO [82185:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 03:16:32 INFO [86361:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 03:16:32 INFO [86361:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 03:16:32 INFO [86361:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 03:16:32 INFO [86361:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 03:16:49 INFO [86481:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 03:16:49 INFO [86481:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 03:18:03 INFO [86881:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 03:18:03 INFO [86881:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 03:18:03 ERROR [86881:src/log/CLog.cpp:87] Config file  does not exist
+2017-04-27 03:18:03 ERROR [86881:src/log/CLog.cpp:87] Config file  does not exist
+2017-04-27 03:18:03 ERROR [86881:src/log/CLog.cpp:87] Config file  does not exist
+2017-04-27 03:18:03 INFO [86881:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 03:18:03 INFO [86881:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 03:18:26 INFO [87085:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 03:18:26 INFO [87085:src/log/CLog.cpp:84] Logging engine started.
+2017-04-27 03:18:26 ERROR [87085:src/log/CLog.cpp:87] Config file config/config.cfg does not exist
+2017-04-27 03:18:26 ERROR [87085:src/log/CLog.cpp:87] Config file config/config.cfg does not exist
+2017-04-27 03:18:26 ERROR [87085:src/log/CLog.cpp:87] Config file config/config.cfg does not exist
+2017-04-27 03:18:26 INFO [87085:src/log/CLog.cpp:84] Logging engine stopped.
+2017-04-27 03:18:26 INFO [87085:src/log/CLog.cpp:84] Logging engine stopped.
