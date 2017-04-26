@@ -9,8 +9,6 @@
 
 using namespace std;
 
-#define DEFAULT_ZLOG_CONFIG "config/zlog.conf"
-
 enum logCategory {
     LOG_INFO  = 1,
     LOG_ERROR = 2,
@@ -28,6 +26,7 @@ public:
     CLog();
     // Destructor
     ~CLog();
+    void init(string configFilename);
     // log @msg to specific @category - uses variadic parameters
     void log(const int category, const char* msg, ...);
 

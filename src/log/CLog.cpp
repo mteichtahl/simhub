@@ -10,8 +10,26 @@ CLog logger; ///< global logging singleton
   *   @return nothing 
   */
 CLog::CLog() {
+    this->canZlog = false;
+}
+/**
+  *   @brief  Default  destructor for CLog  
+  *   
+  *   @return nothing 
+  */
+CLog::~CLog() {
+
+    if (this->canZlog) {
+        // stop logging to zlog and return to stdout
+        this->canZlog = false;
+        // releases all zlog API memory and closes opened files
+        ::zlog_fini();
+    }
+}
+
+void CLog::init(string configFilename) {
     // set the default zlog config file name
-    this->configFilename = (const char*)DEFAULT_ZLOG_CONFIG;
+    this->configFilename = configFilename.c_str();
 
     // set the maximum variadic argument length
     this->maxVA_length = MAX_VA_LENGTH;
@@ -22,31 +40,17 @@ CLog::CLog() {
     // cannot load the zlog configuration so log an error
     if (this->zlog) {
         // display the error then return
-        this->log(LOG_ERROR, "Cant load zlog config - all output will be to stdout");
+        this->log(LOG_ERROR, "Cant load zlog config %s - All output will be to stdout", this->configFilename);
     } else {
         // setup the correct categories
         this->infoCategory  = ::zlog_get_category("simhub");
         this->errorCategory = ::zlog_get_category("simhub");
         this->debugCategory = ::zlog_get_category("simhub");
         this->canZlog       = true;
-        this->log(LOG_INFO, "Logging engine started.");
+        this->log(LOG_INFO, "Logging engine v%s started.", ::zlog_version());
     }
 }
-/**
-  *   @brief  Default  destructor for CLog  
-  *   
-  *   @return nothing 
-  */
-CLog::~CLog() {
-    // display log information
-    this->log(LOG_INFO, "Logging engine stopped.");
 
-    // stop logging to zlog and return to stdout
-    this->canZlog = false;
-
-    // releases all zlog API memory and closes opened files
-    zlog_fini();
-}
 /**
   *   @brief log a message to a zlog category  
   *
