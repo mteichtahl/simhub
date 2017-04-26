@@ -8,9 +8,8 @@
 
 using namespace std;
 
-int main()
-{
-    CConfigManager config("config/config.cfg");
+int main() {
+    //CConfigManager config("config/config.cfg");
 
     return 0;
 }

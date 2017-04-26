@@ -1,3 +1,4 @@
+UNAME := $(shell uname)
 CC = gcc
 CXX = g++ 
 DEBUG = -g3 -O0 
@@ -18,9 +19,13 @@ CXXSOURCES = 	$(wildcard src/*.cpp) \
 OBJECTS = $(SOURCES:.c=.o) $(CXXSOURCES:.cpp=.o)
 
 simhub: $(OBJECTS) 	 
-	@mkdir -p $(OUT)
 	$(CXX) $(CXXSOURCES) -o $(OUT)/simhub $(CXXFLAGS) $(LDFLAGS) $(CDFLAGS)
+	@echo Generating debug symbols
 	dsymutil $(OUT)/simhub
+ifeq ($(UNAME),Darwin)
+	@echo creating OS X intellisense tags
+	gtags
+endif
 
 clean:
 	-rm -rf bin/simhub.dSYM/

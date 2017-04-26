@@ -32,4 +32,7 @@
 **/*.
 bin/
 .vscode/
+GPATH
+GRTAGS
+GTAGS
 
