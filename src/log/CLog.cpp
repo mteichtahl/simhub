@@ -1,7 +1,7 @@
 #include "CLog.h"
 
 using namespace std;
-//
+
 CLog logger; ///< global logging singleton
 
 /**

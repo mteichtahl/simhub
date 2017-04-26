@@ -9,7 +9,7 @@
 using namespace std;
 
 int main() {
-    //CConfigManager config("config/config.cfg");
+    CConfigManager config("config/config.cfg");
 
     return 0;
 }

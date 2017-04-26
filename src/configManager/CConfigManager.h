@@ -22,12 +22,13 @@ Base class for all pin based classes
 **/
 class CConfigManager {
     libconfig::Config config;
-    string configFileName;
 
 public:
     CConfigManager(string);
+    string getConfigFilename();
 
 protected:
+    string configFilename;
     bool fileExists(const string& filename);
 
 private:
