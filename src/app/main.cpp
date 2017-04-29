@@ -3,9 +3,9 @@
 #include <string>
 #include <vector>
 
-#include "configManager/CConfigManager.h"
+#include "configmanager/configmanager.h"
 #include "libs/commandLine.h" // https://github.com/tanakh/cmdline
-#include "log/CLog.h"
+#include "log/clog.h"
 
 void configureCli(cmdline::parser *cli)
 {

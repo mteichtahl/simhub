@@ -1,4 +1,4 @@
-#include "CLog.h"
+#include "clog.h"
 
 CLog logger; ///< global logging singleton
 

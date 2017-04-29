@@ -1,11 +1,11 @@
-#include "CConfigManager.h"
+#include "configmanager.h"
 
-CConfigManager::CConfigManager(std::string filename)
+CConfigManager::CConfigManager(string filename)
 {
-    if (fileExists(filename)) {
-        _configFilename = filename;
+    if (this->fileExists(filename)) {
+        this->configFilename = filename;
     }
-	else {
+    else {
         logger.log(LOG_ERROR, "Config file %s does not exist", filename.c_str());
     }
 }

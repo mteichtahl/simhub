@@ -13,7 +13,7 @@
 #include <map>
 #include <string>
 
-#include "../log/CLog.h"
+#include "log/clog.h"
 
 /**
  * Base class for all pin based classes
