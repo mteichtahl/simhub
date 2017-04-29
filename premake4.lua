@@ -25,8 +25,8 @@ solution "simhub"
 	    language "C++"
         files { "src/common/**.h", "src/common/**.cpp", 
                 "src/test/**.h", "src/test/**.cpp", 
-                "/usr/src/googletest/googletest/src/gtest-all.cc" }
-        includedirs { "/usr/src/googletest/googletest", "src", "src/common" }
+                "src/libs/googletest/src/gtest-all.cc" }
+        includedirs { "src/libs/googletest/include", "src/libs/googletest", "src", "src/common" }
         links { "zlog", "pthread", "config++" }
 
 
