@@ -28,9 +28,12 @@
 *.out
 *.app
 
+Makefile
+*.make
 .DS_Store
 **/*.
 **/*.o
+obj/**
 bin/
 .vscode/
 logs/
