@@ -2,8 +2,8 @@
 
 CConfigManager::CConfigManager(string filename)
 {
-    if (this->fileExists(filename)) {
-        this->configFilename = filename;
+    if (fileExists(filename)) {
+        _configFilename = filename;
     }
     else {
         logger.log(LOG_ERROR, "Config file %s does not exist", filename.c_str());
