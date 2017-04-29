@@ -18,7 +18,9 @@ solution "simhub"
                 "src/common/**.h", "src/common/**.cpp" }
         includedirs { "src", "src/common" }
         links { "zlog", "pthread", "config++" }
-		postbuildcommands { "dsymutil simhub", "gtags" }
+        targetdir ("bin")
+        configuration { "macosx" }
+            postbuildcommands { "dsymutil bin/simhub", "gtags" }
 
     project "simhub_tests"
         kind "ConsoleApp"
@@ -28,5 +30,6 @@ solution "simhub"
                 "src/libs/googletest/src/gtest-all.cc" }
         includedirs { "src/libs/googletest/include", "src/libs/googletest", "src", "src/common" }
         links { "zlog", "pthread", "config++" }
+        targetdir ("bin")
 
 
