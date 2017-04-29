@@ -1,6 +1,6 @@
 #include "configmanager.h"
 
-CConfigManager::CConfigManager(string filename)
+CConfigManager::CConfigManager(std::string filename)
 {
     if (fileExists(filename)) {
         _configFilename = filename;
