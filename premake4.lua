@@ -18,7 +18,7 @@ solution "simhub"
                 "src/common/**.h", "src/common/**.cpp" }
         includedirs { "src", "src/common" }
         links { "zlog", "pthread", "config++" }
-
+		postbuildcommands { "dsymutil simhub", "gtags" }
 
     project "simhub_tests"
         kind "ConsoleApp"
