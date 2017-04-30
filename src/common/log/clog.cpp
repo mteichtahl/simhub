@@ -73,7 +73,7 @@ void CLog::log(const int category, const char *pMsg, ...)
     va_start(args, pMsg); ///< initializes args to retrieve the additional arguments after pMsg
 
     // zlog has failed to initialise so use stdout only
-    if (canZlog) {
+    if (!canZlog) {
         char *pTempMsg = (char *)malloc(strlen(pMsg) + 2); ///< temporary message, making room for \0 and \n
 
         // copy pMsg into pTempMsg (a later strcat will modify pMsg)
