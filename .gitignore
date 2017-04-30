@@ -34,7 +34,7 @@ Makefile
 **/*.
 **/*.o
 obj/**
-bin/
+bin/simhub*
 .vscode/
 logs/
 GPATH
