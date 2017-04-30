@@ -33,7 +33,7 @@
 **/*.o
 bin/
 .vscode/
-logs/*
+logs/
 GPATH
 GRTAGS
 GTAGS
