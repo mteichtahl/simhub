@@ -1,2 +1,6 @@
-#include "common/elements/sources/source.h"
+#include "source.h"
 
+Element::attribute_t Source::getAttribute(std::string name)
+{
+    return _attributes.at(name);
+}
