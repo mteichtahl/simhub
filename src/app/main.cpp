@@ -27,20 +27,22 @@ int main(int argc, char *argv[])
 
     CConfigManager config(cli.get<std::string>("config"));
 
-    Source el("element", "desc");
+    config.init();
 
-    Attribute attr;
-    attr._name = "at1name";
-    attr._description = "lkfjdslfjkds";
-    attr._value = "1";
-    attr._type = eAttribute_t::STRING_ATTRIBUTE;
+    // Source el("element", "desc");
 
-    el.addAttribute(attr);
+    // Attribute attr;
+    // attr._name = "at1name";
+    // attr._description = "lkfjdslfjkds";
+    // attr._value = "1";
+    // attr._type = eAttribute_t::STRING_ATTRIBUTE;
 
-    Attribute at = el.getAttribute("at1name");
+    // el.addAttribute(attr);
 
-    logger.log(LOG_INFO, at.toString());
-    logger.log(LOG_INFO, "%d", el.attributeCount());
+    // Attribute at = el.getAttribute("at1name");
+
+    // logger.log(LOG_INFO, at.toString());
+    // logger.log(LOG_INFO, "%d", el.attributeCount());
 
     return 0;
 }

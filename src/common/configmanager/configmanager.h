@@ -22,13 +22,18 @@ class CConfigManager
 {
 protected:
     libconfig::Config _config;
-	std::string _configFilename;
+    std::string _configFilename;
+    std::string _configFileVersion;
+    std::string _configName;
 
     bool fileExists(std::string filename);
 
 public:
     CConfigManager(std::string);
-	std::string getConfigFilename(void);
+    std::string getConfigFilename(void);
+    int init(void);
+    std::string version();
+    std::string name();
 };
 
 #endif
