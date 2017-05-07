@@ -1,6 +1,7 @@
 #include "element.h"
 #include "../log/clog.h"
 #include <stdlib.h>
+#include <utility>
 
 Element::Element(std::string name, std::string description)
     : _name(name)
@@ -9,6 +10,7 @@ Element::Element(std::string name, std::string description)
     if (_name.empty()) {
         throw std::runtime_error("Element name cannot be empty");
     }
+
     if (_description.empty()) {
         throw std::runtime_error("Element description cannot be empty");
     }
@@ -22,22 +24,28 @@ Element::Element(std::string name, std::string description)
 
 Element::~Element(void)
 {
+    _attributes.clear();
 }
 
-int Element::addAttribute(const attribute_t attribute)
+int Element::attributeCount()
 {
-    if (attribute.name.empty()) {
+    return _attributes.size();
+}
+
+int Element::addAttribute(const Attribute attribute)
+{
+    if (attribute._name.empty()) {
         logger.log(LOG_ERROR, "attribute name cannot be empty");
         return -1;
     }
 
-    auto ret = _attributes.emplace(attribute.name, attribute);
+    const auto ret = _attributes.emplace(attribute._name, attribute);
 
     if (ret.second) {
         return 0;
     }
     else {
-        logger.log(LOG_ERROR, "Failed to create attribute %s - Already exists", attribute.name.c_str());
+        logger.log(LOG_ERROR, "Failed to create attribute %s - Already exists", attribute._name.c_str());
         return -1;
     }
 }
