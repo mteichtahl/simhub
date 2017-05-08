@@ -27,20 +27,29 @@ int main(int argc, char *argv[])
 
     CConfigManager config(cli.get<std::string>("config"));
 
-    Source el("element", "desc");
+    if (!config.init()) {
+        logger.log(LOG_ERROR, "Could not initialise configuration");
+        exit(1);
+    }
 
-    Element::attribute_t attr;
-    attr.name = "at1name";
-    attr.description = "lkfjdslfjkds";
-    attr.type = Element::eAttributeTypes::STRING_ATTRIBUTE;
-    attr.defaultValue = "";
-    attr.value = "";
+    // const libconfig::Setting *simConfig = config.getSimulatorConfig();
 
-    el.addAttribute(attr);
-    el.addAttribute(attr);
+    // std::string ip = simConfig->lookup("ipAddress");
 
-    Element::attribute_t poo = el.getAttribute("at1name");
-    printf("%s", poo.name.c_str());
+    // Source el("element", "desc");
+
+    // Attribute attr;
+    // attr._name = "at1name";
+    // attr._description = "lkfjdslfjkds";
+    // attr._value = "1";
+    // attr._type = eAttribute_t::STRING_ATTRIBUTE;
+
+    // el.addAttribute(attr);
+
+    // Attribute at = el.getAttribute("at1name");
+
+    // logger.log(LOG_INFO, at.toString());
+    // logger.log(LOG_INFO, "%d", el.attributeCount());
 
     return 0;
 }

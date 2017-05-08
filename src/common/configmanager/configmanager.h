@@ -12,8 +12,12 @@
 #include <libconfig.h++>
 #include <map>
 #include <string>
+#include <vector>
 
 #include "log/clog.h"
+
+#define RETURN_OK 1
+#define RETURN_ERROR -1
 
 /**
  * Base class for all pin based classes
@@ -22,13 +26,26 @@ class CConfigManager
 {
 protected:
     libconfig::Config _config;
-	std::string _configFilename;
+    std::string _configFilename;
+    std::string _configFileVersion;
+    std::string _configName;
+    libconfig::Setting *_root;
 
     bool fileExists(std::string filename);
+    bool isValidSimConfiguration(void);
+
+    std::vector<std::string> _requiredSimulatorConfigurationFields = { "ipAddress", "port", "type" };
+    std::vector<std::string> _requiredDeviceConfigurationFields = { "serialNumber", "uid", "name", "dhcp" };
 
 public:
     CConfigManager(std::string);
-	std::string getConfigFilename(void);
+    ~CConfigManager();
+    std::string getConfigFilename(void);
+    int init(void);
+    std::string version(void);
+    std::string name(void);
+
+    const libconfig::Setting *getSimulatorConfig(void);
 };
 
 #endif
