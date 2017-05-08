@@ -25,15 +25,21 @@ protected:
     std::string _configFilename;
     std::string _configFileVersion;
     std::string _configName;
+    libconfig::Setting *_root;
+    bool _isReady = false;
 
     bool fileExists(std::string filename);
+    bool validateSimConfiguration();
 
 public:
     CConfigManager(std::string);
+    ~CConfigManager();
     std::string getConfigFilename(void);
     int init(void);
     std::string version();
     std::string name();
+
+    const libconfig::Setting *getSimulatorConfig();
 };
 
 #endif

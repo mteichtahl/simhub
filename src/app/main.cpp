@@ -29,6 +29,10 @@ int main(int argc, char *argv[])
 
     config.init();
 
+    const libconfig::Setting *simConfig = config.getSimulatorConfig();
+
+    std::string ip = simConfig->lookup("ipAddress");
+
     // Source el("element", "desc");
 
     // Attribute attr;

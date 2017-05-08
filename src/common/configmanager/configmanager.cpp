@@ -1,5 +1,10 @@
 #include "configmanager.h"
 
+/**
+ *   @brief  Default  destructor for CConfigManager
+ *
+ *   @return nothing
+ */
 CConfigManager::CConfigManager(std::string filename)
 {
     if (fileExists(filename)) {
@@ -11,6 +16,20 @@ CConfigManager::CConfigManager(std::string filename)
     }
 }
 
+CConfigManager::~CConfigManager()
+{
+    if (_isReady) {
+        logger.log(LOG_INFO, "Closing configuration");
+    }
+}
+
+/**
+ *   @brief check if a file on the file system exists
+ *
+ *   @param  std::string A string representing the name of the file to check
+ *
+ *   @return bool true if file exists, otherwise false
+ */
 bool CConfigManager::fileExists(std::string filename)
 {
     return (filename.size() > 0 && access(filename.c_str(), 0) == 0);
@@ -36,9 +55,47 @@ int CConfigManager::init(void)
         throw std::runtime_error("Config file parse error - See log file");
     }
 
-    logger.log(LOG_INFO, "Loaded config: %s - %s (v%s)", _configFilename.c_str(), name().c_str(), version().c_str());
+    // _configRoot = _config.getRoot(); ///< get the root of the configuraiton tree
 
-    return 0;
+    logger.log(LOG_INFO, "Loading configuration file: %s - %s (v%s) (v%d.%d.%d)", _configFilename.c_str(),
+        name().c_str(), version().c_str(), LIBCONFIGXX_VER_MAJOR, LIBCONFIGXX_VER_MINOR, LIBCONFIGXX_VER_REVISION);
+
+    _root = &_config.getRoot();
+
+    if (validateSimConfiguration()) {
+        logger.log(LOG_INFO, "Configuration valid");
+        _isReady = true;
+        return 0;
+    }
+    else {
+        _isReady = false;
+        return -1;
+    }
+    return -1;
+}
+
+bool CConfigManager::validateSimConfiguration()
+{
+    const libconfig::Setting *simConfig = getSimulatorConfig();
+
+    if (simConfig->exists("ipAddress")) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+const libconfig::Setting *CConfigManager::getSimulatorConfig()
+{
+    try {
+        libconfig::Setting &sim = _config.lookup("configuration.simulator");
+        return &sim[0];
+    }
+    catch (const libconfig::SettingNotFoundException &nfex) {
+        logger.log(LOG_ERROR, "No %s set in config", nfex.what());
+        return NULL;
+    }
 }
 
 std::string CConfigManager::version()
