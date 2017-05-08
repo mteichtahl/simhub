@@ -19,6 +19,7 @@ solution "simhub"
         includedirs { "src", "src/common" }
         links { "zlog", "pthread", "config++" }
         targetdir ("bin")
+        buildoptions { "--std=c++14" }
         configuration { "macosx" }
             postbuildcommands { "dsymutil bin/simhub", "gtags" }
 
@@ -31,5 +32,6 @@ solution "simhub"
         includedirs { "src/libs/googletest/include", "src/libs/googletest", "src", "src/common" }
         links { "zlog", "pthread", "config++" }
         targetdir ("bin")
+        buildoptions { "--std=c++14" }
 
 
