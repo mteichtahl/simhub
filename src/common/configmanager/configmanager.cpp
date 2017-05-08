@@ -1,7 +1,7 @@
 #include "configmanager.h"
 
 /**
- *   @brief  Default  destructor for CConfigManager
+ *   @brief  Default  constructor for CConfigManager
  *
  *   @return nothing
  */
@@ -16,11 +16,14 @@ CConfigManager::CConfigManager(std::string filename)
     }
 }
 
+/**
+ *   @brief  Default  destructor for CConfigManager
+ *
+ *   @return nothing
+ */
 CConfigManager::~CConfigManager()
 {
-    if (_isReady) {
-        logger.log(LOG_INFO, "Closing configuration");
-    }
+    logger.log(LOG_INFO, "Closing configuration");
 }
 
 /**
@@ -55,42 +58,53 @@ int CConfigManager::init(void)
         throw std::runtime_error("Config file parse error - See log file");
     }
 
-    // _configRoot = _config.getRoot(); ///< get the root of the configuraiton tree
-
     logger.log(LOG_INFO, "Loading configuration file: %s - %s (v%s) (v%d.%d.%d)", _configFilename.c_str(),
         name().c_str(), version().c_str(), LIBCONFIGXX_VER_MAJOR, LIBCONFIGXX_VER_MINOR, LIBCONFIGXX_VER_REVISION);
 
     _root = &_config.getRoot();
 
-    if (validateSimConfiguration()) {
-        logger.log(LOG_INFO, "Configuration valid");
-        _isReady = true;
-        return 0;
+    if (isValidSimConfiguration()) {
+        return RETURN_OK;
     }
     else {
-        _isReady = false;
-        return -1;
+        return RETURN_ERROR;
     }
-    return -1;
+    return RETURN_ERROR;
 }
 
-bool CConfigManager::validateSimConfiguration()
+bool CConfigManager::isValidSimConfiguration(void)
 {
     const libconfig::Setting *simConfig = getSimulatorConfig();
+    int hasError = false;
 
-    if (simConfig->exists("ipAddress")) {
-        return true;
+    if (!simConfig) {
+        logger.log(LOG_ERROR, "Could not get simulator configuration");
+        return false;
+    }
+
+    std::vector<std::string>::iterator it;
+
+    for (it = _requiredSimulatorConfigurationFields.begin(); it < _requiredSimulatorConfigurationFields.end(); it++) {
+        if (!simConfig->exists(it->c_str())) {
+            hasError++;
+            logger.log(LOG_ERROR, " - mandatory field '%s' does not exist in simulator config", it->c_str());
+        }
+    }
+
+    if (hasError) {
+        logger.log(LOG_ERROR, "%d missing field(s) in simulator configuration", hasError);
+        return RETURN_ERROR;
     }
     else {
-        return false;
+        return RETURN_OK;
     }
 }
 
-const libconfig::Setting *CConfigManager::getSimulatorConfig()
+const libconfig::Setting *CConfigManager::getSimulatorConfig(void)
 {
     try {
-        libconfig::Setting &sim = _config.lookup("configuration.simulator");
-        return &sim[0];
+        libconfig::Setting &simulatorConfig = _config.lookup("configuration.simulator");
+        return &simulatorConfig[0];
     }
     catch (const libconfig::SettingNotFoundException &nfex) {
         logger.log(LOG_ERROR, "No %s set in config", nfex.what());
@@ -98,7 +112,7 @@ const libconfig::Setting *CConfigManager::getSimulatorConfig()
     }
 }
 
-std::string CConfigManager::version()
+std::string CConfigManager::version(void)
 {
     if (_configFileVersion.empty()) {
         try {
@@ -112,7 +126,7 @@ std::string CConfigManager::version()
     return _configFileVersion;
 }
 
-std::string CConfigManager::name()
+std::string CConfigManager::name(void)
 {
     if (_configName.empty()) {
         try {

@@ -27,9 +27,12 @@ int main(int argc, char *argv[])
 
     CConfigManager config(cli.get<std::string>("config"));
 
-    config.init();
+    if (!config.init()) {
+        logger.log(LOG_ERROR, "Could not initialise configuration");
+        exit(1);
+    }
 
-    const libconfig::Setting *simConfig = config.getSimulatorConfig();
+    // const libconfig::Setting *simConfig = config.getSimulatorConfig();
 
     // std::string ip = simConfig->lookup("ipAddress");
 
