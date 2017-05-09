@@ -1,4 +1,5 @@
 #include "configmanager.h"
+#include <sys/stat.h>
 
 /**
  *   @brief  Default  constructor for CConfigManager
@@ -79,6 +80,10 @@ int CConfigManager::init(void)
 
     logger.log(LOG_INFO, "Loading configuration file: %s - %s (v%s) (v%d.%d.%d)", _configFilename.c_str(),
         name().c_str(), version().c_str(), LIBCONFIGXX_VER_MAJOR, LIBCONFIGXX_VER_MINOR, LIBCONFIGXX_VER_REVISION);
+
+    if (!dirExists(pluginDir())) {
+        logger.log(LOG_ERROR, "Plugin directory %s does not exist - plugins will be loaded", pluginDir().c_str());
+    }
 
     _root = &_config.getRoot();
 
@@ -172,4 +177,3 @@ std::string CConfigManager::name(void)
 
     return _configName;
 }
-
