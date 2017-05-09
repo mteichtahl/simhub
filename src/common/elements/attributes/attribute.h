@@ -1,27 +1,43 @@
 #ifndef __ATTRIBUTE_H
 #define __ATTRIBUTE_H
 
-#include <variant.hpp>
+#include "../../../libs/tz/tz.h"
+#include <chrono>
+#include <sstream>
 #include <string>
+#include <variant.hpp>
 
 typedef enum { INT_ATTRIBUTE = 0, FLOAT_ATTRIBUTE, STRING_ATTRIBUTE, BOOL_ATTRIBUTE } eAttribute_t;
+
 class Attribute
 {
 protected:
-    //std::variant<int64_t, float, double, bool, std::string> _value;
+    mpark::variant<int64_t, float, double, bool, std::string> _value;
+    mpark::variant<int64_t, float, double, bool, std::string> _defaultValue;
 
 public:
-    Attribute(void);
-
-   // template <typename T> virtual T getValue(void);
-
     std::string _name;
     std::string _description;
+    std::chrono::milliseconds _lastUpdate;
     eAttribute_t _type;
-    std::string _defaultValue;
-    std::string _value;
-    const char *toString();
-    std::string getValue() { return _value; };
+
+    Attribute(void);
+    template <typename T> void setValue(T value)
+    {
+        _value = value;
+        _lastUpdate = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch());
+    };
+    template <typename T> T getValue(void) { return mpark::get<T>(_value); };
+    template <typename T> std::string getValueToString(void)
+    {
+        std::ostringstream oss; // create a stream
+        oss << mpark::get<T>(_value); // insert value to stream
+        return oss.str(); // extract value and return
+    }
+
+    std::string lastUpdateString();
+    std::chrono::milliseconds lastUpdate();
 };
 
 #endif
