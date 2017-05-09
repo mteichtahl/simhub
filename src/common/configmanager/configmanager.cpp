@@ -38,6 +38,25 @@ bool CConfigManager::fileExists(std::string filename)
     return (filename.size() > 0 && access(filename.c_str(), 0) == 0);
 }
 
+/**
+ *   @brief check if a directory on the file system exists
+ *
+ *   @param  std::string A string representing the name of the directory to check
+ *
+ *   @return bool true if directory exists, otherwise false
+ */
+bool CConfigManager::dirExists(std::string dirname)
+{
+    if (dirname.size() > 0 && access(dirname.c_str(), 0) == 0) {
+        struct stat status;
+        stat(dirname.c_str(), &status);
+        if (status.st_mode & S_IFDIR) {
+            return true;
+        }
+    }
+    return false;
+}
+
 std::string CConfigManager::getConfigFilename(void)
 {
     return _configFilename;
