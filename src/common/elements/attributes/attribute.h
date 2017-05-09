@@ -1,7 +1,7 @@
 #ifndef __ATTRIBUTE_H
 #define __ATTRIBUTE_H
 
-#include "../../../libs/tz/tz.h"
+#include "../../../libs/tz/tz.h" // https://github.com/HowardHinnant/date
 #include <chrono>
 #include <sstream>
 #include <string>
@@ -18,14 +18,14 @@ protected:
 public:
     std::string _name;
     std::string _description;
-    std::chrono::milliseconds _lastUpdate;
+    std::chrono::milliseconds _timestamp;
     eAttribute_t _type;
 
     Attribute(void);
     template <typename T> void setValue(T value)
     {
         _value = value;
-        _lastUpdate = std::chrono::duration_cast<std::chrono::milliseconds>(
+        _timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now().time_since_epoch());
     };
     template <typename T> T getValue(void) { return mpark::get<T>(_value); };
@@ -36,8 +36,8 @@ public:
         return oss.str(); // extract value and return
     }
 
-    std::string lastUpdateString();
-    std::chrono::milliseconds lastUpdate();
+    std::string timestampString();
+    std::chrono::milliseconds timestamp();
 };
 
 #endif
