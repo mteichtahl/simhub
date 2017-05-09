@@ -26,6 +26,8 @@ public:
     void log(const int category, const char *msg, ...);
     // check if we are able to log
     inline bool canLog() { return canZlog; }
+    // get the config file name
+    inline std::string configFilename() { return _configFilename; }
 
 protected:
     bool canZlog; ///< true when using zlog, cout otherwise
