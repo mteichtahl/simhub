@@ -1,7 +1,7 @@
 #ifndef __ATTRIBUTE_H
 #define __ATTRIBUTE_H
 
-//#include <variant>
+#include <variant.hpp>
 #include <string>
 
 typedef enum { INT_ATTRIBUTE = 0, FLOAT_ATTRIBUTE, STRING_ATTRIBUTE, BOOL_ATTRIBUTE } eAttribute_t;
