@@ -8,13 +8,12 @@
 #include <unistd.h>
 #endif
 
+#include "log/clog.h"
 #include <iostream>
 #include <libconfig.h++>
 #include <map>
 #include <string>
 #include <vector>
-
-#include "log/clog.h"
 
 #define RETURN_OK 1
 #define RETURN_ERROR -1
