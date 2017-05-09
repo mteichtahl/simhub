@@ -31,18 +31,18 @@ CLog::~CLog()
 void CLog::init(std::string configFilename)
 {
     // set the default zlog config file name - defaults to config/zlog.conf
-    configFilename = configFilename.c_str();
+    _configFilename = configFilename;
 
     // set the maximum variadic argument length
     maxVA_length = MAX_VA_LENGTH;
 
     // zlog_init() reads configuration from the file confpath.
-    zlog = ::zlog_init(configFilename.c_str());
+    zlog = zlog_init(_configFilename.c_str());
 
     // cannot load the zlog configuration so log an error
     if (zlog) {
         // display the error then return
-        log(LOG_ERROR, "Cant load zlog config %s - All output will be to stdout", configFilename.c_str());
+        log(LOG_ERROR, "Cant load zlog config %s - All output will be to stdout", _configFilename.c_str());
     }
     else {
         // setup the correct categories

@@ -26,7 +26,7 @@ public:
 
 protected:
     bool canZlog; ///< true when using zlog, cout otherwise
-    const char *configFilename; ///< location of the zlong configuration file
+    std::string _configFilename; ///< location of the zlong configuration file
     zlog_category_t *infoCategory; ///< a zlog category for informational logging
     zlog_category_t *errorCategory; ///< a zlog category for error logging
     zlog_category_t *debugCategory; ///< a zlog category for error logging
