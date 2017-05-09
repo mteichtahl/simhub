@@ -12,8 +12,8 @@ typedef enum { INT_ATTRIBUTE = 0, FLOAT_ATTRIBUTE, STRING_ATTRIBUTE, BOOL_ATTRIB
 class Attribute
 {
 protected:
-    mpark::variant<int64_t, float, double, bool, std::string> _value;
-    mpark::variant<int64_t, float, double, bool, std::string> _defaultValue;
+    mpark::variant<int64_t, int, float, double, bool, std::string> _value;
+    mpark::variant<int64_t, int, float, double, bool, std::string> _defaultValue;
 
 public:
     std::string _name;
@@ -25,8 +25,7 @@ public:
     template <typename T> void setValue(T value)
     {
         _value = value;
-        _timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::system_clock::now().time_since_epoch());
+        _timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
     };
     template <typename T> T getValue(void) { return mpark::get<T>(_value); };
     template <typename T> std::string getValueToString(void)
