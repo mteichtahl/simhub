@@ -33,6 +33,7 @@ protected:
     libconfig::Setting *_root;
 
     bool fileExists(std::string filename);
+    bool dirExists(std::string dirname);
     bool isValidSimConfiguration(void);
 
     std::vector<std::string> _requiredSimulatorConfigurationFields = { "ipAddress", "port", "type" };
