@@ -35,6 +35,7 @@ Makefile
 **/*.o
 obj/**
 bin/simhub*
+bin/test_detail.xml
 .vscode/
 logs/*
 GPATH
