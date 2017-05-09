@@ -126,6 +126,20 @@ std::string CConfigManager::version(void)
     return _configFileVersion;
 }
 
+std::string CConfigManager::pluginDir(void)
+{
+    if (_pluginDir.empty()) {
+        try {
+            _pluginDir = (const char *)_config.lookup("pluginDir");
+        }
+        catch (const libconfig::SettingNotFoundException &nfex) {
+            logger.log(LOG_ERROR, "No plugin directory set in config");
+        }
+    }
+
+    return _pluginDir;
+}
+
 std::string CConfigManager::name(void)
 {
     if (_configName.empty()) {
@@ -139,3 +153,4 @@ std::string CConfigManager::name(void)
 
     return _configName;
 }
+

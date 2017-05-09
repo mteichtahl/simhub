@@ -29,6 +29,7 @@ protected:
     std::string _configFilename;
     std::string _configFileVersion;
     std::string _configName;
+    std::string _pluginDir;
     libconfig::Setting *_root;
 
     bool fileExists(std::string filename);
@@ -44,6 +45,7 @@ public:
     int init(void);
     std::string version(void);
     std::string name(void);
+    std::string pluginDir(void);
 
     const libconfig::Setting *getSimulatorConfig(void);
 };

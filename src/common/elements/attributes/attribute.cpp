@@ -12,3 +12,13 @@ const char *Attribute::toString()
         _defaultValue.c_str(), _value.c_str());
     return ret;
 }
+
+// template <typename T> Attribute::getValue(void)
+// {
+//     try {
+//         return std::get<T>(_value);
+//     }
+//     catch(std::bad_variant_access &v) {
+//         logger.log(LOG_ERROR, "invalid variant type coersion");
+//     }
+// }
