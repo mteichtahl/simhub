@@ -1,4 +1,4 @@
-#include <gtest/gtest.h>
+#include "test_logging.h"
 
 #include "plugins/simsource/simsource.h"
 
