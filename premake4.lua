@@ -16,7 +16,7 @@ solution "simhub"
         language "C++"
         files { "src/app/**.cpp", "src/app/**.h", 
                 "src/common/**.h", "src/common/**.cpp" }
-        includedirs { "src", "src/common" }
+        includedirs { "src", "src/common", "src/libs/variant/include", "src/libs/variant/include/mpark" }
         links { "zlog", "pthread", "config++" }
         targetdir ("bin")
         buildoptions { "--std=c++14" }
@@ -29,7 +29,7 @@ solution "simhub"
         files { "src/common/**.h", "src/common/**.cpp", 
                 "src/test/**.h", "src/test/**.cpp", 
                 "src/libs/googletest/src/gtest-all.cc" }
-        includedirs { "src/libs/googletest/include", "src/libs/googletest", "src", "src/common" }
+        includedirs { "src/libs/googletest/include", "src/libs/googletest", "src", "src/common", "src/libs/variant/include", "src/libs/variant/include/mpark" }
         links { "zlog", "pthread", "config++" }
         targetdir ("bin")
         buildoptions { "--std=c++14" }
