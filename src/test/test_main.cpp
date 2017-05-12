@@ -1,6 +1,9 @@
 #include "test_logging.h"
+#include <thread>
+#include <gtest/gtest.h>
 
 #include "plugins/simsource/simsource.h"
+#include "concurrent_queue.h"
 
 // -- these are examples, showing the general test syntax
  
@@ -11,12 +14,7 @@ TEST(SquareRootTest, PositiveNos)
 TEST(SquareRootTest, ZeroAndNegativeNos) 
 { 
 }
-
-extern "C" void TestEnqueueEventHandler(void *eventData)
-{
-    std::cout << "event handler called" << std::endl;
-}
-
+					   
 TEST(PluginsTest, BasicTest)
 {
     SPHANDLE pluginInstance = NULL;
@@ -24,11 +22,40 @@ TEST(PluginsTest, BasicTest)
 
     memset(&pluginMethods, sizeof(simplug_vtable), 0);
     
-    int err = simplug_bootstrap("plugins/libsimplug_simsource.so", &pluginMethods);
+    int err = simplug_bootstrap("plugins/libsimplug_simsource.dylib", &pluginMethods);
 
     if (err == 0) {
         err = pluginMethods.simplug_init(&pluginInstance);
-        pluginMethods.simplug_commence_eventing(pluginInstance, &TestEnqueueEventHandler);
+
+		
+		ConcurrentQueue<std::string> testEventQueue;
+
+		// this callback will be called from the thread of the event
+		// generator which is assumed to not be the thread of the for
+		// loop below
+		
+		static std::function<void (void *)> testFnBounce = [&](void* eventData)
+			{
+				std::cout << "event handler called" << std::endl;
+				testEventQueue.push("...event...");
+			};
+
+		// proxy the C style call through to the lambda above, which
+		// manages the var capture
+		
+		auto testFn = [](void *eventData)
+			{
+				testFnBounce(eventData);
+			};
+		
+        pluginMethods.simplug_commence_eventing(pluginInstance, testFn);
+
+		for (size_t i = 0; i < 10; i++) {
+			std::string data = testEventQueue.pop();
+
+			std::cout << "just popped: " << data << " off the concurrent event queue" << std::endl;
+		}
+		
         pluginMethods.simplug_cease_eventing(pluginInstance);
         pluginMethods.simplug_release(pluginInstance);
     }

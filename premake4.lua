@@ -16,7 +16,11 @@ solution "simhub"
         language "C++"
         files { "src/app/**.cpp", "src/app/**.h", 
                 "src/common/**.h", "src/common/**.cpp" }
-        includedirs { "src", "src/common", "src/libs/variant/include", "src/libs/variant/include/mpark" }
+        includedirs { "src",
+					  "src/common",
+					  "src/libs/variant/include",
+					  "src/libs/variant/include/mpark",
+					  "src/libs/queue" }
         links { "zlog", "pthread", "config++" }
         targetdir ("bin")
         buildoptions { "--std=c++14" }
@@ -37,7 +41,8 @@ solution "simhub"
                       "src/common", 
                       "src/libs/variant/include", 
                       "src/libs",
-                      "src/libs/variant/include/mpark" }
+                      "src/libs/variant/include/mpark",
+					  "src/libs/queue" }
         links { "dl", "zlog", "pthread", "config++" }
         targetdir ("bin")
         buildoptions { "--std=c++14" }
@@ -46,5 +51,14 @@ solution "simhub"
 	    kind "SharedLib"
 		language "C++"
         targetdir ("bin/plugins")
-		files { "src/libs/plugins/simsource/**.h", "src/libs/plugins/simsource/**.cpp" }
+		files { "src/libs/plugins/simsource/**.h",
+			    "src/libs/plugins/simsource/**.cpp" }
+        includedirs { "src/libs/googletest/include", 
+                      "src/libs/googletest", 
+                      "src/common", 
+                      "src/libs/variant/include", 
+                      "src/libs",
+                      "src/libs/variant/include/mpark",
+					  "src/libs/queue" }
+        buildoptions { "--std=c++14" }
 		
