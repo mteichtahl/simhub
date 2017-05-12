@@ -33,7 +33,7 @@ TEST(PluginsTest, BasicTest)
         // generator which is assumed to not be the thread of the for
         // loop below
         
-        static std::function<void (void *)> testFnBounce = [&](void* eventData)
+        static std::function<void (SPHANDLE, void *)> testFnBounce = [&](SPHANDLE eventSource, void* eventData)
             {
                 std::cout << "event handler called" << std::endl;
                 testEventQueue.push("...event...");
@@ -42,9 +42,9 @@ TEST(PluginsTest, BasicTest)
         // proxy the C style call through to the lambda above, which
         // manages the var capture
         
-        auto testFn = [](void *eventData)
+        auto testFn = [](SPHANDLE eventSource, void *eventData)
             {
-                testFnBounce(eventData);
+                testFnBounce(eventSource, eventData);
             };
         
         pluginMethods.simplug_commence_eventing(pluginInstance, testFn);
