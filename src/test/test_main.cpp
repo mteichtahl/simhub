@@ -13,7 +13,7 @@ TEST(SquareRootTest, PositiveNos)
 TEST(SquareRootTest, ZeroAndNegativeNos) 
 { 
 }
-					   
+                       
 TEST(PluginsTest, BasicTest)
 {
     SPHANDLE pluginInstance = NULL;
@@ -26,35 +26,35 @@ TEST(PluginsTest, BasicTest)
     if (err == 0) {
         err = pluginMethods.simplug_init(&pluginInstance);
 
-		
-		ConcurrentQueue<std::string> testEventQueue;
+        
+        ConcurrentQueue<std::string> testEventQueue;
 
-		// this callback will be called from the thread of the event
-		// generator which is assumed to not be the thread of the for
-		// loop below
-		
-		static std::function<void (void *)> testFnBounce = [&](void* eventData)
-			{
-				std::cout << "event handler called" << std::endl;
-				testEventQueue.push("...event...");
-			};
+        // this callback will be called from the thread of the event
+        // generator which is assumed to not be the thread of the for
+        // loop below
+        
+        static std::function<void (void *)> testFnBounce = [&](void* eventData)
+            {
+                std::cout << "event handler called" << std::endl;
+                testEventQueue.push("...event...");
+            };
 
-		// proxy the C style call through to the lambda above, which
-		// manages the var capture
-		
-		auto testFn = [](void *eventData)
-			{
-				testFnBounce(eventData);
-			};
-		
+        // proxy the C style call through to the lambda above, which
+        // manages the var capture
+        
+        auto testFn = [](void *eventData)
+            {
+                testFnBounce(eventData);
+            };
+        
         pluginMethods.simplug_commence_eventing(pluginInstance, testFn);
 
-		for (size_t i = 0; i < 10; i++) {
-			std::string data = testEventQueue.pop();
+        for (size_t i = 0; i < 10; i++) {
+            std::string data = testEventQueue.pop();
 
-			std::cout << "just popped: " << data << " off the concurrent event queue" << std::endl;
-		}
-		
+            std::cout << "just popped: " << data << " off the concurrent event queue" << std::endl;
+        }
+        
         pluginMethods.simplug_cease_eventing(pluginInstance);
         pluginMethods.simplug_release(pluginInstance);
     }
