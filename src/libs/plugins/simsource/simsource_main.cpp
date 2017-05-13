@@ -11,12 +11,13 @@ protected:
     virtual void runTestEventLoop(void);
     EnqueueEventHandler _enqueueCallback;
     std::thread _testEventThread;
-
+    void *_callbackArg;
+    
 public:
     PluginStateManager(void);
     virtual ~PluginStateManager(void);
     
-    virtual void commenceEventing(EnqueueEventHandler enqueueCallback);
+    virtual void commenceEventing(EnqueueEventHandler enqueueCallback, void *arg);
     virtual void ceaseEventing(void);
 };
 
@@ -37,23 +38,21 @@ void PluginStateManager::runTestEventLoop(void)
     std::cout << "generating 9 events in a sleep loop" << std::endl;
     for(size_t i = 0; i < 9; i++) {
         sleep(1);
-        _enqueueCallback(this, (void *)"echo");
+        _enqueueCallback(this, (void *)"echo", _callbackArg);
     }
     std::cout << "done" << std::endl;
 }
 
-void PluginStateManager::commenceEventing(EnqueueEventHandler enqueueCallback)
+void PluginStateManager::commenceEventing(EnqueueEventHandler enqueueCallback, void *arg)
 {
     std::cout << "commence eventing" << std::endl;
     _enqueueCallback = enqueueCallback;
-    enqueueCallback(this, NULL);
+    _callbackArg = arg;
 }
 
 void PluginStateManager::ceaseEventing(void)
 {
     std::cout << "cease eventing" << std::endl;
-
-    _enqueueCallback(this, NULL);
 }
  
 // -- public C FFI
@@ -65,9 +64,9 @@ extern "C" {
         return 0;
     }
 
-    void simplug_commence_eventing(SPHANDLE plugin_instance, EnqueueEventHandler enqueue_callback)
+    void simplug_commence_eventing(SPHANDLE plugin_instance, EnqueueEventHandler enqueue_callback, void *arg)
     {
-        static_cast<PluginStateManager*>(plugin_instance)->commenceEventing(enqueue_callback);
+        static_cast<PluginStateManager*>(plugin_instance)->commenceEventing(enqueue_callback, arg);
     }
 
     void simplug_cease_eventing(SPHANDLE plugin_instance)
