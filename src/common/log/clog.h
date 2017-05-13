@@ -14,15 +14,20 @@ enum logCategory { LOG_INFO = 1, LOG_ERROR = 2, LOG_DEBUG = 3 };
 /**
  *  @brief Class allowing for logging to various targets based on zlog.
  */
-class CLog {
+class CLog
+{
 public:
     // Default constructor
     CLog();
     // Destructor
     ~CLog();
-    void init(std::string configFilename);
+    bool init(std::string configFilename = "");
     // log @msg to specific @category - uses variadic parameters
     void log(const int category, const char *msg, ...);
+    // check if we are able to log
+    inline bool canLog() { return canZlog; }
+    // get the config file name
+    inline std::string configFilename() { return _configFilename; }
 
 protected:
     bool canZlog; ///< true when using zlog, cout otherwise

@@ -3,6 +3,7 @@
 
 #include "plugins/simsource/simsource.h"
 #include "concurrent_queue.h"
+#include "test_logging.h"
 
 // -- these are examples, showing the general test syntax
  

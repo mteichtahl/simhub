@@ -8,13 +8,12 @@
 #include <unistd.h>
 #endif
 
+#include "log/clog.h"
 #include <iostream>
 #include <libconfig.h++>
 #include <map>
 #include <string>
 #include <vector>
-
-#include "log/clog.h"
 
 #define RETURN_OK 1
 #define RETURN_ERROR -1
@@ -33,6 +32,7 @@ protected:
     libconfig::Setting *_root;
 
     bool fileExists(std::string filename);
+    bool dirExists(std::string dirname);
     bool isValidSimConfiguration(void);
 
     std::vector<std::string> _requiredSimulatorConfigurationFields = { "ipAddress", "port", "type" };
