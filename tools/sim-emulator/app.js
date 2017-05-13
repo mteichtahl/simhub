@@ -92,6 +92,6 @@ function handleConnection(conn) {
 
 
 
-    conn.write(outString);
+    conn.write(outString+"\n");
   }
 }
