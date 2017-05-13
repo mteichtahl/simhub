@@ -15,7 +15,8 @@ solution "simhub"
         kind "ConsoleApp"
         language "C++"
         files { "src/app/**.cpp", "src/app/**.h", 
-                "src/common/**.h", "src/common/**.cpp" }
+                "src/common/**.h", "src/common/**.cpp",
+                "src/libs/common/plugins/**.cpp","src/libs/common/plugins/**.h"}
         includedirs { "src", "src/common", "src/libs/variant/include", "src/libs/variant/include/mpark" }
         links { "zlog", "pthread", "config++" }
         targetdir ("bin")
