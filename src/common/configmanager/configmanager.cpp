@@ -25,6 +25,7 @@ CConfigManager::CConfigManager(std::string filename)
 CConfigManager::~CConfigManager()
 {
     logger.log(LOG_INFO, "Closing configuration");
+    delete simConfigManager;
 }
 
 /**
@@ -99,72 +100,9 @@ int CConfigManager::init(void)
     // get the root of the configration
     _root = &_config.getRoot();
 
-    // check various configuration sections are correct
-    if (isValidSimConfiguration()) {
-        return RETURN_OK;
-    }
-    else {
-        return RETURN_ERROR;
-    }
-    return RETURN_ERROR;
-}
+    simConfigManager = new SimConfigManager(&_config, _pluginDir);
 
-/**
- *   @brief check if the simulator section of the configuration file is correct
- *
- *   @return bool true if configuration ok, otherwise false
- */
-bool CConfigManager::isValidSimConfiguration(void)
-{
-    const libconfig::Setting *simConfig = getSimulatorConfig();
-    int hasError = false;
-
-    if (!simConfig) {
-        logger.log(LOG_ERROR, "Could not get simulator configuration");
-        return false;
-    }
-
-    // iterate through the mandatory config fields and check they are present
-    std::vector<std::string>::iterator it;
-
-    for (it = _requiredSimulatorConfigurationFields.begin(); it < _requiredSimulatorConfigurationFields.end(); it++) {
-        if (!simConfig->exists(it->c_str())) {
-            hasError++;
-            logger.log(LOG_ERROR, " - mandatory field '%s' does not exist in simulator config", it->c_str());
-        }
-    }
-
-    if (hasError) {
-        logger.log(LOG_ERROR, "%d missing field(s) in simulator configuration", hasError);
-        return RETURN_ERROR;
-    }
-    else {
-        // check the plugin for the simulator is present
-        std::string pluginName = simConfig->lookup("type");
-
-        if (!fileExists(pluginDir() + "/" + pluginName + ".so")) {
-            logger.log(LOG_ERROR, " - simulator plugin %s does not exist ", (pluginDir() + "/" + pluginName + ".so").c_str());
-            return RETURN_ERROR;
-        }
-        return RETURN_OK;
-    }
-}
-
-/**
- *   @brief get the configuration filename
- *
- *   @return libconfig::Setting configuration file setting section for simulator
- */
-const libconfig::Setting *CConfigManager::getSimulatorConfig(void)
-{
-    try {
-        libconfig::Setting &simulatorConfig = _config.lookup("configuration.simulator");
-        return &simulatorConfig[0];
-    }
-    catch (const libconfig::SettingNotFoundException &nfex) {
-        logger.log(LOG_ERROR, "No %s set in config", nfex.what());
-        return NULL;
-    }
+    return RETURN_OK;
 }
 
 /**

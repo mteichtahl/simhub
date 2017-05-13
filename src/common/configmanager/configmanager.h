@@ -9,6 +9,7 @@
 #endif
 
 #include "log/clog.h"
+#include "simConfigManager/simConfigManager.h"
 #include <iostream>
 #include <libconfig.h++>
 #include <map>
@@ -16,7 +17,7 @@
 #include <vector>
 
 #define RETURN_OK 1
-#define RETURN_ERROR -1
+#define RETURN_ERROR 0
 
 /**
  * Base class for all pin based classes
@@ -33,9 +34,9 @@ protected:
 
     bool fileExists(std::string filename);
     bool dirExists(std::string dirname);
-    bool isValidSimConfiguration(void);
 
-    std::vector<std::string> _requiredSimulatorConfigurationFields = { "ipAddress", "port", "type" };
+    SimConfigManager *simConfigManager;
+
     std::vector<std::string> _requiredDeviceConfigurationFields = { "serialNumber", "uid", "name", "dhcp" };
 
 public:
@@ -46,8 +47,6 @@ public:
     std::string version(void);
     std::string name(void);
     std::string pluginDir(void);
-
-    const libconfig::Setting *getSimulatorConfig(void);
 };
 
 #endif
