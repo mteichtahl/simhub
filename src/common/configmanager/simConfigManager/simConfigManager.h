@@ -9,6 +9,8 @@
 #endif
 
 #include "../../log/clog.h"
+#include "concurrent_queue.h"
+#include "simsource.h"
 #include <iostream>
 #include <libconfig.h++>
 #include <map>
@@ -28,6 +30,8 @@ protected:
     libconfig::Setting *_simConfig;
     std::string _pluginDir;
     std::string _pluginName;
+    SPHANDLE _pluginInstance = NULL;
+    simplug_vtable _pluginMethods;
 
 public:
     SimConfigManager(libconfig::Config *config, std::string pluginDir);

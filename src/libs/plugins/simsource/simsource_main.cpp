@@ -3,7 +3,7 @@
 #include <thread>
 #include <unistd.h>
 
-#include "simsource_main.h"
+#include "simsource.h"
 
 class PluginStateManager
 {
@@ -24,7 +24,7 @@ PluginStateManager::PluginStateManager(void)
     : _enqueueCallback(NULL)
 {
     std::cout << "simplugin init'd" << std::endl;
-    _testEventThread = std::thread(std::bind(&PluginStateManager::runTestEventLoop, this));
+    //_testEventThread = std::thread(std::bind(&PluginStateManager::runTestEventLoop, this));
 }
 
 PluginStateManager::~PluginStateManager(void)
