@@ -6,19 +6,20 @@ var _ = require('lodash');
 var indicators = [
   // values are only 0 or 1
   'I_OH_SPEED_TRIM', 'I_OH_STDBY_POWER_OFF', 'I_OH_SOURCE_OFF1',
-  'I_OH_SOURCE_OFF2'
+  'I_OH_SOURCE_OFF2', 'I_MC_FUEL', 'I_MC_HYDRAULICS', 'I_MC_DOORS'
 ];
 
 var analogs = [
   // values are 0 - 255
   'A_ASP_ADF_1_VOLUME', 'A_ASP_ADF_2_VOLUME', 'A_ASP_MARKER_VOLUME',
-  'A_CDU1_BRIGHTNESS', 'A_CDU2_BRIGHTNESS'
+  'A_CDU1_BRIGHTNESS', 'A_CDU2_BRIGHTNESS', 'R_XPDR', 'R_XPDR2'
 ];
 
 
 var gauges = [
   // floats
-  'G_OH_TEMPERATURE', 'G_OH_FUEL_TEMP'
+  'G_OH_TEMPERATURE', 'G_OH_FUEL_TEMP', 'G_PED_RUDDER_TRIM', 'G_THROTTLE_LEFT',
+  'G_THROTTLE_RIGHT'
 ]
 
 cli.version('1.0.0')
