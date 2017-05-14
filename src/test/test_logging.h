@@ -12,7 +12,11 @@
 TEST(LoggerTest, InvalidConfigFile)
 {
     EXPECT_EQ(false, logger.init());
+    EXPECT_EQ(false, logger.canLog());
+
     EXPECT_EQ(false, logger.init(""));
+    EXPECT_EQ(false, logger.canLog());
+
     EXPECT_EQ(false, logger.init("invalid"));
     EXPECT_EQ(false, logger.canLog());
 }
