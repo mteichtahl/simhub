@@ -50,6 +50,7 @@ solution "simhub"
     project "simplug_simsource"
 	    kind "SharedLib"
 		language "C++"
+        targetname "prepare3d"
         targetdir ("bin/plugins")
 		files { "src/libs/plugins/simsource/**.h",
 			    "src/libs/plugins/simsource/**.cpp" }
