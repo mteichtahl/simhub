@@ -67,8 +67,8 @@ bool SimConfigManager::validateConfig(void)
     // check the plugin for the simulator is present
     _pluginName = _simConfig->lookup("type").c_str();
 
-    if (!fileExists(_pluginDir + "/" + _pluginName + ".so")) {
-        logger.log(LOG_ERROR, " - simulator plugin %s does not exist ", (_pluginName + "/" + _pluginName + ".dylib").c_str());
+    if (!fileExists(_pluginDir + "/lib" + _pluginName + ".dylib")) {
+        logger.log(LOG_ERROR, " - simulator plugin %s does not exist ", (_pluginDir + "/lib" + _pluginName + ".dylib").c_str());
         return RETURN_ERROR;
     }
 
