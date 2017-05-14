@@ -92,8 +92,6 @@ function handleConnection(conn) {
       outString += (`${ind} = ${value}\n`);
     }
 
-
-
     conn.write(outString + '\n');
   }
 }
