@@ -36,21 +36,21 @@ int main(int argc, char *argv[])
 
     // std::string ip = simConfig->lookup("ipAddress");
 
-    Source el("element", "desc");
+    // Source el("element", "desc");
 
-    Attribute attr;
-    attr._name = "at1name";
-    attr._description = "lkfjdslfjkds";
-    attr._type = FLOAT_ATTRIBUTE;
-    attr.setValue<float>(1.223);
+    // Attribute attr;
+    // attr._name = "at1name";
+    // attr._description = "lkfjdslfjkds";
+    // attr._type = FLOAT_ATTRIBUTE;
+    // attr.setValue<float>(1.223);
 
-    el.addAttribute(attr);
+    // el.addAttribute(attr);
 
-    Attribute at = el.getAttribute("at1name");
+    // Attribute at = el.getAttribute("at1name");
 
-    printf("----> %0.5f\n", at.getValue<float>());
-    printf("----> %s\n", at.getValueToString<float>().c_str());
-    printf("----> %s\n", at.timestampString().c_str());
+    // printf("----> %0.5f\n", at.getValue<float>());
+    // printf("----> %s\n", at.getValueToString<float>().c_str());
+    // printf("----> %s\n", at.timestampString().c_str());
 
     return 0;
 }
