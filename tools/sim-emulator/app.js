@@ -3,6 +3,8 @@ var cli = require('commander');
 var net = require('net');
 var _ = require('lodash');
 
+var DATA_INTERVAL_MS = 500;
+
 var indicators = [
   // values are only 0 or 1
   'I_OH_SPEED_TRIM', 'I_OH_STDBY_POWER_OFF', 'I_OH_SOURCE_OFF1',
@@ -61,8 +63,8 @@ function handleConnection(conn) {
       (a) => {
         getData(a, conn);
       },
-      500, {'indicators': indicators, 'analog': analogs, 'gauges': gauges},
-      conn);
+      DATA_INTERVAL_MS,
+      {'indicators': indicators, 'analog': analogs, 'gauges': gauges}, conn);
 
   function getData(data, conn) {
     var indicatorCount = _.random(0, data.indicators.length - 1);
@@ -92,6 +94,6 @@ function handleConnection(conn) {
 
 
 
-    conn.write(outString+"\n");
+    conn.write(outString + '\n');
   }
 }
