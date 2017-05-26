@@ -9,11 +9,34 @@ extern "C"
 #endif
 #define SPHANDLE void *
     typedef void (*EnqueueEventHandler)(SPHANDLE eventSource, void *event, void *arg);
-    
+
+    typedef enum {
+        CONFIG_INT = 0,
+        CONFIG_STRING,
+        CONFIG_FLOAT
+    } ConfigType;
+
+    typedef union {
+        float float_value;
+        long int_value;
+        char *string_value;
+    } VariantUnion;
+
+    typedef struct {
+        ConfigType type;
+        long length;
+        VariantUnion value;
+    } ConfigEntry;    
+
     //! basic block of function pointers
     typedef struct {
         //! inits the state manager handle 
         int (*simplug_init)(SPHANDLE *plugin_instance);
+
+        //! pass in named config key/val pair group
+        int (*simplug_bind_config_values)(SPHANDLE plugin_instance, char *group_name, ConfigEntry **values, int count);
+        //! pre-flight checks method
+        int (*simplug_preflight_complete)(SPHANDLE plugin_instance);
         
         /**
          * tell the manager to prepare event loop - the final argment
@@ -51,6 +74,10 @@ extern "C"
         
         plugin_vtable->simplug_init = (int (*)(SPHANDLE*))dlsym(handle, "simplug_init");
         
+        plugin_vtable->simplug_bind_config_values = (int (*)(SPHANDLE, char *, ConfigEntry**, int))dlsym(handle, "simplug_bind_config_values");
+
+        plugin_vtable->simplug_preflight_complete = (int (*)(SPHANDLE))dlsym(handle, "simplug_preflight_complete");
+
         plugin_vtable->simplug_commence_eventing = (void (*)(SPHANDLE,
                                                              EnqueueEventHandler,
                                                              void *))dlsym(handle, "simplug_commence_eventing");

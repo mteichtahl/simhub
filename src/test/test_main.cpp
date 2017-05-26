@@ -58,23 +58,48 @@ void EventConsumer::runConsumptionTest(void)
     if (err == 0) {
         err = pluginMethods.simplug_init(&pluginInstance);
 
-        // proxy the C style lambda call through to the member
-        // function above
-        
-        auto testFn = [](SPHANDLE eventSource, void *eventData, void *arg) {
-            static_cast<EventConsumer*>(arg)->eventCallback(eventSource, eventData);
-        };
-        
-        pluginMethods.simplug_commence_eventing(pluginInstance, testFn, this);
+        static const int TEST_VAL_COUNT = 3;
+        ConfigEntry *configValues[TEST_VAL_COUNT];
+        configValues[0] = (ConfigEntry*)calloc(1, sizeof(ConfigEntry));
+        configValues[0]->type = CONFIG_INT;
+        configValues[0]->value.int_value = 42;
+        configValues[0]->length = sizeof(configValues[0]->value.int_value);
+        configValues[1] = (ConfigEntry*)calloc(1, sizeof(ConfigEntry));
+        configValues[1]->type = CONFIG_STRING;
+        configValues[1]->value.string_value = (char *)"42";
+        configValues[1]->length = strlen(configValues[1]->value.string_value);
+        configValues[2] = (ConfigEntry*)calloc(1, sizeof(ConfigEntry));
+        configValues[2]->type = CONFIG_FLOAT;
+        configValues[2]->value.float_value = 42.42;
+        configValues[2]->length = sizeof(configValues[2]->value.float_value);
 
-        for (size_t i = 0; i < 9; i++) {
-            std::string data = _testEventQueue.pop();
+        pluginMethods.simplug_bind_config_values(pluginInstance, (char *)"test_group", configValues, TEST_VAL_COUNT);
 
-            std::cout << "just popped: " << data << " off the concurrent event queue" << std::endl;
+        if (pluginMethods.simplug_preflight_complete(pluginInstance) == 0) {
+            // proxy the C style lambda call through to the member
+            // function above
+            
+            auto testFn = [](SPHANDLE eventSource, void *eventData, void *arg) {
+                static_cast<EventConsumer*>(arg)->eventCallback(eventSource, eventData);
+            };
+            
+            pluginMethods.simplug_commence_eventing(pluginInstance, testFn, this);
+
+            for (size_t i = 0; i < 9; i++) {
+                std::string data = _testEventQueue.pop();
+
+                std::cout << "just popped: " << data << " off the concurrent event queue" << std::endl;
+            }
+            
+            pluginMethods.simplug_cease_eventing(pluginInstance);
+            pluginMethods.simplug_release(pluginInstance);
         }
-        
-        pluginMethods.simplug_cease_eventing(pluginInstance);
-        pluginMethods.simplug_release(pluginInstance);
+        else {
+            assert(false);
+        }
+    }
+    else {
+        assert(false);
     }
 }
 
