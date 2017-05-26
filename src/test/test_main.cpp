@@ -53,7 +53,7 @@ void EventConsumer::runConsumptionTest(void)
     memset(&pluginMethods, sizeof(simplug_vtable), 0);
 
     
-    int err = simplug_bootstrap("plugins/libsimplug_simsource.dylib", &pluginMethods);
+    int err = simplug_bootstrap("plugins/libprepare3d.dylib", &pluginMethods);
 
     if (err == 0) {
         err = pluginMethods.simplug_init(&pluginInstance);
