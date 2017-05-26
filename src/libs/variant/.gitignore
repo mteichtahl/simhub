@@ -15,7 +15,6 @@
 
 # Fortran module files
 *.mod
-*.smod
 
 # Compiled Static libraries
 *.lai
@@ -28,17 +27,5 @@
 *.out
 *.app
 
-Makefile
-*.make
-.DS_Store
-**/*.
-**/*.o
-obj/**
-bin/simhub*
-bin/test_detail.xml
-.vscode/
-logs/*
-GPATH
-GRTAGS
-GTAGS
-
+# build
+/build

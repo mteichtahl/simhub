@@ -41,15 +41,16 @@ int main(int argc, char *argv[])
     // Attribute attr;
     // attr._name = "at1name";
     // attr._description = "lkfjdslfjkds";
-    // attr._value = "1";
-    // attr._type = eAttribute_t::STRING_ATTRIBUTE;
+    // attr._type = FLOAT_ATTRIBUTE;
+    // attr.setValue<float>(1.223);
 
     // el.addAttribute(attr);
 
     // Attribute at = el.getAttribute("at1name");
 
-    // logger.log(LOG_INFO, at.toString());
-    // logger.log(LOG_INFO, "%d", el.attributeCount());
+    // printf("----> %0.5f\n", at.getValue<float>());
+    // printf("----> %s\n", at.getValueToString<float>().c_str());
+    // printf("----> %s\n", at.timestampString().c_str());
 
     return 0;
 }

@@ -1,4 +1,5 @@
 #include "configmanager.h"
+#include <sys/stat.h>
 
 /**
  *   @brief  Default  constructor for CConfigManager
@@ -24,6 +25,7 @@ CConfigManager::CConfigManager(std::string filename)
 CConfigManager::~CConfigManager()
 {
     logger.log(LOG_INFO, "Closing configuration");
+    delete simConfigManager;
 }
 
 /**
@@ -38,11 +40,40 @@ bool CConfigManager::fileExists(std::string filename)
     return (filename.size() > 0 && access(filename.c_str(), 0) == 0);
 }
 
+/**
+ *   @brief check if a directory on the file system exists
+ *
+ *   @param  std::string A string representing the name of the directory to check
+ *
+ *   @return bool true if directory exists, otherwise false
+ */
+bool CConfigManager::dirExists(std::string dirname)
+{
+    if (dirname.size() > 0 && access(dirname.c_str(), 0) == 0) {
+        struct stat status;
+        stat(dirname.c_str(), &status);
+        if (status.st_mode & S_IFDIR) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ *   @brief get the configuration filename
+ *
+ *   @return std::string configuration filename
+ */
 std::string CConfigManager::getConfigFilename(void)
 {
     return _configFilename;
 }
 
+/**
+ *   @brief initialise from the configuration file
+ *
+ *   @return int 1 if initialised, -1 otherwise
+ */
 int CConfigManager::init(void)
 {
     // read the config file and handle any errors
@@ -58,60 +89,27 @@ int CConfigManager::init(void)
         throw std::runtime_error("Config file parse error - See log file");
     }
 
-    logger.log(LOG_INFO, "Loading configuration file: %s - %s (v%s) (v%d.%d.%d)", _configFilename.c_str(),
-        name().c_str(), version().c_str(), LIBCONFIGXX_VER_MAJOR, LIBCONFIGXX_VER_MINOR, LIBCONFIGXX_VER_REVISION);
+    logger.log(LOG_INFO, "Loading configuration file: %s - %s (v%s) (v%d.%d.%d)", _configFilename.c_str(), name().c_str(), version().c_str(), LIBCONFIGXX_VER_MAJOR,
+        LIBCONFIGXX_VER_MINOR, LIBCONFIGXX_VER_REVISION);
 
+    // check if the plugin directory specified in the config file exists
+    if (!dirExists(pluginDir())) {
+        logger.log(LOG_ERROR, "Plugin directory %s does not exist - plugins will not be loaded", pluginDir().c_str());
+    }
+
+    // get the root of the configration
     _root = &_config.getRoot();
 
-    if (isValidSimConfiguration()) {
-        return RETURN_OK;
-    }
-    else {
-        return RETURN_ERROR;
-    }
-    return RETURN_ERROR;
+    simConfigManager = new SimConfigManager(&_config, _pluginDir);
+
+    return RETURN_OK;
 }
 
-bool CConfigManager::isValidSimConfiguration(void)
-{
-    const libconfig::Setting *simConfig = getSimulatorConfig();
-    int hasError = false;
-
-    if (!simConfig) {
-        logger.log(LOG_ERROR, "Could not get simulator configuration");
-        return false;
-    }
-
-    std::vector<std::string>::iterator it;
-
-    for (it = _requiredSimulatorConfigurationFields.begin(); it < _requiredSimulatorConfigurationFields.end(); it++) {
-        if (!simConfig->exists(it->c_str())) {
-            hasError++;
-            logger.log(LOG_ERROR, " - mandatory field '%s' does not exist in simulator config", it->c_str());
-        }
-    }
-
-    if (hasError) {
-        logger.log(LOG_ERROR, "%d missing field(s) in simulator configuration", hasError);
-        return RETURN_ERROR;
-    }
-    else {
-        return RETURN_OK;
-    }
-}
-
-const libconfig::Setting *CConfigManager::getSimulatorConfig(void)
-{
-    try {
-        libconfig::Setting &simulatorConfig = _config.lookup("configuration.simulator");
-        return &simulatorConfig[0];
-    }
-    catch (const libconfig::SettingNotFoundException &nfex) {
-        logger.log(LOG_ERROR, "No %s set in config", nfex.what());
-        return NULL;
-    }
-}
-
+/**
+ *   @brief get the configuration version
+ *
+ *   @return std::string configuration version
+ */
 std::string CConfigManager::version(void)
 {
     if (_configFileVersion.empty()) {
@@ -126,6 +124,30 @@ std::string CConfigManager::version(void)
     return _configFileVersion;
 }
 
+/**
+ *   @brief get the configuration plugin directory
+ *
+ *   @return std::string configuration plugin directory
+ */
+std::string CConfigManager::pluginDir(void)
+{
+    if (_pluginDir.empty()) {
+        try {
+            _pluginDir = (const char *)_config.lookup("pluginDir");
+        }
+        catch (const libconfig::SettingNotFoundException &nfex) {
+            logger.log(LOG_ERROR, "No plugin directory set in config");
+        }
+    }
+
+    return _pluginDir;
+}
+
+/**
+ *   @brief get the configuration name
+ *
+ *   @return std::string configuration name
+ */
 std::string CConfigManager::name(void)
 {
     if (_configName.empty()) {

@@ -16,7 +16,11 @@ solution "simhub"
         language "C++"
         files { "src/app/**.cpp", "src/app/**.h", 
                 "src/common/**.h", "src/common/**.cpp" }
-        includedirs { "src", "src/common" }
+        includedirs { "src",
+					  "src/common",
+					  "src/libs/variant/include",
+					  "src/libs/variant/include/mpark",
+					  "src/libs/queue" }
         links { "zlog", "pthread", "config++" }
         targetdir ("bin")
         buildoptions { "--std=c++14" }
@@ -26,12 +30,36 @@ solution "simhub"
     project "simhub_tests"
         kind "ConsoleApp"
 	    language "C++"
-        files { "src/common/**.h", "src/common/**.cpp", 
-                "src/test/**.h", "src/test/**.cpp", 
+        files { "src/common/**.h", 
+                "src/common/**.cpp", 
+                "src/test/**.h", 
+                "src/test/**.cpp", 
                 "src/libs/googletest/src/gtest-all.cc" }
-        includedirs { "src/libs/googletest/include", "src/libs/googletest", "src", "src/common" }
-        links { "zlog", "pthread", "config++" }
+        includedirs { "src/libs/googletest/include", 
+                      "src/libs/googletest", 
+                      "src", 
+                      "src/common", 
+                      "src/libs/variant/include", 
+                      "src/libs",
+                      "src/libs/variant/include/mpark",
+					  "src/libs/queue" }
+        links { "dl", "zlog", "pthread", "config++" }
         targetdir ("bin")
         buildoptions { "--std=c++14" }
 
-
+    project "simplug_simsource"
+	    kind "SharedLib"
+		language "C++"
+        targetname "prepare3d"
+        targetdir ("bin/plugins")
+		files { "src/libs/plugins/simsource/**.h",
+			    "src/libs/plugins/simsource/**.cpp" }
+        includedirs { "src/libs/googletest/include", 
+                      "src/libs/googletest", 
+                      "src/common", 
+                      "src/libs/variant/include", 
+                      "src/libs",
+                      "src/libs/variant/include/mpark",
+					  "src/libs/queue" }
+        buildoptions { "--std=c++14" }
+		

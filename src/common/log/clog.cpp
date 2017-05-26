@@ -28,21 +28,30 @@ CLog::~CLog()
     }
 }
 
-void CLog::init(std::string configFilename)
+bool CLog::init(std::string configFilename)
 {
+
+    if (configFilename.empty()) {
+        log(LOG_ERROR, "No logging configuration file specified");
+        canZlog = false;
+        return false;
+    }
+
     // set the default zlog config file name - defaults to config/zlog.conf
-    configFilename = configFilename.c_str();
+    _configFilename = configFilename;
 
     // set the maximum variadic argument length
     maxVA_length = MAX_VA_LENGTH;
 
     // zlog_init() reads configuration from the file confpath.
-    zlog = ::zlog_init(configFilename.c_str());
+    zlog = zlog_init(_configFilename.c_str());
 
     // cannot load the zlog configuration so log an error
-    if (zlog) {
+    if (zlog < 0) {
         // display the error then return
-        log(LOG_ERROR, "Cant load zlog config %s - All output will be to stdout", configFilename.c_str());
+        log(LOG_ERROR, "Cant load zlog config %s - All output will be to stdout", _configFilename.c_str());
+        canZlog = false;
+        return false;
     }
     else {
         // setup the correct categories
@@ -53,6 +62,7 @@ void CLog::init(std::string configFilename)
         // now we can start logging to the the zlog categories (rather the stdout)
         canZlog = true;
         log(LOG_INFO, "Logging engine v%s started.", ::zlog_version());
+        return true;
     }
 }
 
