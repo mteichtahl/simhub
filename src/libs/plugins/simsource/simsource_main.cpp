@@ -17,6 +17,8 @@ public:
     PluginStateManager(void);
     virtual ~PluginStateManager(void);
     
+    virtual int bindConfigValues(char *group_name, ConfigEntry **values, int count);
+    virtual int preflightComplete(void);
     virtual void commenceEventing(EnqueueEventHandler enqueueCallback, void *arg);
     virtual void ceaseEventing(void);
 };
@@ -43,6 +45,17 @@ void PluginStateManager::runTestEventLoop(void)
     std::cout << "done" << std::endl;
 }
 
+int PluginStateManager::bindConfigValues(char *group_name, ConfigEntry **values, int count)
+{
+    std::cout << "bindConfigValues: " << group_name << ", " << count << std::endl;
+    return 0;
+}
+
+int PluginStateManager::preflightComplete(void)
+{
+    return 0;
+}
+
 void PluginStateManager::commenceEventing(EnqueueEventHandler enqueueCallback, void *arg)
 {
     std::cout << "commence eventing" << std::endl;
@@ -64,6 +77,15 @@ extern "C" {
         return 0;
     }
 
+    int simplug_bind_config_values(SPHANDLE plugin_instance, char *group_name, ConfigEntry **values, int count)
+    {
+        return static_cast<PluginStateManager *>(plugin_instance)->bindConfigValues(group_name, values, count);
+    }
+
+    int simplug_preflight_complete(SPHANDLE plugin_instance)
+    {
+        return static_cast<PluginStateManager *>(plugin_instance)->preflightComplete();
+    }
     void simplug_commence_eventing(SPHANDLE plugin_instance, EnqueueEventHandler enqueue_callback, void *arg)
     {
         static_cast<PluginStateManager*>(plugin_instance)->commenceEventing(enqueue_callback, arg);
