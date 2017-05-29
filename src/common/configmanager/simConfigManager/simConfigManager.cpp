@@ -11,14 +11,9 @@ SimConfigManager::SimConfigManager(libconfig::Config *config, std::string plugin
     _config = config;
     _pluginDir = pluginDir;
 
-    try {
-        _simConfig = &_config->lookup("configuration.simulator")[0];
-        if (!validateConfig()) {
-            logger.log(LOG_ERROR, "[SimConfigManager] Unable to validate config.");
-        }
-    }
-    catch (const libconfig::SettingNotFoundException &nfex) {
-        logger.log(LOG_ERROR, "No %s set in config", nfex.what());
+    _simConfig = &_config->lookup("configuration.simulator")[0];
+    if (!validateConfig()) {
+        throw std::runtime_error("[SimConfigManager] Unable to validate config.");
     }
 }
 
@@ -45,7 +40,7 @@ bool SimConfigManager::validateConfig(void)
     int hasError = false;
 
     if (!_simConfig) {
-        logger.log(LOG_ERROR, "[SimConfigManager] Could not get simulator configuration");
+        throw std::logic_error("[SimConfigManager] Could not get simulator configuration");
         return RETURN_ERROR;
     }
 
@@ -55,12 +50,12 @@ bool SimConfigManager::validateConfig(void)
     for (it = _requiredSimulatorConfigurationFields.begin(); it < _requiredSimulatorConfigurationFields.end(); it++) {
         if (!_simConfig->exists(it->c_str())) {
             hasError++;
-            logger.log(LOG_ERROR, "[SimConfigManager]  - mandatory field '%s' does not exist in simulator config", it->c_str());
+            logger.log(LOG_ERROR, "[SimConfigManager] requiredfield '%s' does not exist in simulator config", it->c_str());
         }
     }
 
     if (hasError) {
-        logger.log(LOG_ERROR, "[SimConfigManager]  %d missing field(s) in simulator configuration", hasError);
+        logger.log(LOG_ERROR, "[SimConfigManager] %d missing field(s) in simulator configuration", hasError);
         return RETURN_ERROR;
     }
 
@@ -68,8 +63,8 @@ bool SimConfigManager::validateConfig(void)
     _pluginName = _simConfig->lookup("type").c_str();
 
     if (!fileExists(_pluginDir + "/lib" + _pluginName + ".dylib")) {
-        logger.log(LOG_ERROR, " - simulator plugin %s does not exist ", (_pluginDir + "/lib" + _pluginName + ".dylib").c_str());
-        return RETURN_ERROR;
+        std::string msg = "[SimConfigManager] plugin does not exist " + _pluginDir + "/lib" + _pluginName + ".dylib";
+        throw std::logic_error(msg.c_str());
     }
 
     return RETURN_OK;

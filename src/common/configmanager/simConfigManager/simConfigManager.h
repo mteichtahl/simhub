@@ -30,7 +30,7 @@ protected:
     std::string _pluginName;
 
 public:
-    SimConfigManager(libconfig::Config *config, std::string pluginDir);
+    SimConfigManager(libconfig::Config *config, std::string pluginDir = "./plugins");
     const libconfig::Setting *getConfig(void);
     bool validateConfig(void);
     bool fileExists(std::string filename);
