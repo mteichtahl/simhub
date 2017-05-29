@@ -14,7 +14,7 @@ var indicators = [
 var analogs = [
   // values are 0 - 255
   'A_ASP_ADF_1_VOLUME', 'A_ASP_ADF_2_VOLUME', 'A_ASP_MARKER_VOLUME',
-  'A_CDU1_BRIGHTNESS', 'A_CDU2_BRIGHTNESS', 'R_XPDR', 'R_XPDR2'
+  'A_CDU1_BRIGHTNESS', 'A_CDU2_BRIGHTNESS', 'R_XPDR1', 'R_XPDR2'
 ];
 
 
@@ -34,16 +34,36 @@ console.log(color.green(`Starting emulator on port ${cli.port}`));
 var server = net.createServer();
 server.on('connection', handleConnection);
 
+var connections = {}
+
+function getBytes(string) {
+  return Buffer.byteLength(string, 'utf8')
+};
+
+function formatBytes(a, b) {
+  if (0 == a) return '0 Bytes';
+  var c = 1e3, d = b || 2,
+      e = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'],
+      f = Math.floor(Math.log(a) / Math.log(c));
+  return parseFloat((a / Math.pow(c, f)).toFixed(d)) + ' ' + e[f]
+}
+
 server.listen(cli.port, () => {
   var address = server.address().address;
   var port = server.address().port;
+
 });
 
 function handleConnection(conn) {
   var self = this;
   var address = conn.remoteAddress;
   var port = conn.remotePort;
+  var portString = port.toString();
   var intervalTimer;
+
+  connections[portString] = {startTime: _.now()};
+
+
 
   console.log(color.yellow(`Client connected - ${address}:${port}`));
 
@@ -55,16 +75,35 @@ function handleConnection(conn) {
   };
 
   function onConnClose() {
-    console.log(color.yellow(`Client disconnect - ${address}:${port}`));
     clearInterval(intervalTimer);
+    connections.portString.endTime = _.now();
+    duration =
+        (connections.portString.endTime - connections.portString.startTime) /
+        1000;
+
+    console.log(color.yellow(`Client disconnect - ${address}:${port}`));
+
+    if (connections.portString) {
+      totalBytes = connections.portString.totalBytes;
+      speed = (totalBytes / duration).toFixed(2);
+      console.log(
+          color.yellow(`Sent: ${
+                                formatBytes(totalBytes)
+                              } for ${duration} seconds / ${speed} B/s`));
+    }
+    delete (connections.portString);
   }
 
+  connections.portString = {'totalBytes': 0, startTime: _.now(), endTime: 0};
   intervalTimer = setInterval(
+
       (a) => {
-        getData(a, conn);
+        if (connections.portString)
+          connections.portString.totalBytes += getData(a, conn);
       },
       DATA_INTERVAL_MS,
-      {'indicators': indicators, 'analog': analogs, 'gauges': gauges}, conn);
+      {'indicators': indicators, 'analog': analogs, 'gauges': gauges},
+      conn.totalBytes);
 
   function getData(data, conn) {
     var indicatorCount = _.random(0, data.indicators.length - 1);
@@ -93,5 +132,6 @@ function handleConnection(conn) {
     }
 
     conn.write(outString + '\n');
+    return getBytes(outString);
   }
 }

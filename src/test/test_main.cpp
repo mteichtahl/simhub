@@ -1,22 +1,12 @@
 #include "test_logging.h"
-#include <thread>
 #include <gtest/gtest.h>
+#include <thread>
 
-#include "plugins/simsource/simsource.h"
 #include "concurrent_queue.h"
-
-// -- these are examples, showing the general test syntax
- 
-TEST(SquareRootTest, PositiveNos) 
-{ 
-}
- 
-TEST(SquareRootTest, ZeroAndNegativeNos) 
-{ 
-}
+#include "plugins/simsource/simsource.h"
 
 /**
- * simple state management class used by the PluginTests 
+ * simple state management class used by the PluginTests
  *
  * - sets up a capture-less lambda that is called by a plugin instance
  *   (on a separate thread) when the plugin generates an event
@@ -30,7 +20,7 @@ class EventConsumer
 protected:
     void eventCallback(SPHANDLE eventSource, void *eventData);
     ConcurrentQueue<std::string> _testEventQueue;
-    
+
 public:
     void runConsumptionTest(void);
 };
@@ -52,7 +42,6 @@ void EventConsumer::runConsumptionTest(void)
 
     memset(&pluginMethods, sizeof(simplug_vtable), 0);
 
-    
     int err = simplug_bootstrap("plugins/libprepare3d.dylib", &pluginMethods);
 
     if (err == 0) {
@@ -60,15 +49,15 @@ void EventConsumer::runConsumptionTest(void)
 
         static const int TEST_VAL_COUNT = 3;
         ConfigEntry *configValues[TEST_VAL_COUNT];
-        configValues[0] = (ConfigEntry*)calloc(1, sizeof(ConfigEntry));
+        configValues[0] = (ConfigEntry *)calloc(1, sizeof(ConfigEntry));
         configValues[0]->type = CONFIG_INT;
         configValues[0]->value.int_value = 42;
         configValues[0]->length = sizeof(configValues[0]->value.int_value);
-        configValues[1] = (ConfigEntry*)calloc(1, sizeof(ConfigEntry));
+        configValues[1] = (ConfigEntry *)calloc(1, sizeof(ConfigEntry));
         configValues[1]->type = CONFIG_STRING;
         configValues[1]->value.string_value = (char *)"42";
         configValues[1]->length = strlen(configValues[1]->value.string_value);
-        configValues[2] = (ConfigEntry*)calloc(1, sizeof(ConfigEntry));
+        configValues[2] = (ConfigEntry *)calloc(1, sizeof(ConfigEntry));
         configValues[2]->type = CONFIG_FLOAT;
         configValues[2]->value.float_value = 42.42;
         configValues[2]->length = sizeof(configValues[2]->value.float_value);
@@ -78,11 +67,9 @@ void EventConsumer::runConsumptionTest(void)
         if (pluginMethods.simplug_preflight_complete(pluginInstance) == 0) {
             // proxy the C style lambda call through to the member
             // function above
-            
-            auto testFn = [](SPHANDLE eventSource, void *eventData, void *arg) {
-                static_cast<EventConsumer*>(arg)->eventCallback(eventSource, eventData);
-            };
-            
+
+            auto testFn = [](SPHANDLE eventSource, void *eventData, void *arg) { static_cast<EventConsumer *>(arg)->eventCallback(eventSource, eventData); };
+
             pluginMethods.simplug_commence_eventing(pluginInstance, testFn, this);
 
             for (size_t i = 0; i < 9; i++) {
@@ -90,7 +77,7 @@ void EventConsumer::runConsumptionTest(void)
 
                 std::cout << "just popped: " << data << " off the concurrent event queue" << std::endl;
             }
-            
+
             pluginMethods.simplug_cease_eventing(pluginInstance);
             pluginMethods.simplug_release(pluginInstance);
         }
@@ -108,9 +95,10 @@ TEST(PluginsTest, BasicTest)
     EventConsumer consumer;
     consumer.runConsumptionTest();
 }
- 
-int main(int argc, char **argv) 
+
+int main(int argc, char **argv)
 {
+    // ::testing::internal::CaptureStdout();
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
