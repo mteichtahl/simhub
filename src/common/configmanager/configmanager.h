@@ -15,6 +15,7 @@
 #include <string>
 #include <vector>
 
+#include "deviceConfigManager/deviceConfigManager.h"
 #include "log/clog.h"
 #include "simConfigManager/simConfigManager.h"
 
@@ -47,6 +48,7 @@ public:
     CConfigManager(std::string);
     ~CConfigManager();
     SimConfigManager *simConfigManager;
+    DeviceConfigManager *deviceConfigManager;
     std::string getConfigFilename(void);
     int init(void);
     std::string version(void);

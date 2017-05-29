@@ -2,8 +2,8 @@
 #include <gtest/gtest.h>
 #include <thread>
 
-#include "concurrent_queue.h"
-#include "plugins/simsource/simsource.h"
+#include "plugins/common/queue/concurrent_queue.h"
+#include "plugins/common/simHubDevicePlugin.h"
 
 /**
  * simple state management class used by the PluginTests

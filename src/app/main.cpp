@@ -1,8 +1,11 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <thread>
 #include <vector>
 
+#include "../../plugins/common/queue/concurrent_queue.h"
+#include "../../plugins/common/simHubDevicePlugin.h"
 #include "../common/configmanager/configmanager.h"
 #include "../common/elements/sources/source.h"
 #include "libs/commandLine.h" // https://github.com/tanakh/cmdline

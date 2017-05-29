@@ -66,7 +66,7 @@ int CConfigManager::init(void)
     // instansiate the simulator configuration
     try {
         simConfigManager = new SimConfigManager(&_config);
-        logger.log(LOG_INFO, "simulator configuration loaded");
+        logger.log(LOG_INFO, "Simulator %s loaded", simConfigManager->getType().c_str());
     }
     catch (libconfig::SettingNotFoundException &nfex) {
         logger.log(LOG_ERROR, "No simulator section set in config [%s]", nfex.what());
@@ -77,6 +77,14 @@ int CConfigManager::init(void)
         return RETURN_ERROR;
     }
     catch (std::logic_error &e) {
+        logger.log(LOG_ERROR, "%s", e.what());
+        return RETURN_ERROR;
+    }
+
+    try {
+        deviceConfigManager = new DeviceConfigManager(&_config);
+    }
+    catch (std::exception &e) {
         logger.log(LOG_ERROR, "%s", e.what());
         return RETURN_ERROR;
     }
