@@ -8,6 +8,7 @@
 #include <unistd.h>
 #endif
 
+#include <exception>
 #include <iostream>
 #include <libconfig.h++>
 #include <map>
@@ -15,9 +16,14 @@
 #include <vector>
 
 #include "log/clog.h"
+#include "simConfigManager/simConfigManager.h"
 
+#ifndef RETURN_OK
 #define RETURN_OK 1
+#endif
+#ifndef RETURN_ERROR
 #define RETURN_ERROR -1
+#endif
 
 /**
  * Base class for all pin based classes
@@ -33,6 +39,7 @@ protected:
 
     bool fileExists(std::string filename);
     bool isValidSimConfiguration(void);
+    SimConfigManager *simConfigManager;
 
     std::vector<std::string> _requiredSimulatorConfigurationFields = { "ipAddress", "port", "type" };
     std::vector<std::string> _requiredDeviceConfigurationFields = { "serialNumber", "uid", "name", "dhcp" };
@@ -45,7 +52,7 @@ public:
     std::string version(void);
     std::string name(void);
 
-    const libconfig::Setting *getSimulatorConfig(void);
+    // const libconfig::Setting *getSimulatorConfig(void);
 };
 
 #endif

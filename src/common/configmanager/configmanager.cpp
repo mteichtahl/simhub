@@ -58,58 +58,30 @@ int CConfigManager::init(void)
         throw std::runtime_error("Config file parse error - See log file");
     }
 
-    logger.log(LOG_INFO, "Loading configuration file: %s - %s (v%s) (v%d.%d.%d)", _configFilename.c_str(),
-        name().c_str(), version().c_str(), LIBCONFIGXX_VER_MAJOR, LIBCONFIGXX_VER_MINOR, LIBCONFIGXX_VER_REVISION);
+    logger.log(LOG_INFO, "Loading configuration file: %s - %s (v%s) (v%d.%d.%d)", _configFilename.c_str(), name().c_str(), version().c_str(), LIBCONFIGXX_VER_MAJOR,
+        LIBCONFIGXX_VER_MINOR, LIBCONFIGXX_VER_REVISION);
 
     _root = &_config.getRoot();
 
-    if (isValidSimConfiguration()) {
-        return RETURN_OK;
-    }
-    else {
-        return RETURN_ERROR;
-    }
-    return RETURN_ERROR;
-}
-
-bool CConfigManager::isValidSimConfiguration(void)
-{
-    const libconfig::Setting *simConfig = getSimulatorConfig();
-    int hasError = false;
-
-    if (!simConfig) {
-        logger.log(LOG_ERROR, "Could not get simulator configuration");
-        return false;
-    }
-
-    std::vector<std::string>::iterator it;
-
-    for (it = _requiredSimulatorConfigurationFields.begin(); it < _requiredSimulatorConfigurationFields.end(); it++) {
-        if (!simConfig->exists(it->c_str())) {
-            hasError++;
-            logger.log(LOG_ERROR, " - mandatory field '%s' does not exist in simulator config", it->c_str());
-        }
-    }
-
-    if (hasError) {
-        logger.log(LOG_ERROR, "%d missing field(s) in simulator configuration", hasError);
-        return RETURN_ERROR;
-    }
-    else {
-        return RETURN_OK;
-    }
-}
-
-const libconfig::Setting *CConfigManager::getSimulatorConfig(void)
-{
+    // instansiate the simulator configuration
     try {
-        libconfig::Setting &simulatorConfig = _config.lookup("configuration.simulator");
-        return &simulatorConfig[0];
+        simConfigManager = new SimConfigManager(&_config);
+        logger.log(LOG_INFO, "simulator configuration loaded");
     }
-    catch (const libconfig::SettingNotFoundException &nfex) {
-        logger.log(LOG_ERROR, "No %s set in config", nfex.what());
-        return NULL;
+    catch (libconfig::SettingNotFoundException &nfex) {
+        logger.log(LOG_ERROR, "No simulator section set in config [%s]", nfex.what());
+        return RETURN_ERROR;
     }
+    catch (std::exception &e) {
+        logger.log(LOG_ERROR, "%s", e.what());
+        return RETURN_ERROR;
+    }
+    catch (std::logic_error &e) {
+        logger.log(LOG_ERROR, "%s", e.what());
+        return RETURN_ERROR;
+    }
+
+    return RETURN_OK;
 }
 
 std::string CConfigManager::version(void)
