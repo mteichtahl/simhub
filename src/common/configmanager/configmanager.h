@@ -39,7 +39,6 @@ protected:
 
     bool fileExists(std::string filename);
     bool isValidSimConfiguration(void);
-    SimConfigManager *simConfigManager;
 
     std::vector<std::string> _requiredSimulatorConfigurationFields = { "ipAddress", "port", "type" };
     std::vector<std::string> _requiredDeviceConfigurationFields = { "serialNumber", "uid", "name", "dhcp" };
@@ -47,6 +46,7 @@ protected:
 public:
     CConfigManager(std::string);
     ~CConfigManager();
+    SimConfigManager *simConfigManager;
     std::string getConfigFilename(void);
     int init(void);
     std::string version(void);
