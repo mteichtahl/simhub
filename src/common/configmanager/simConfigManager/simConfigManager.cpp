@@ -69,3 +69,18 @@ bool SimConfigManager::validateConfig(void)
 
     return RETURN_OK;
 }
+
+const std::string SimConfigManager::getIPAddress()
+{
+    return _simConfig->lookup("ipAddress").c_str();
+}
+
+const int SimConfigManager::getPort()
+{
+    return _simConfig->lookup("port");
+}
+
+const std::string SimConfigManager::getType()
+{
+    return _simConfig->lookup("type").c_str();
+}

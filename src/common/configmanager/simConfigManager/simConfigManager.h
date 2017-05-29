@@ -34,6 +34,9 @@ public:
     const libconfig::Setting *getConfig(void);
     bool validateConfig(void);
     bool fileExists(std::string filename);
+    const std::string getIPAddress();
+    const int getPort();
+    const std::string getType();
 };
 
 #endif
