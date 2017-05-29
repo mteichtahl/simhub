@@ -29,7 +29,7 @@ DeviceConfigManager::DeviceConfigManager(libconfig::Config *config, std::string 
             continue;
         }
         newDevice = new Device(type, id, tmpDeviceConfig);
-        _device.insert(std::make_pair(id, newDevice));
+        _device.emplace(id, newDevice);
     }
 }
 

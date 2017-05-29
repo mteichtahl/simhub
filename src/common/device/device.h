@@ -14,6 +14,7 @@ protected:
 
 public:
     Device(std::string type, std::string id, libconfig::Setting *config);
+    ~Device();
     void show();
 };
 
