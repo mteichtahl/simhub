@@ -1,14 +1,11 @@
-#include <assert.h>
-
-#include "common/simhubdeviceplugin.h"
-#include "simsource_main.h"
+#include "pokeysource_main.h"
 
 // -- public C FFI
 
 extern "C" {
 int simplug_init(SPHANDLE *plugin_instance)
 {
-    *plugin_instance = new SimSourcePluginStateManager();
+    *plugin_instance = new PokeyDevicePluginStateManager();
     return 0;
 }
 
