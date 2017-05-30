@@ -4,10 +4,10 @@
 #include <thread>
 #include <vector>
 
-#include "../../plugins/common/queue/concurrent_queue.h"
-#include "../../plugins/common/simHubDevicePlugin.h"
-#include "../common/configmanager/configmanager.h"
-#include "../common/elements/sources/source.h"
+#include "plugins/common/queue/concurrent_queue.h"
+#include "plugins/common/simhubdeviceplugin.h"
+#include "common/configmanager/configmanager.h"
+#include "common/elements/sources/source.h"
 #include "libs/commandLine.h" // https://github.com/tanakh/cmdline
 #include "log/clog.h"
 

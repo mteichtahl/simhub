@@ -10,7 +10,7 @@ solution "simhub"
         defines { "NDEBUG" }
         flags { "Optimize" }    
  
-   -- A project defines one build target
+    -- A project defines one build target
     project "simhub"
         kind "ConsoleApp"
         language "C++"
@@ -18,6 +18,7 @@ solution "simhub"
                 "src/common/**.h", "src/common/**.cpp" }
         includedirs { "src",
 					  "src/common",
+					  "src/libs",
 					  "src/libs/variant/include",
 					  "src/libs/variant/include/mpark",
 					  "src/libs/queue" }
