@@ -1,17 +1,13 @@
 #include "device.h"
 
-Device::Device(std::string type, std::string id, libconfig::Setting *config)
+Device::Device(std::string type, std::string id, std::unique_ptr<libconfig::Setting> config) 
+ : _type(type), _id(id), _config(std::move(config))
 {
-    _type = type;
-    _id = id;
-    _config = config;
-
     logger.log(LOG_INFO, "  - Creating %s device #%s with %d elements", _type.c_str(), _id.c_str(), _config->getLength());
 }
 
 Device::~Device()
 {
-    delete _config;
 }
 
 void Device::show()
