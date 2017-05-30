@@ -53,26 +53,30 @@ solution "simhub"
         targetname "prepare3d"
         targetdir ("bin/plugins")
 		files { "src/libs/plugins/simsource/**.h",
+                "src/libs/plugins/common/**.cpp",
 			    "src/libs/plugins/simsource/**.cpp" }
         includedirs { "src/libs/googletest/include", 
                       "src/libs/googletest", 
-                      "src/common", 
+                      "src/common",
+                      "src/libs/plugins",
                       "src/libs/variant/include", 
                       "src/libs",
                       "src/libs/variant/include/mpark",
 					  "src/libs/queue" }
         buildoptions { "--std=c++14" }
 
-        project "simplug_devicesource"
+project "simplug_devicesource"
 	    kind "SharedLib"
 		language "C++"
         targetname "pokey"
         targetdir ("bin/plugins")
 		files { "src/libs/plugins/pokey/**.h",
+                "src/libs/plugins/common/**.cpp",
 			    "src/libs/plugins/pokey/**.cpp" }
         includedirs { "src/libs/googletest/include", 
                       "src/libs/googletest", 
-                      "src/common", 
+                      "src/common",
+                      "src/libs/plugins",
                       "src/libs/variant/include", 
                       "src/libs",
                       "src/libs/variant/include/mpark",
