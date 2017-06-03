@@ -72,10 +72,6 @@ int CConfigManager::init(void)
         logger.log(LOG_ERROR, "No simulator section set in config [%s]", nfex.what());
         return RETURN_ERROR;
     }
-    catch (std::exception &e) {
-        logger.log(LOG_ERROR, "%s", e.what());
-        return RETURN_ERROR;
-    }
     catch (std::logic_error &e) {
         logger.log(LOG_ERROR, "%s", e.what());
         return RETURN_ERROR;

@@ -4,6 +4,7 @@
 #include "../log/clog.h"
 #include <libconfig.h++>
 #include <string>
+#include <memory>
 
 class Device
 {

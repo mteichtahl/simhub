@@ -3,7 +3,7 @@
 #include <thread>
 
 #include "plugins/common/queue/concurrent_queue.h"
-#include "plugins/common/simHubDevicePlugin.h"
+#include "plugins/common/simhubdeviceplugin.h"
 
 /**
  * simple state management class used by the PluginTests
