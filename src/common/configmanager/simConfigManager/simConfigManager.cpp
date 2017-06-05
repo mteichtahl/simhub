@@ -7,9 +7,9 @@
  *   @return nothing
  */
 SimConfigManager::SimConfigManager(libconfig::Config *config, std::string pluginDir)
+    : _config(config)
+    , _pluginDir(pluginDir)
 {
-    _config = config;
-    _pluginDir = pluginDir;
 
     _simConfig = &_config->lookup("configuration.simulator")[0];
     if (!validateConfig()) {

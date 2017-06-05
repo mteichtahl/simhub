@@ -7,9 +7,10 @@
  *   @return nothing
  */
 DeviceConfigManager::DeviceConfigManager(libconfig::Config *config, std::string pluginDir)
+    : _config(config)
+    , _pluginDir(pluginDir)
 {
-    _config = config;
-    _pluginDir = pluginDir;
+
     Device *newDevice;
 
     _deviceConfig = &_config->lookup("configuration.devices");
