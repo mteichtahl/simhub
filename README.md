@@ -1,5 +1,4 @@
 # simhub
 HIGHLY OPTIMIZED CLOUD READY REAL-TIME SIMULATOR INTERFACE HUB
 
-This is a test
-blah 1
+[![CircleCI](https://circleci.com/gh/mteichtahl/simhub.svg?style=svg)](https://circleci.com/gh/mteichtahl/simhub)
