@@ -27,6 +27,7 @@ protected:
     libconfig::Setting *_simConfig;
     std::string _pluginDir;
     std::string _pluginName;
+    bool loadPlugin();
 
 public:
     SimConfigManager(libconfig::Setting *config, std::string pluginDir = "./plugins");

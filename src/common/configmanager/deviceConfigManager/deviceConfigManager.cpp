@@ -25,10 +25,9 @@ DeviceConfigManager::DeviceConfigManager(libconfig::Config *config, std::string 
             type = tmpDeviceConfig->lookup("type").c_str();
 
             if (type == "prepare3d") {
-                logger.log(LOG_INFO, " - Found %s simulator device", type.c_str());
+                logger.log(LOG_INFO, " - Creating %s simulator device", type.c_str());
                 try {
                     simConfigManager = new SimConfigManager(tmpDeviceConfig);
-                    logger.log(LOG_INFO, " - Simulator %s loaded", simConfigManager->getType().c_str());
                     continue;
                 }
                 catch (libconfig::SettingNotFoundException &nfex) {

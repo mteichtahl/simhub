@@ -15,6 +15,14 @@ SimConfigManager::SimConfigManager(libconfig::Setting *setting, std::string plug
     if (!validateConfig()) {
         throw std::runtime_error("[SimConfigManager] Unable to validate config.");
     }
+
+    loadPlugin();
+}
+
+bool SimConfigManager::loadPlugin()
+{
+    logger.log(LOG_INFO, "   - LOAD THE %s PLUGIN HERE", getType().c_str());
+    return RETURN_OK;
 }
 
 /**
