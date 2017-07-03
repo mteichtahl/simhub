@@ -1,8 +1,12 @@
 dependencies:
   pre:
+    - sudo apt-get upgrade
     - sudo apt-get update
     - sudo apt-get install premake
 compile:
   override:
     - premake gmake
     - make
+tests:
+  override:
+    - bin/simhub_tests
