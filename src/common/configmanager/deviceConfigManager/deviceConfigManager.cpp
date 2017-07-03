@@ -28,13 +28,16 @@ DeviceConfigManager::DeviceConfigManager(libconfig::Config *config, std::string 
                 logger.log(LOG_INFO, " - Found %s simulator device", type.c_str());
                 try {
                     simConfigManager = new SimConfigManager(tmpDeviceConfig);
-                    logger.log(LOG_INFO, "Simulator %s loaded", simConfigManager->getType().c_str());
+                    logger.log(LOG_INFO, " - Simulator %s loaded", simConfigManager->getType().c_str());
+                    continue;
                 }
                 catch (libconfig::SettingNotFoundException &nfex) {
                     logger.log(LOG_ERROR, "No simulator section set in config [%s]", nfex.what());
+                    continue;
                 }
                 catch (std::logic_error &e) {
                     logger.log(LOG_ERROR, "%s", e.what());
+                    continue;
                 }
             }
             id = tmpDeviceConfig->lookup("id").c_str();

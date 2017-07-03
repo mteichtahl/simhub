@@ -5,7 +5,7 @@ Device::Device(std::string type, std::string id, std::unique_ptr<libconfig::Sett
     , _id(id)
     , _config(std::move(config))
 {
-    logger.log(LOG_INFO, "  - Creating %s device #%s with %d elements", _type.c_str(), _id.c_str(), _config->getLength());
+    logger.log(LOG_INFO, " - Creating %s device #%s with %d elements", _type.c_str(), _id.c_str(), _config->getLength());
 }
 
 Device::~Device()
