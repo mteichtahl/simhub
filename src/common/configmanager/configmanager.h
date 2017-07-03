@@ -17,7 +17,6 @@
 
 #include "deviceConfigManager/deviceConfigManager.h"
 #include "log/clog.h"
-#include "simConfigManager/simConfigManager.h"
 
 #ifndef RETURN_OK
 #define RETURN_OK 1
@@ -37,7 +36,6 @@ protected:
     std::string _configFileVersion;
     std::string _configName;
     libconfig::Setting *_root;
-    SimConfigManager *simConfigManager;
     DeviceConfigManager *deviceConfigManager;
 
     bool fileExists(std::string filename);
