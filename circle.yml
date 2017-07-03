@@ -2,5 +2,5 @@ dependencies:
   pre:
     - sudo apt-get update
     - sudo apt-get install premake
-    - premake4 gmake
+    - premake gmake
     - make
