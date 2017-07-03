@@ -6,12 +6,12 @@
  *
  *   @return nothing
  */
-SimConfigManager::SimConfigManager(libconfig::Config *config, std::string pluginDir)
-    : _config(config)
+SimConfigManager::SimConfigManager(libconfig::Setting *setting, std::string pluginDir)
+    : _simConfig(setting)
     , _pluginDir(pluginDir)
 {
 
-    _simConfig = &_config->lookup("configuration.simulator")[0];
+    //  _simConfig = &_config->lookup("configuration.simulator")[0];
     if (!validateConfig()) {
         throw std::runtime_error("[SimConfigManager] Unable to validate config.");
     }

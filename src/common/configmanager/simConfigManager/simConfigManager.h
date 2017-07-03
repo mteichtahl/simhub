@@ -24,13 +24,12 @@ class SimConfigManager
 protected:
     bool isValidConfig;
     std::vector<std::string> _requiredSimulatorConfigurationFields = { "ipAddress", "port", "type" };
-    libconfig::Config *_config;
     libconfig::Setting *_simConfig;
     std::string _pluginDir;
     std::string _pluginName;
 
 public:
-    SimConfigManager(libconfig::Config *config, std::string pluginDir = "./plugins");
+    SimConfigManager(libconfig::Setting *config, std::string pluginDir = "./plugins");
     const libconfig::Setting *getConfig(void);
     bool validateConfig(void);
     bool fileExists(std::string filename);
