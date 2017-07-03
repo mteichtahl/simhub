@@ -1,0 +1,4 @@
+dependencies:
+  - premake
+  - gcc
+  - make
