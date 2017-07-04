@@ -18,7 +18,7 @@
 
 #define RETURN_OK 1
 #define RETURN_ERROR 0
-#define PREPARE3D "preapre3d"
+#define PREPARE3D "prepare3d"
 
 class SimConfigManager
 {
