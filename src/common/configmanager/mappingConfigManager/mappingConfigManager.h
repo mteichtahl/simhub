@@ -24,12 +24,12 @@ class MappingConfigManager
 protected:
     bool isValidConfig;
     libconfig::Config _config;
-    std::vector<std::string> _requiredConfigurationFields = { "source", "target" };
     libconfig::Setting *_mappingConfig;
     std::string _configFilename;
     std::string _mappingConfigFileVersion;
     std::string _configName;
     libconfig::Setting *_root;
+    std::map<std::string, std::pair<std::string, std::string>> _mapping;
 
 public:
     MappingConfigManager(std::string);

@@ -79,8 +79,20 @@ int MappingConfigManager::init(void)
                 logger.log(LOG_ERROR, "Config file parse error at %s. Skipping....", nfex.getPath());
                 continue;
             }
-            logger.log(LOG_INFO, "  - Mapping %s -> %s", source.c_str(), target.c_str());
+
+            std::pair<std::map<std::string, std::pair<std::string, std::string>>::iterator, bool> ret;
+            auto pair = std::make_pair(source, target);
+            ret = _mapping.insert(std::make_pair(source, pair));
+
+            if (!ret.second) {
+                logger.log(LOG_INFO, "  - skipping duplicate source %s ", source.c_str());
+                continue;
+            }
+            else {
+                logger.log(LOG_INFO, "  - adding %s -> %s", source.c_str(), target.c_str());
+            }
         }
+        logger.log(LOG_INFO, " - Added %d mappings", _mapping.size());
     }
     catch (std::exception &e) {
         logger.log(LOG_ERROR, "%s", e.what());
