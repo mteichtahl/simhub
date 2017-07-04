@@ -43,6 +43,20 @@ std::string CConfigManager::getConfigFilename(void)
     return _configFilename;
 }
 
+std::string CConfigManager::getMappingConfigFilename(void)
+{
+    if (_mappingConfigFilename.empty()) {
+        try {
+            _mappingConfigFilename = (const char *)_config.lookup("mappingFile");
+        }
+        catch (const libconfig::SettingNotFoundException &nfex) {
+            logger.log(LOG_ERROR, "No mapping file set in config");
+        }
+    }
+
+    return _mappingConfigFilename;
+}
+
 int CConfigManager::init(void)
 {
     // read the config file and handle any errors
@@ -63,8 +77,19 @@ int CConfigManager::init(void)
 
     _root = &_config.getRoot();
 
+    /** load the device configuration mapping file **/
     try {
         deviceConfigManager = new DeviceConfigManager(&_config);
+    }
+    catch (std::exception &e) {
+        logger.log(LOG_ERROR, "%s", e.what());
+        return RETURN_ERROR;
+    }
+
+    /** load the mapping configuration mapping file **/
+    try {
+        mappingConfigManager = new MappingConfigManager(getMappingConfigFilename());
+        mappingConfigManager->init();
     }
     catch (std::exception &e) {
         logger.log(LOG_ERROR, "%s", e.what());
