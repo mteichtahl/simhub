@@ -18,43 +18,31 @@ void configureCli(cmdline::parser *cli)
 {
     cli->add<std::string>("config", 'c', "config file", false, "config/config.cfg");
     cli->add<std::string>("logConfig", 'l', "log config file", false, "config/zlog.conf");
+    cli->add<bool>("polly", 'p', "Use Amazon Polly", false, true);
 
     cli->set_program_name("simhub");
     cli->footer("\n");
 }
 
-void my_handler(int s)
-{
-
-    printf("Caught signal %d\n", s);
-    exit(1);
-}
-
 int main(int argc, char *argv[])
 {
-    struct sigaction sigIntHandler;
-
-    sigIntHandler.sa_handler = my_handler;
-    sigemptyset(&sigIntHandler.sa_mask);
-    sigIntHandler.sa_flags = 0;
-
-    sigaction(SIGINT, &sigIntHandler, NULL);
 
     cmdline::parser cli;
     configureCli(&cli);
     cli.parse_check(argc, argv);
 
     logger.init(cli.get<std::string>("logConfig"));
-    awsHelper.init();
 
     CConfigManager config(cli.get<std::string>("config"));
+    awsHelper.init();
+    std::thread pollyThread = awsHelper.initPolly(cli.get<bool>("polly"));
 
     if (!config.init()) {
         logger.log(LOG_ERROR, "Could not initialise configuration");
         exit(1);
     }
 
-    sleep(60);
+    awsHelper.pollySay("system ready");
 
     // Source el("element", "desc");
 
@@ -71,6 +59,8 @@ int main(int argc, char *argv[])
     // printf("----> %0.5f\n", at.getValue<float>());
     // printf("----> %s\n", at.getValueToString<float>().c_str());
     // printf("----> %s\n", at.timestampString().c_str());
+
+    pollyThread.join();
 
     return 0;
 }
