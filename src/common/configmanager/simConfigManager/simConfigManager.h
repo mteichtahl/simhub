@@ -18,25 +18,26 @@
 
 #define RETURN_OK 1
 #define RETURN_ERROR 0
+#define PREPARE3D "preapre3d"
 
 class SimConfigManager
 {
 protected:
     bool isValidConfig;
     std::vector<std::string> _requiredSimulatorConfigurationFields = { "ipAddress", "port", "type" };
-    libconfig::Config *_config;
     libconfig::Setting *_simConfig;
     std::string _pluginDir;
     std::string _pluginName;
+    bool loadPlugin();
 
 public:
-    SimConfigManager(libconfig::Config *config, std::string pluginDir = "./plugins");
+    SimConfigManager(libconfig::Setting *config, std::string pluginDir = "./plugins");
     const libconfig::Setting *getConfig(void);
     bool validateConfig(void);
     bool fileExists(std::string filename);
-    const std::string getIPAddress();
-    const int getPort();
-    const std::string getType();
+    const std::string getIPAddress(void);
+    const int getPort(void);
+    const std::string getType(void);
 };
 
 #endif

@@ -23,6 +23,22 @@ DeviceConfigManager::DeviceConfigManager(libconfig::Config *config, std::string 
 
         try {
             type = tmpDeviceConfig->lookup("type").c_str();
+
+            if (type == PREPARE3D) {
+                logger.log(LOG_INFO, " - Creating %s simulator device", type.c_str());
+                try {
+                    simConfigManager = new SimConfigManager(tmpDeviceConfig);
+                    continue;
+                }
+                catch (libconfig::SettingNotFoundException &nfex) {
+                    logger.log(LOG_ERROR, "No simulator section set in config [%s]", nfex.what());
+                    continue;
+                }
+                catch (std::logic_error &e) {
+                    logger.log(LOG_ERROR, "%s", e.what());
+                    continue;
+                }
+            }
             id = tmpDeviceConfig->lookup("id").c_str();
         }
         catch (const libconfig::SettingNotFoundException &nfex) {

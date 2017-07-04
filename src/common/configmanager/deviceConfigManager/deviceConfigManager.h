@@ -10,6 +10,7 @@
 
 #include "../../device/device.h"
 #include "../../log/clog.h"
+#include "../simConfigManager/simConfigManager.h"
 #include <iostream>
 #include <libconfig.h++>
 #include <map>
@@ -17,8 +18,12 @@
 #include <sys/stat.h>
 #include <vector>
 
+#ifndef RETURN_OK
 #define RETURN_OK 1
-#define RETURN_ERROR 0
+#endif
+#ifndef RETURN_ERROR
+#define RETURN_ERROR -1
+#endif
 
 class DeviceConfigManager
 {
@@ -28,6 +33,7 @@ protected:
     libconfig::Setting *_deviceConfig;
     std::string _pluginDir;
     std::map<std::string, Device *> _device;
+    SimConfigManager *simConfigManager;
 
 public:
     DeviceConfigManager(libconfig::Config *config, std::string pluginDir = "./plugins");
