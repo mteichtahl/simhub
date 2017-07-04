@@ -9,3 +9,4 @@ compile:
 tests:
   override:
     - bin/simhub_tests
+    

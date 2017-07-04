@@ -24,7 +24,7 @@ DeviceConfigManager::DeviceConfigManager(libconfig::Config *config, std::string 
         try {
             type = tmpDeviceConfig->lookup("type").c_str();
 
-            if (type == "prepare3d") {
+            if (type == PREPARE3D) {
                 logger.log(LOG_INFO, " - Creating %s simulator device", type.c_str());
                 try {
                     simConfigManager = new SimConfigManager(tmpDeviceConfig);

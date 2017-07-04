@@ -11,7 +11,6 @@ SimConfigManager::SimConfigManager(libconfig::Setting *setting, std::string plug
     , _pluginDir(pluginDir)
 {
 
-    //  _simConfig = &_config->lookup("configuration.simulator")[0];
     if (!validateConfig()) {
         throw std::runtime_error("[SimConfigManager] Unable to validate config.");
     }
@@ -19,7 +18,7 @@ SimConfigManager::SimConfigManager(libconfig::Setting *setting, std::string plug
     loadPlugin();
 }
 
-bool SimConfigManager::loadPlugin()
+bool SimConfigManager::loadPlugin(void)
 {
     logger.log(LOG_INFO, "   - LOAD THE %s PLUGIN HERE", getType().c_str());
     return RETURN_OK;
@@ -78,17 +77,17 @@ bool SimConfigManager::validateConfig(void)
     return RETURN_OK;
 }
 
-const std::string SimConfigManager::getIPAddress()
+const std::string SimConfigManager::getIPAddress(void)
 {
     return _simConfig->lookup("ipAddress").c_str();
 }
 
-const int SimConfigManager::getPort()
+const int SimConfigManager::getPort(void)
 {
     return _simConfig->lookup("port");
 }
 
-const std::string SimConfigManager::getType()
+const std::string SimConfigManager::getType(void)
 {
     return _simConfig->lookup("type").c_str();
 }

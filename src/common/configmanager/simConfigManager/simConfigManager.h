@@ -18,6 +18,7 @@
 
 #define RETURN_OK 1
 #define RETURN_ERROR 0
+#define PREPARE3D "preapre3d"
 
 class SimConfigManager
 {
@@ -34,9 +35,9 @@ public:
     const libconfig::Setting *getConfig(void);
     bool validateConfig(void);
     bool fileExists(std::string filename);
-    const std::string getIPAddress();
-    const int getPort();
-    const std::string getType();
+    const std::string getIPAddress(void);
+    const int getPort(void);
+    const std::string getType(void);
 };
 
 #endif
