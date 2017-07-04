@@ -1,8 +1,10 @@
 #ifndef __AWS_H
 #define __AWS_H
 
+#include "../../libs/queue/concurrent_queue.h"
 #include <aws/core/Aws.h>
 #include <aws/core/Version.h>
+#include <aws/core/utils/memory/stl/AWSAllocator.h>
 #include <aws/text-to-speech/TextToSpeechManager.h>
 #include <condition_variable>
 #include <cstdarg>
@@ -24,21 +26,21 @@ public:
     AWS(void);
     // Destructor
     ~AWS(void);
-    bool init();
-    void say(const char *text, ...);
+    void init();
+    void pollySay(std::string);
+    std::thread initPolly(bool);
 
 protected:
     Aws::SDKOptions _options;
     std::string _SDKVersion;
-    Aws::String _defaultPollyVoice = "Joanna";
+    Aws::String _defaultPollyVoice = "Nicole";
     Aws::String _defaultAudioDevice = "default";
-    Aws::TextToSpeech::SendTextCompletedHandler _handlerFunction;
-    Aws::TextToSpeech::TextToSpeechManager *_textToSpeechManager;
-    int _maxVA_length;
-    static void handler(const char *, const Aws::Polly::Model::SynthesizeSpeechOutcome &, bool);
+    void _handler(const char *, const Aws::Polly::Model::SynthesizeSpeechOutcome &, bool);
+    std::shared_ptr<Aws::Polly::PollyClient::PollyClient> _pollyClient;
+    std::shared_ptr<Aws::TextToSpeech::TextToSpeechManager> _manager;
+    bool _pollyCanTalk;
 
-private:
-    void initPolly(void);
+    ConcurrentQueue<Aws::String> _pollyQueue;
 };
 
 extern AWS awsHelper; ///< allow externals to access logger
