@@ -17,6 +17,7 @@
 
 #include "deviceConfigManager/deviceConfigManager.h"
 #include "log/clog.h"
+#include "mappingConfigManager/mappingConfigManager.h"
 
 #ifndef RETURN_OK
 #define RETURN_OK 1
@@ -35,8 +36,10 @@ protected:
     std::string _configFilename;
     std::string _configFileVersion;
     std::string _configName;
+    std::string _mappingConfigFilename;
     libconfig::Setting *_root;
-    DeviceConfigManager *deviceConfigManager;
+    DeviceConfigManager *_deviceConfigManager;
+    MappingConfigManager *mappingConfigManager;
 
     bool fileExists(std::string filename);
 
@@ -45,6 +48,7 @@ public:
     ~CConfigManager();
 
     std::string getConfigFilename(void);
+    std::string getMappingConfigFilename(void);
     int init(void);
     std::string version(void);
     std::string name(void);
