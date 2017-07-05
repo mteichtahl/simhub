@@ -38,7 +38,7 @@ protected:
     std::string _configName;
     std::string _mappingConfigFilename;
     libconfig::Setting *_root;
-    DeviceConfigManager *deviceConfigManager;
+    DeviceConfigManager *_deviceConfigManager;
     MappingConfigManager *mappingConfigManager;
 
     bool fileExists(std::string filename);

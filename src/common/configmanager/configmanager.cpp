@@ -79,7 +79,7 @@ int CConfigManager::init(void)
 
     /** load the device configuration mapping file **/
     try {
-        deviceConfigManager = new DeviceConfigManager(&_config);
+        _deviceConfigManager = new DeviceConfigManager(&_config);
     }
     catch (std::exception &e) {
         logger.log(LOG_ERROR, "%s", e.what());

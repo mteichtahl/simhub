@@ -67,16 +67,19 @@ int MappingConfigManager::init(void)
         logger.log(LOG_INFO, " - Found %d mappings", _mappingConfig->getLength());
 
         for (int i = 0; i <= _mappingConfig->getLength() - 1; i++) {
-            libconfig::Setting *tmpMapping = &_config.lookup("mapping")[i];
             std::string source;
             std::string target;
 
             try {
-                source = tmpMapping->lookup("source").c_str();
-                target = tmpMapping->lookup("target").c_str();
+                source = (const char *)(&(*_mappingConfig)[i])->lookup("source");
+                target = (const char *)(&(*_mappingConfig)[i])->lookup("target");
             }
             catch (const libconfig::SettingNotFoundException &nfex) {
                 logger.log(LOG_ERROR, "Config file parse error at %s. Skipping....", nfex.getPath());
+                continue;
+            }
+            catch (const libconfig::SettingTypeException &nfex) {
+                logger.log(LOG_ERROR, "Setting type error for %s. Skipping....", nfex.getPath());
                 continue;
             }
 

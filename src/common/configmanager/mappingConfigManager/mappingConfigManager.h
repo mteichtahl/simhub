@@ -22,7 +22,6 @@
 class MappingConfigManager
 {
 protected:
-    bool isValidConfig;
     libconfig::Config _config;
     libconfig::Setting *_mappingConfig;
     std::string _configFilename;
@@ -33,9 +32,8 @@ protected:
 
 public:
     MappingConfigManager(std::string);
-    ~MappingConfigManager();
+    ~MappingConfigManager(void);
     const libconfig::Setting *getConfig(void);
-    bool validateConfig(void);
     int init(void);
     bool fileExists(std::string filename);
     std::string getConfigFilename(void);
