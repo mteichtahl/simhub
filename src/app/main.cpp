@@ -35,14 +35,17 @@ int main(int argc, char *argv[])
 
     CConfigManager config(cli.get<std::string>("config"));
     awsHelper.init();
-    std::thread pollyThread = awsHelper.initPolly(cli.get<bool>("polly"));
+
+    if (cli.get<bool>("polly")) {
+        awsHelper.initPolly();
+    }
 
     if (!config.init()) {
         logger.log(LOG_ERROR, "Could not initialise configuration");
         exit(1);
     }
 
-    awsHelper.pollySay("system ready");
+    awsHelper.polly()->say("system ready %d %s", 1, "test");
 
     // Source el("element", "desc");
 
@@ -60,7 +63,9 @@ int main(int argc, char *argv[])
     // printf("----> %s\n", at.getValueToString<float>().c_str());
     // printf("----> %s\n", at.timestampString().c_str());
 
-    pollyThread.join();
+    // pollyThread.join();
+    if (awsHelper.polly()->isJoinable())
+        awsHelper.polly()->thread()->join();
 
     return 0;
 }

@@ -2,6 +2,7 @@
 #define __AWS_H
 
 #include "../../libs/queue/concurrent_queue.h"
+#include "polly/polly.h"
 #include <aws/core/Aws.h>
 #include <aws/core/Version.h>
 #include <aws/core/utils/memory/stl/AWSAllocator.h>
@@ -11,7 +12,6 @@
 #include <iostream>
 #include <stdio.h>
 #include <string.h>
-#define MAX_VA_LENGTH 4096
 
 static const char *POLLY_ALLOCATION_TAG = "PollySample::Main";
 
@@ -27,20 +27,14 @@ public:
     // Destructor
     ~AWS(void);
     void init();
-    void pollySay(std::string);
-    std::thread initPolly(bool);
+    void initPolly(void);
+    Polly *polly();
 
 protected:
     Aws::SDKOptions _options;
     std::string _SDKVersion;
-    Aws::String _defaultPollyVoice = "Nicole";
-    Aws::String _defaultAudioDevice = "default";
-    void _handler(const char *, const Aws::Polly::Model::SynthesizeSpeechOutcome &, bool);
-    std::shared_ptr<Aws::Polly::PollyClient::PollyClient> _pollyClient;
-    std::shared_ptr<Aws::TextToSpeech::TextToSpeechManager> _manager;
-    bool _pollyCanTalk;
 
-    ConcurrentQueue<Aws::String> _pollyQueue;
+    Polly *_polly;
 };
 
 extern AWS awsHelper; ///< allow externals to access logger
