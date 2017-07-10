@@ -15,6 +15,7 @@
 #include <string>
 #include <vector>
 
+#include "aws/aws.h"
 #include "deviceConfigManager/deviceConfigManager.h"
 #include "log/clog.h"
 #include "mappingConfigManager/mappingConfigManager.h"

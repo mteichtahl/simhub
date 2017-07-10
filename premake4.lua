@@ -22,7 +22,13 @@ solution "simhub"
 					  "src/libs/variant/include",
 					  "src/libs/variant/include/mpark",
 					  "src/libs/queue" }
-        links { "zlog", "pthread", "config++" }
+        links { "zlog", 
+                "pthread", 
+                "config++",
+                "aws-cpp-sdk-core",
+                "aws-cpp-sdk-polly",
+                "aws-cpp-sdk-text-to-speech"
+                }
         targetdir ("bin")
         buildoptions { "--std=c++14" }
         configuration { "macosx" }
@@ -44,7 +50,13 @@ solution "simhub"
                       "src/libs",
                       "src/libs/variant/include/mpark",
 					  "src/libs/queue" }
-        links { "dl", "zlog", "pthread", "config++" }
+        links { "dl", 
+                "zlog", 
+                "pthread", 
+                "config++" ,
+                "aws-cpp-sdk-core",
+                "aws-cpp-sdk-polly",  
+                "aws-cpp-sdk-text-to-speech"}
         targetdir ("bin")
         buildoptions { "--std=c++14" }
 
