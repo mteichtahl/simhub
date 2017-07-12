@@ -1,3 +1,4 @@
+
 -- Clean Function --
 newaction {
    trigger     = "clean",
@@ -11,7 +12,7 @@ newaction {
 
 -- A solution contains projects, and defines the available configurations
 solution "simhub"
-    configurations { "Debug", "Release" }
+    configurations { "Debug", "Release", "Debug_AWS" }
     
     configuration "Debug"
         defines { "DEBUG" }
@@ -27,6 +28,9 @@ solution "simhub"
     configuration "Release"
         defines { "NDEBUG" }
         flags { "Optimize" }
+        links { "aws-cpp-sdk-core",
+                "aws-cpp-sdk-polly",
+                "aws-cpp-sdk-text-to-speech" }
  
     -- A project defines one build target
     project "simhub"
@@ -35,10 +39,9 @@ solution "simhub"
         files { "src/app/**.cpp", "src/app/**.h", 
                 "src/common/**.h", "src/common/**.cpp" }
 
-        filter { "configurations:Debug" }
+        configuration {"Debug"}
             excludes {"src/common/aws/**"}
-        filter {} 
-        
+
         includedirs { "src",
 					  "src/common",
 					  "src/libs",
@@ -66,9 +69,8 @@ solution "simhub"
                 "src/test/**.cpp", 
                 "src/libs/googletest/src/gtest-all.cc" }
 
-        filter { "configurations:Debug" }
+        configuration {"Debug"}
             excludes {"src/common/aws/**"}
-        filter {} 
 
         includedirs { "src/libs/googletest/include", 
                       "src/libs/googletest", 
@@ -81,10 +83,8 @@ solution "simhub"
         links { "dl", 
                 "zlog", 
                 "pthread", 
-                "config++" ,
-                "aws-cpp-sdk-core",
-                "aws-cpp-sdk-polly",  
-                "aws-cpp-sdk-text-to-speech"}
+                "config++"}
+                
         targetdir ("bin")
         buildoptions { "--std=c++14" }
 
