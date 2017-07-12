@@ -19,7 +19,7 @@ solution "simhub"
         symbols "On"
 
     configuration "Debug_AWS"
-        defines { "DEBUG" }
+        defines { "DEBUG" , "_AWS_SDK" }
         symbols "On"
         links { "aws-cpp-sdk-core",
                 "aws-cpp-sdk-polly",
