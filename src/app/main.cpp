@@ -6,7 +6,10 @@
 #include <thread>
 #include <vector>
 
+#if defined(_AWS_SDK)
 #include "aws/aws.h"
+#endif
+
 #include "common/configmanager/configmanager.h"
 #include "common/elements/sources/source.h"
 #include "libs/commandLine.h" // https://github.com/tanakh/cmdline
@@ -37,9 +40,9 @@ int main(int argc, char *argv[])
     logger.init(cli.get<std::string>("logConfig"));
 
     CConfigManager config(cli.get<std::string>("config"));
-    awsHelper.init();
 
 #if defined(_AWS_SDK)
+    awsHelper.init();
     if (cli.get<bool>("polly")) {
         awsHelper.initPolly();
     }
