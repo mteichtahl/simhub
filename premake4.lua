@@ -19,7 +19,7 @@ solution "simhub"
         symbols "On"
 
     configuration "Debug_AWS"
-        defines { "DEBUG", "_AWS_SDK" }
+        defines { "DEBUG" }
         symbols "On"
         links { "aws-cpp-sdk-core",
                 "aws-cpp-sdk-polly",
@@ -41,6 +41,7 @@ solution "simhub"
 
         configuration {"Debug"}
             excludes {"src/common/aws/**"}
+        configuration {}
 
         includedirs { "src",
 					  "src/common",
@@ -59,6 +60,7 @@ solution "simhub"
     
         configuration { "macosx", "Debug" }
             postbuildcommands { "dsymutil bin/simhub", "gtags" }
+        configuration {}
                 
     project "simhub_tests"
         kind "ConsoleApp"
@@ -71,6 +73,7 @@ solution "simhub"
 
         configuration {"Debug"}
             excludes {"src/common/aws/**"}
+        configuration {}
 
         includedirs { "src/libs/googletest/include", 
                       "src/libs/googletest", 
@@ -84,7 +87,7 @@ solution "simhub"
                 "zlog", 
                 "pthread", 
                 "config++"}
-                
+
         targetdir ("bin")
         buildoptions { "--std=c++14" }
 

@@ -32,7 +32,6 @@ void configureCli(cmdline::parser *cli)
 
 int main(int argc, char *argv[])
 {
-
     cmdline::parser cli;
     configureCli(&cli);
     cli.parse_check(argc, argv);
