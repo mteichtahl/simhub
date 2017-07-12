@@ -15,6 +15,7 @@ AWS::AWS()
 AWS::~AWS()
 {
     Aws::ShutdownAPI(_options);
+    delete *_polly;
 }
 
 Polly *AWS::polly()
