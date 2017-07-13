@@ -1,7 +1,7 @@
 #include <assert.h>
 
 #include "common/simhubdeviceplugin.h"
-#include "simsource_main.h"
+#include "main.h"
 
 // -- public C FFI
 

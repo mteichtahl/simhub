@@ -36,7 +36,7 @@ protected:
     SimConfigManager *simConfigManager;
 
 public:
-    DeviceConfigManager(libconfig::Config *config, std::string pluginDir = "./plugins");
+    DeviceConfigManager(libconfig::Config *config, SimHubEventController *simhubController, std::string pluginDir = "./plugins");
     ~DeviceConfigManager();
 };
 

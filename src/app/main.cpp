@@ -14,8 +14,8 @@
 #include "common/elements/sources/source.h"
 #include "libs/commandLine.h" // https://github.com/tanakh/cmdline
 #include "log/clog.h"
-#include "plugins/common/queue/concurrent_queue.h"
 #include "plugins/common/simhubdeviceplugin.h"
+#include "simhub.h"
 
 void configureCli(cmdline::parser *cli)
 {
@@ -38,7 +38,8 @@ int main(int argc, char *argv[])
 
     logger.init(cli.get<std::string>("logConfig"));
 
-    CConfigManager config(cli.get<std::string>("config"));
+    SimHubEventController simhubController;
+    ConfigManager config(cli.get<std::string>("config"));
 
 #if defined(_AWS_SDK)
     awsHelper.init();
@@ -47,7 +48,7 @@ int main(int argc, char *argv[])
     }
 #endif
 
-    if (!config.init()) {
+    if (!config.init(&simhubController)) {
         logger.log(LOG_ERROR, "Could not initialise configuration");
         exit(1);
     }

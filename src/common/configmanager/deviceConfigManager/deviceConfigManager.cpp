@@ -6,7 +6,7 @@
  *
  *   @return nothing
  */
-DeviceConfigManager::DeviceConfigManager(libconfig::Config *config, std::string pluginDir)
+DeviceConfigManager::DeviceConfigManager(libconfig::Config *config, SimHubEventController *simhubController, std::string pluginDir)
     : _config(config)
     , _pluginDir(pluginDir)
 {
@@ -27,7 +27,7 @@ DeviceConfigManager::DeviceConfigManager(libconfig::Config *config, std::string 
             if (type == PREPARE3D) {
                 logger.log(LOG_INFO, " - Creating %s simulator device", type.c_str());
                 try {
-                    simConfigManager = new SimConfigManager(tmpDeviceConfig);
+                    simConfigManager = new SimConfigManager(tmpDeviceConfig, simhubController);
                     continue;
                 }
                 catch (libconfig::SettingNotFoundException &nfex) {

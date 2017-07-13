@@ -7,7 +7,6 @@ PluginStateManager::PluginStateManager(void)
     : _enqueueCallback(NULL)
 {
     std::cout << "simplugin init'd" << std::endl;
-    _testEventThread = std::thread(std::bind(&PluginStateManager::runTestEventLoop, this));
 }
 
 PluginStateManager::~PluginStateManager(void)
@@ -42,6 +41,7 @@ void PluginStateManager::commenceEventing(EnqueueEventHandler enqueueCallback, v
     std::cout << "commence eventing" << std::endl;
     _enqueueCallback = enqueueCallback;
     _callbackArg = arg;
+    _testEventThread = std::thread(std::bind(&PluginStateManager::runTestEventLoop, this));
 }
 
 void PluginStateManager::ceaseEventing(void)

@@ -1,27 +1,23 @@
-#include "simConfigManager.h"
 #include <sys/stat.h>
+#include <assert.h>
+
+#include "simConfigManager.h"
 
 /**
  *   @brief  Default  constructor for SimConfigManager
  *
  *   @return nothing
  */
-SimConfigManager::SimConfigManager(libconfig::Setting *setting, std::string pluginDir)
+SimConfigManager::SimConfigManager(libconfig::Setting *setting, SimHubEventController *simhubController, std::string pluginDir)
     : _simConfig(setting)
+    , _simhubController(simhubController)
     , _pluginDir(pluginDir)
 {
-
     if (!validateConfig()) {
         throw std::runtime_error("[SimConfigManager] Unable to validate config.");
     }
 
-    loadPlugin();
-}
-
-bool SimConfigManager::loadPlugin(void)
-{
-    logger.log(LOG_INFO, "   - LOAD THE %s PLUGIN HERE", getType().c_str());
-    return RETURN_OK;
+    _simhubController->loadPrepare3dPlugin();
 }
 
 /**
@@ -77,17 +73,17 @@ bool SimConfigManager::validateConfig(void)
     return RETURN_OK;
 }
 
-const std::string SimConfigManager::getIPAddress(void)
+const std::string SimConfigManager::IPAddress(void)
 {
     return _simConfig->lookup("ipAddress").c_str();
 }
 
-const int SimConfigManager::getPort(void)
+const int SimConfigManager::port(void)
 {
     return _simConfig->lookup("port");
 }
 
-const std::string SimConfigManager::getType(void)
+const std::string SimConfigManager::type(void)
 {
     return _simConfig->lookup("type").c_str();
 }
