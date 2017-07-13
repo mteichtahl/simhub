@@ -43,6 +43,7 @@ bool Polly::isJoinable()
 
 void Polly::say(const char *pMsg, ...)
 {
+
     va_list args; ///< variable arguement list (derived from  ...)
     char buffer[MAX_VA_LENGTH]; ///< buffer for formated output
 
