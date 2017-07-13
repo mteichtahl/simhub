@@ -15,7 +15,10 @@
 #include <string>
 #include <vector>
 
+#if defined(_AWS_SDK)
 #include "aws/aws.h"
+#endif
+
 #include "deviceConfigManager/deviceConfigManager.h"
 #include "log/clog.h"
 #include "mappingConfigManager/mappingConfigManager.h"

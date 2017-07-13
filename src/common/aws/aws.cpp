@@ -15,7 +15,8 @@ AWS::AWS()
 AWS::~AWS()
 {
     Aws::ShutdownAPI(_options);
-    delete *_polly;
+    delete _polly;
+    logger.log(LOG_INFO, "AWS SDK shutdown");
 }
 
 Polly *AWS::polly()

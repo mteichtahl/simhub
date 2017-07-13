@@ -1,14 +1,36 @@
+
+-- Clean Function --
+newaction {
+   trigger     = "clean",
+   description = "clean the software",
+   execute     = function ()
+      print("clean the build...")
+      os.rmdir("./build")
+      print("done.")
+   end
+}
+
 -- A solution contains projects, and defines the available configurations
 solution "simhub"
-    configurations { "Debug", "Release" }
+    configurations { "Debug", "Release", "Debug_AWS" }
     
     configuration "Debug"
         defines { "DEBUG" }
-        flags { "Symbols" }
+        symbols "On"
+
+    configuration "Debug_AWS"
+        defines { "DEBUG" , "_AWS_SDK" }
+        symbols "On"
+        links { "aws-cpp-sdk-core",
+                "aws-cpp-sdk-polly",
+                "aws-cpp-sdk-text-to-speech" }
 
     configuration "Release"
         defines { "NDEBUG" }
-        flags { "Optimize" }    
+        flags { "Optimize" }
+        links { "aws-cpp-sdk-core",
+                "aws-cpp-sdk-polly",
+                "aws-cpp-sdk-text-to-speech" }
  
     -- A project defines one build target
     project "simhub"
@@ -16,24 +38,30 @@ solution "simhub"
         language "C++"
         files { "src/app/**.cpp", "src/app/**.h", 
                 "src/common/**.h", "src/common/**.cpp" }
+
+        configuration {"Debug"}
+            excludes {"src/common/aws/**"}
+        configuration {}
+
         includedirs { "src",
 					  "src/common",
 					  "src/libs",
 					  "src/libs/variant/include",
 					  "src/libs/variant/include/mpark",
 					  "src/libs/queue" }
+
         links { "zlog", 
                 "pthread", 
-                "config++",
-                "aws-cpp-sdk-core",
-                "aws-cpp-sdk-polly",
-                "aws-cpp-sdk-text-to-speech"
-                }
-        targetdir ("bin")
-        buildoptions { "--std=c++14" }
-        configuration { "macosx" }
-            postbuildcommands { "dsymutil bin/simhub", "gtags" }
+                "config++" }
 
+        targetdir ("bin")
+    
+        buildoptions { "--std=c++14" }
+    
+        configuration { "macosx", "Debug" }
+            postbuildcommands { "dsymutil bin/simhub", "gtags" }
+        configuration {}
+                
     project "simhub_tests"
         kind "ConsoleApp"
 	    language "C++"
@@ -42,6 +70,11 @@ solution "simhub"
                 "src/test/**.h", 
                 "src/test/**.cpp", 
                 "src/libs/googletest/src/gtest-all.cc" }
+
+        configuration {"Debug"}
+            excludes {"src/common/aws/**"}
+        configuration {}
+
         includedirs { "src/libs/googletest/include", 
                       "src/libs/googletest", 
                       "src", 
@@ -53,10 +86,8 @@ solution "simhub"
         links { "dl", 
                 "zlog", 
                 "pthread", 
-                "config++" ,
-                "aws-cpp-sdk-core",
-                "aws-cpp-sdk-polly",  
-                "aws-cpp-sdk-text-to-speech"}
+                "config++"}
+
         targetdir ("bin")
         buildoptions { "--std=c++14" }
 
