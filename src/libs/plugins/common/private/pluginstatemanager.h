@@ -5,6 +5,9 @@
 
 #include "common/simhubdeviceplugin.h"
 
+#define PREFLIGHT_OK 0
+#define PREFLIGHT_FAIL 0
+
 /**
  * This base class serves as the definition of shared supporting
  * functionality that can be used to create specific plugin

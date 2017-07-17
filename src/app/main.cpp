@@ -38,8 +38,8 @@ int main(int argc, char *argv[])
 
     logger.init(cli.get<std::string>("logConfig"));
 
-    SimHubEventController simhubController;
     ConfigManager config(cli.get<std::string>("config"));
+    SimHubEventController simhubController;
 
 #if defined(_AWS_SDK)
     awsHelper.init();

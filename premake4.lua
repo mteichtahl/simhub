@@ -97,6 +97,8 @@ solution "simhub"
 		language "C++"
         targetname "prepare3d"
         targetdir ("bin/plugins")
+        links { 'uv',
+                'pthread'}
 		files { "src/libs/plugins/prepare3d/**.h",
                 "src/libs/plugins/common/**.cpp",
 			    "src/libs/plugins/prepare3d/**.cpp" }

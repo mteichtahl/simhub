@@ -3,10 +3,10 @@
 
 #include "pluginstatemanager.h"
 
-PluginStateManager::PluginStateManager(void)
+PluginStateManager::PluginStateManager()
     : _enqueueCallback(NULL)
 {
-    std::cout << "simplugin init'd" << std::endl;
+    std::cout << "simplugin release" << std::endl;
 }
 
 PluginStateManager::~PluginStateManager(void)

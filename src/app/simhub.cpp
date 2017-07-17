@@ -1,12 +1,13 @@
 #include <assert.h>
 
-#include "simhub.h"
 #include "log/clog.h"
+#include "simhub.h"
 
 // TODO: FIX EVERYTHING
 
 SimHubEventController::SimHubEventController(void)
 {
+    logger.log(LOG_INFO, "Starting event controller");
 }
 
 SimHubEventController::~SimHubEventController(void)
@@ -19,7 +20,7 @@ SimHubEventController::~SimHubEventController(void)
 
 void SimHubEventController::prepare3dEventCallback(SPHANDLE eventSource, void *eventData)
 {
-    logger.log(LOG_INFO, "prepare3dEventCallback handler called");    
+    logger.log(LOG_INFO, "prepare3dEventCallback handler called");
     _eventQueue.push("...event...");
 }
 
@@ -44,23 +45,6 @@ void SimHubEventController::loadPlugin(std::string dylibName, EnqueueEventHandle
 
     if (err == 0) {
         err = pluginMethods.simplug_init(&pluginInstance);
-
-        // static const int TEST_VAL_COUNT = 3;
-        // ConfigEntry *configValues[TEST_VAL_COUNT];
-        // configValues[0] = (ConfigEntry *)calloc(1, sizeof(ConfigEntry));
-        // configValues[0]->type = CONFIG_INT;
-        // configValues[0]->value.int_value = 42;
-        // configValues[0]->length = sizeof(configValues[0]->value.int_value);
-        // configValues[1] = (ConfigEntry *)calloc(1, sizeof(ConfigEntry));
-        // configValues[1]->type = CONFIG_STRING;
-        // configValues[1]->value.string_value = (char *)"42";
-        // configValues[1]->length = strlen(configValues[1]->value.string_value);
-        // configValues[2] = (ConfigEntry *)calloc(1, sizeof(ConfigEntry));
-        // configValues[2]->type = CONFIG_FLOAT;
-        // configValues[2]->value.float_value = 42.42;
-        // configValues[2]->length = sizeof(configValues[2]->value.float_value);
-
-        // pluginMethods.simplug_bind_config_values(pluginInstance, (char *)"test_group", configValues, TEST_VAL_COUNT);
 
         if (pluginMethods.simplug_preflight_complete(pluginInstance) == 0) {
             // proxy the C style lambda call through to the member
