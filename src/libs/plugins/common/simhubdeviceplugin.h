@@ -8,6 +8,7 @@ extern "C" {
 #endif
 #define SPHANDLE void *
 typedef void (*EnqueueEventHandler)(SPHANDLE eventSource, void *event, void *arg);
+typedef void (*LoggingFunctionCB)(const int category, const char *msg, ...);
 
 typedef enum { CONFIG_INT = 0, CONFIG_STRING, CONFIG_FLOAT } ConfigType;
 
@@ -26,7 +27,7 @@ typedef struct {
 //! basic block of function pointers
 typedef struct {
     //! inits the state manager handle
-    int (*simplug_init)(SPHANDLE *plugin_instance);
+    int (*simplug_init)(SPHANDLE *plugin_instance, LoggingFunctionCB logger);
 
     //! pass in named config key/val pair group
     int (*simplug_bind_config_values)(SPHANDLE plugin_instance, char *group_name, ConfigEntry **values, int count);
@@ -65,7 +66,7 @@ inline int simplug_bootstrap(const char *plugin_path, simplug_vtable *plugin_vta
     // grab the addresses of the relevant public plugin interface
     // functions
 
-    plugin_vtable->simplug_init = (int (*)(SPHANDLE *))dlsym(handle, "simplug_init");
+    plugin_vtable->simplug_init = (int (*)(SPHANDLE *, LoggingFunctionCB))dlsym(handle, "simplug_init");
 
     plugin_vtable->simplug_bind_config_values = (int (*)(SPHANDLE, char *, ConfigEntry **, int))dlsym(handle, "simplug_bind_config_values");
 

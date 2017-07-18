@@ -6,7 +6,7 @@
 #include "common/simhubdeviceplugin.h"
 
 #define PREFLIGHT_OK 0
-#define PREFLIGHT_FAIL 0
+#define PREFLIGHT_FAIL 1
 
 /**
  * This base class serves as the definition of shared supporting
@@ -26,9 +26,10 @@ protected:
     EnqueueEventHandler _enqueueCallback;
     std::thread _testEventThread;
     void *_callbackArg;
+    LoggingFunctionCB _logger;
 
 public:
-    PluginStateManager(void);
+    PluginStateManager(LoggingFunctionCB logger);
     virtual ~PluginStateManager(void);
 
     virtual int bindConfigValues(char *group_name, ConfigEntry **values, int count);

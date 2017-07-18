@@ -5,8 +5,11 @@
 
 // TODO: FIX EVERYTHING
 
+SimHubEventController *SimHubEventController::_EventControllerInstance = NULL;
+
 SimHubEventController::SimHubEventController(void)
 {
+    _EventControllerInstance = this;
     logger.log(LOG_INFO, "Starting event controller");
 }
 
@@ -30,6 +33,23 @@ void SimHubEventController::pokeyEventCallback(SPHANDLE eventSource, void *event
     _eventQueue.push("...event...");
 }
 
+SimHubEventController * SimHubEventController::EventControllerInstance(void)
+{
+    return SimHubEventController::_EventControllerInstance;
+}
+
+void SimHubEventController::LoggerWrapper(const int category, const char *msg, ...)
+{
+    // TODO: make logger a class instance member
+    char buff[MAX_VA_LENGTH];
+    va_list args;
+    va_start(args, msg);
+    vsprintf(buff, msg, args);
+    va_end(args);
+
+    logger.log(category, buff);
+}
+
 void SimHubEventController::loadPlugin(std::string dylibName, EnqueueEventHandler eventCallback)
 {
     SPHANDLE pluginInstance = NULL;
@@ -44,7 +64,7 @@ void SimHubEventController::loadPlugin(std::string dylibName, EnqueueEventHandle
     int err = simplug_bootstrap(fullPath.c_str(), &pluginMethods);
 
     if (err == 0) {
-        err = pluginMethods.simplug_init(&pluginInstance);
+        err = pluginMethods.simplug_init(&pluginInstance, SimHubEventController::LoggerWrapper);
 
         if (pluginMethods.simplug_preflight_complete(pluginInstance) == 0) {
             // proxy the C style lambda call through to the member
