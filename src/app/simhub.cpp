@@ -23,7 +23,7 @@ SimHubEventController::~SimHubEventController(void)
 
 void SimHubEventController::prepare3dEventCallback(SPHANDLE eventSource, void *eventData)
 {
-    logger.log(LOG_INFO, "prepare3dEventCallback handler called");
+    logger.log(LOG_INFO, "prepare3dEventCallback handler called %s", eventData);
     _eventQueue.push("...event...");
 }
 
@@ -33,7 +33,7 @@ void SimHubEventController::pokeyEventCallback(SPHANDLE eventSource, void *event
     _eventQueue.push("...event...");
 }
 
-SimHubEventController * SimHubEventController::EventControllerInstance(void)
+SimHubEventController *SimHubEventController::EventControllerInstance(void)
 {
     return SimHubEventController::_EventControllerInstance;
 }

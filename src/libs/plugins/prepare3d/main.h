@@ -1,25 +1,24 @@
 #ifndef __SIMSOURCE_MAIN_H
 #define __SIMSOURCE_MAIN_H
 
+#include "common/elements/sources/source.h"
 #include "common/private/pluginstatemanager.h"
+
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <uv.h>
 
-void onConnect(uv_connect_t *req, int status)
-{
-    if (uv_is_readable(req->handle)) {
-        printf("reading\n");
-        //    uv_read_start(req->handle, alloc_buffer, onRead);
-    }
-    else {
-        printf("not readable\n");
-    }
-}
-
 #define BUFFER_LEN 4096
+#define MAX_ELEMENTS_PER_UPDATE 512
+#define GAUGE_IDENTIFIER 'G'
+#define NUMBER_IDENTIFIER 'N'
+#define INDICATOR_IDENTIFIER 'I'
+#define VALUE_IDENTIFIER 'V'
+#define ANALOG_IDENTIFIER 'A'
+#define ROTARY_IDENTIFIER 'R'
+#define BOOLEAN_IDENTIFIER 'B'
 
 #define check_uv(status)                                                                                                                                                           \
     do {                                                                                                                                                                           \
@@ -40,6 +39,9 @@ private:
     uv_connect_t _connectReq;
     char *_rawBuffer; ///< raw buffer for the tcp loop
 
+    // statistics
+    long _processedElementCount;
+
     //! simple implementation of class instance singleton
     static SimSourcePluginStateManager *_StateManagerInstance;
 
@@ -55,6 +57,10 @@ private:
     void instanceCloseHandler(uv_handle_t *handle);
     void instanceConnectionHandler(uv_connect_t *req, int status);
 
+    // data element processing
+    void processData(char *data, int len);
+    void processElement(int index, char *element);
+    char *getElementDataType(char identifier);
 
 public:
     SimSourcePluginStateManager(LoggingFunctionCB logger);

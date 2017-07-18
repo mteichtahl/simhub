@@ -1,12 +1,13 @@
 #ifndef __PLUGINSTATEMANAGER_H
 #define __PLUGINSTATEMANAGER_H
 
-#include <thread>
-
 #include "common/simhubdeviceplugin.h"
+#include <thread>
 
 #define PREFLIGHT_OK 0
 #define PREFLIGHT_FAIL 1
+
+enum logCategory { LOG_INFO = 1, LOG_ERROR = 2, LOG_DEBUG = 3 };
 
 /**
  * This base class serves as the definition of shared supporting

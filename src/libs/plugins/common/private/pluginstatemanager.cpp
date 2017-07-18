@@ -4,14 +4,13 @@
 #include "pluginstatemanager.h"
 
 PluginStateManager::PluginStateManager(LoggingFunctionCB logger)
-    : _enqueueCallback(NULL), _logger(logger)
+    : _enqueueCallback(NULL)
+    , _logger(logger)
 {
-    std::cout << "simplugin constructed" << std::endl;
 }
 
 PluginStateManager::~PluginStateManager(void)
 {
-    std::cout << "simplugin destroyed" << std::endl;
 
     // TODO: move these into proper test class
     //_testEventThread.join();
@@ -40,7 +39,7 @@ int PluginStateManager::preflightComplete(void)
 
 void PluginStateManager::commenceEventing(EnqueueEventHandler enqueueCallback, void *arg)
 {
-    std::cout << "commence eventing" << std::endl;
+    _logger(LOG_INFO, "  - commence eventing");
     _enqueueCallback = enqueueCallback;
     _callbackArg = arg;
     //_testEventThread = std::thread(std::bind(&PluginStateManager::runTestEventLoop, this));
@@ -48,5 +47,5 @@ void PluginStateManager::commenceEventing(EnqueueEventHandler enqueueCallback, v
 
 void PluginStateManager::ceaseEventing(void)
 {
-    std::cout << "cease eventing" << std::endl;
+    _logger(LOG_INFO, "  - Cease eventing");
 }
