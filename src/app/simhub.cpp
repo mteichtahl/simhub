@@ -23,8 +23,6 @@ SimHubEventController::~SimHubEventController(void)
 
 void SimHubEventController::prepare3dEventCallback(SPHANDLE eventSource, void *eventData)
 {
-    logger.log(LOG_INFO, "prepare3dEventCallback handler called %s", eventData);
-    _eventQueue.push("...event...");
     genericTLV *data = (genericTLV *)eventData;
 
     if (data->type == CONFIG_FLOAT)
