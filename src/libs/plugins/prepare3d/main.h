@@ -1,7 +1,6 @@
 #ifndef __SIMSOURCE_MAIN_H
 #define __SIMSOURCE_MAIN_H
 
-#include "common/elements/sources/source.h"
 #include "common/private/pluginstatemanager.h"
 
 #include <errno.h>
@@ -19,6 +18,10 @@
 #define ANALOG_IDENTIFIER 'A'
 #define ROTARY_IDENTIFIER 'R'
 #define BOOLEAN_IDENTIFIER 'B'
+
+#define SIM_CONNECT_NOT_FOUND -61
+
+typedef genericTLV simElement;
 
 #define check_uv(status)                                                                                                                                                           \
     do {                                                                                                                                                                           \
