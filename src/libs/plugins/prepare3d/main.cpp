@@ -100,8 +100,13 @@ void SimSourcePluginStateManager::OnConnect(uv_connect_t *req, int status)
 {
     assert(SimSourcePluginStateManager::StateManagerInstance());
 
-    SimSourcePluginStateManager::StateManagerInstance()->_logger(LOG_INFO, " - Connected to simulator %d", status);
-    SimSourcePluginStateManager::StateManagerInstance()->instanceConnectionHandler(req, status);
+    if (status == SIM_CONNECT_NOT_FOUND) {
+        SimSourcePluginStateManager::StateManagerInstance()->_logger(LOG_INFO, " - Failed to connect to simulator");
+    }
+    else {
+        SimSourcePluginStateManager::StateManagerInstance()->_logger(LOG_INFO, " - Connected to simulator %d", status);
+        SimSourcePluginStateManager::StateManagerInstance()->instanceConnectionHandler(req, status);
+    }
 }
 
 void SimSourcePluginStateManager::OnRead(uv_stream_t *server, ssize_t nread, const uv_buf_t *buf)
@@ -170,7 +175,33 @@ void SimSourcePluginStateManager::processElement(int index, char *element)
     char *type = getElementDataType(name[0]);
 
     if (type != NULL) {
-        SimSourcePluginStateManager::StateManagerInstance()->_logger(LOG_INFO, "%s %s %s", name, value, type);
+        // SimSourcePluginStateManager::StateManagerInstance()->_logger(LOG_INFO, "%s %s %s", name, value, type);
+
+        simElement el;
+
+        el.name = name;
+        if (strncmp(type, "float", sizeof(&type)) == 0) {
+            el.type = CONFIG_FLOAT;
+            el.value.float_value = atof(value);
+        }
+        else if (strncmp(type, "char", sizeof(&type)) == 0) {
+            el.type = CONFIG_STRING;
+            el.value.string_value = value;
+        }
+        else if (strncmp(type, "integer", sizeof(&type)) == 0) {
+            el.type = CONFIG_INT;
+            el.value.int_value = atoi(value);
+        }
+        else if (strncmp(type, "bool", sizeof(&type)) == 0) {
+            el.type = CONFIG_BOOL;
+
+            if (strncmp(value, "OFF", sizeof(el.value)) == 0)
+                el.value.int_value = 0;
+            else
+                el.value.int_value = 1;
+        }
+
+        el.length = sizeof(&value);
 
         // Source el("element", "desc");
         // Attribute attr;
@@ -180,7 +211,7 @@ void SimSourcePluginStateManager::processElement(int index, char *element)
         // attr.setValue<float>(1.223);
 
         // el.addAttribute(attr);
-        _enqueueCallback(this, (void *)name, _callbackArg);
+        _enqueueCallback(this, (void *)&el, _callbackArg);
         _processedElementCount++;
     }
 }
