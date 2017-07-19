@@ -26,7 +26,7 @@ void PluginStateManager::runTestEventLoop(void)
     std::cout << "done" << std::endl;
 }
 
-int PluginStateManager::bindConfigValues(char *group_name, ConfigEntry **values, int count)
+int PluginStateManager::bindConfigValues(char *group_name, genericTLV **values, int count)
 {
     std::cout << "bindConfigValues: " << group_name << ", " << count << std::endl;
     return 0;
