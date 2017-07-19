@@ -25,6 +25,22 @@ void SimHubEventController::prepare3dEventCallback(SPHANDLE eventSource, void *e
 {
     logger.log(LOG_INFO, "prepare3dEventCallback handler called %s", eventData);
     _eventQueue.push("...event...");
+    genericTLV *data = (genericTLV *)eventData;
+
+    if (data->type == CONFIG_FLOAT)
+        logger.log(LOG_INFO, "[SimHubEventController] %s %2.6f", data->name, data->value.float_value);
+
+    if (data->type == CONFIG_STRING)
+        logger.log(LOG_INFO, "[SimHubEventController] %s %s", data->name, data->value.string_value);
+
+    if (data->type == CONFIG_INT)
+        logger.log(LOG_INFO, "[SimHubEventController] %s %i", data->name, data->value.int_value);
+
+    if (data->type == CONFIG_BOOL)
+        logger.log(LOG_INFO, "[SimHubEventController] %s %i", data->name, data->value.int_value);
+
+    // TODO: this needs to change to a genericTLV
+    _eventQueue.push(data->name);
 }
 
 void SimHubEventController::pokeyEventCallback(SPHANDLE eventSource, void *eventData)
