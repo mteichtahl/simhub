@@ -24,7 +24,7 @@ protected:
     void loadPlugin(std::string dylibName, EnqueueEventHandler eventCallback);
 
     ConcurrentQueue<std::string> _eventQueue;
-    
+
     static SimHubEventController *EventControllerInstance(void);
     static void LoggerWrapper(const int category, const char *msg, ...);
     static SimHubEventController *_EventControllerInstance;
