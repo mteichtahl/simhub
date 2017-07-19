@@ -13,7 +13,7 @@ int simplug_init(SPHANDLE *plugin_instance, LoggingFunctionCB logger)
     return 0;
 }
 
-int simplug_bind_config_values(SPHANDLE plugin_instance, char *group_name, ConfigEntry **values, int count)
+int simplug_bind_config_values(SPHANDLE plugin_instance, char *group_name, genericTLV **values, int count)
 {
     return static_cast<PluginStateManager *>(plugin_instance)->bindConfigValues(group_name, values, count);
 }
