@@ -22,6 +22,7 @@ int simplug_preflight_complete(SPHANDLE plugin_instance)
 {
     return static_cast<PluginStateManager *>(plugin_instance)->preflightComplete();
 }
+
 void simplug_commence_eventing(SPHANDLE plugin_instance, EnqueueEventHandler enqueue_callback, void *arg)
 {
     static_cast<PluginStateManager *>(plugin_instance)->commenceEventing(enqueue_callback, arg);
@@ -264,5 +265,10 @@ void SimSourcePluginStateManager::commenceEventing(EnqueueEventHandler enqueueCa
 {
     _enqueueCallback = enqueueCallback;
     _callbackArg = arg;
-    check_uv(uv_run(_eventLoop, UV_RUN_DEFAULT));
+
+    // this is wrong in a number of ways - it needs to be cancel-able being its chief sin
+    // TODO: unbreak
+    _pluginThread = new std::thread([=] {
+        check_uv(uv_run(_eventLoop, UV_RUN_DEFAULT));
+    });
 }

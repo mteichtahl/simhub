@@ -4,6 +4,7 @@
 
 #include "plugins/common/queue/concurrent_queue.h"
 #include "plugins/common/simhubdeviceplugin.h"
+#include "simhub.h"
 
 /**
  * simple state management class used by the PluginTests
@@ -31,7 +32,20 @@ public:
 
 void EventConsumer::eventCallback(SPHANDLE eventSource, void *eventData)
 {
-    std::cout << "event handler called" << std::endl;
+    genericTLV *data = (genericTLV *)eventData;
+
+    if (data->type == CONFIG_FLOAT)
+        logger.log(LOG_INFO, "[SimHubEventController] %s %2.6f", data->name, data->value.float_value);
+
+    if (data->type == CONFIG_STRING)
+        logger.log(LOG_INFO, "[SimHubEventController] %s %s", data->name, data->value.string_value);
+
+    if (data->type == CONFIG_INT)
+        logger.log(LOG_INFO, "[SimHubEventController] %s %i", data->name, data->value.int_value);
+
+    if (data->type == CONFIG_BOOL)
+        logger.log(LOG_INFO, "[SimHubEventController] %s %i", data->name, data->value.int_value);
+
     _testEventQueue.push("...event...");
 }
 
@@ -42,22 +56,25 @@ void EventConsumer::runConsumptionTest(void)
 
     memset(&pluginMethods, sizeof(simplug_vtable), 0);
 
-    int err = simplug_bootstrap("plugins/libprepare3d.dylib", &pluginMethods);
+    std::string plugin = "plugins/libprepare3d";
+    plugin += LIB_EXT;
+
+    int err = simplug_bootstrap(plugin.c_str(), &pluginMethods);
 
     if (err == 0) {
-        err = pluginMethods.simplug_init(&pluginInstance);
+        err = pluginMethods.simplug_init(&pluginInstance, SimHubEventController::LoggerWrapper);
 
         static const int TEST_VAL_COUNT = 3;
-        ConfigEntry *configValues[TEST_VAL_COUNT];
-        configValues[0] = (ConfigEntry *)calloc(1, sizeof(ConfigEntry));
+        genericTLV *configValues[TEST_VAL_COUNT];
+        configValues[0] = (genericTLV *)calloc(1, sizeof(genericTLV));
         configValues[0]->type = CONFIG_INT;
         configValues[0]->value.int_value = 42;
         configValues[0]->length = sizeof(configValues[0]->value.int_value);
-        configValues[1] = (ConfigEntry *)calloc(1, sizeof(ConfigEntry));
+        configValues[1] = (genericTLV *)calloc(1, sizeof(genericTLV));
         configValues[1]->type = CONFIG_STRING;
         configValues[1]->value.string_value = (char *)"42";
         configValues[1]->length = strlen(configValues[1]->value.string_value);
-        configValues[2] = (ConfigEntry *)calloc(1, sizeof(ConfigEntry));
+        configValues[2] = (genericTLV *)calloc(1, sizeof(genericTLV));
         configValues[2]->type = CONFIG_FLOAT;
         configValues[2]->value.float_value = 42.42;
         configValues[2]->length = sizeof(configValues[2]->value.float_value);

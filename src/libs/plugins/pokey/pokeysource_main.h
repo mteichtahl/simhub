@@ -12,6 +12,8 @@
 //! barest specialisation of the internal plugin management support base class
 class PokeyDevicePluginStateManager : public PluginStateManager
 {
+public:
+    PokeyDevicePluginStateManager(LoggingFunctionCB logger) : PluginStateManager(logger) {};
 };
 
 #endif

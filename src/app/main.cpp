@@ -53,6 +53,8 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
+    simhubController.runEventLoop();
+
 #if defined(_AWS_SDK)
     awsHelper.polly()->say("system ready %d %s", 1, "test");
 #endif

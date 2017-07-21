@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <uv.h>
+#include <thread>
 
 #define BUFFER_LEN 4096
 #define MAX_ELEMENTS_PER_UPDATE 512
@@ -64,6 +65,7 @@ private:
     void processData(char *data, int len);
     void processElement(int index, char *element);
     char *getElementDataType(char identifier);
+    std::thread *_pluginThread;
 
 public:
     SimSourcePluginStateManager(LoggingFunctionCB logger);

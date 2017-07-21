@@ -39,7 +39,6 @@ bool SimConfigManager::fileExists(std::string filename)
  */
 bool SimConfigManager::validateConfig(void)
 {
-
     int hasError = false;
 
     if (!_simConfig) {
@@ -65,8 +64,8 @@ bool SimConfigManager::validateConfig(void)
     // check the plugin for the simulator is present
     _pluginName = _simConfig->lookup("type").c_str();
 
-    if (!fileExists(_pluginDir + "/lib" + _pluginName + ".dylib")) {
-        std::string msg = "[SimConfigManager] plugin does not exist " + _pluginDir + "/lib" + _pluginName + ".dylib";
+    if (!fileExists(_pluginDir + "/lib" + _pluginName + LIB_EXT)) {
+        std::string msg = "[SimConfigManager] plugin does not exist " + _pluginDir + "/lib" + _pluginName + LIB_EXT;
         throw std::logic_error(msg.c_str());
     }
 
