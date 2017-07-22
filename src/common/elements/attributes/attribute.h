@@ -22,6 +22,8 @@ public:
     eAttribute_t _type;
 
     Attribute(void);
+    virtual ~Attribute(void);
+    
     template <typename T> void setValue(T value)
     {
         _value = value;

@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <utility>
 
 #include "log/clog.h"
 #include "simhub.h"
@@ -8,9 +9,9 @@
 SimHubEventController *SimHubEventController::_EventControllerInstance = NULL;
 
 //! marshals the C generic struct instance into an Attribute C++ generic container
-Attribute *FromCGeneric(genericTLV *generic)
+std::shared_ptr<Attribute> FromCGeneric(genericTLV *generic)
 {
-    Attribute *retVal = new Attribute();
+    std::shared_ptr<Attribute> retVal(new Attribute());
 
     switch(generic->type) {
         case CONFIG_BOOL:
@@ -48,6 +49,9 @@ SimHubEventController *SimHubEventController::EventControllerInstance(void)
 SimHubEventController::SimHubEventController(void)
 {
     _EventControllerInstance = this;
+    _prepare3dMethods.plugin_instance = NULL;
+    _pokeyMethods.plugin_instance = NULL;
+
     logger.log(LOG_INFO, "Starting event controller");
 }
 
@@ -62,16 +66,18 @@ SimHubEventController::~SimHubEventController(void)
 
 void SimHubEventController::prepare3dEventCallback(SPHANDLE eventSource, void *eventData)
 {
-    genericTLV *data = (genericTLV *)eventData;
-    Attribute *attribute = FromCGeneric(data);
+    genericTLV *data = static_cast<genericTLV *>(eventData);
+    assert(data != NULL);
     //std::cout << "prepare3d event " << data->name << ": " << attribute->getValueToString() << std::endl;
+    std::shared_ptr<Attribute> attribute = FromCGeneric(data);
     _eventQueue.push(attribute);
 }
 
 void SimHubEventController::pokeyEventCallback(SPHANDLE eventSource, void *eventData)
 {
-    genericTLV *data = (genericTLV *)eventData;
-    Attribute *attribute = FromCGeneric(data);
+    genericTLV *data = static_cast<genericTLV *>(eventData);
+    assert(data != NULL);
+    std::shared_ptr<Attribute> attribute = FromCGeneric(data);
     //std::cout << "pokey event " << attribute->_name << ": " << attribute->getValueToString() << std::endl;
     _eventQueue.push(attribute);
 }
@@ -157,11 +163,10 @@ void SimHubEventController::shutdownPlugin(simplug_vtable &pluginMethods)
 //      will awake and pop the event
 void SimHubEventController::runEventLoop(void)
 {
-    // clearly TODO
-    for (int i = 0; i < 10000; i++) {
-        Attribute *data = _eventQueue.pop();
+    // clearly TODO 
+    for (int i = 0; i < 100; i++) { // -- 9782 was crashing before we freed the uv buffer
+        std::shared_ptr<Attribute> data = _eventQueue.pop();
         std::cout << "popped (" << data->_name << ": " << data->getValueToString() << ") off the concurrent event queue" << std::endl;
-        delete data;
     }
 
     terminate();

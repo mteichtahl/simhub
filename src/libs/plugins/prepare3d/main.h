@@ -63,12 +63,14 @@ private:
 
     // data element processing
     void processData(char *data, int len);
-    void processElement(int index, char *element);
+    void processElement(char *element);
     char *getElementDataType(char identifier);
     std::thread *_pluginThread;
 
 public:
     SimSourcePluginStateManager(LoggingFunctionCB logger);
+    virtual ~SimSourcePluginStateManager(void);
+
     int preflightComplete(void);
     void commenceEventing(EnqueueEventHandler enqueueCallback, void *arg);
     void ceaseEventing(void);

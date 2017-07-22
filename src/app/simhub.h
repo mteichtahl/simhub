@@ -26,7 +26,7 @@ protected:
     simplug_vtable loadPlugin(std::string dylibName, EnqueueEventHandler eventCallback);
     void shutdownPlugin(simplug_vtable &pluginMethods);
 
-    ConcurrentQueue<Attribute *> _eventQueue;
+    ConcurrentQueue<std::shared_ptr<Attribute>> _eventQueue;
     simplug_vtable _prepare3dMethods;
     simplug_vtable _pokeyMethods;
 
