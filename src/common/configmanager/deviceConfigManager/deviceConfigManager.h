@@ -29,14 +29,16 @@ class DeviceConfigManager
 {
 protected:
     bool isValidConfig;
-    libconfig::Config *_config;
-    libconfig::Setting *_deviceConfig;
+    libconfig::Config *_config; //< reference to config owned by other class
+    libconfig::Setting *_deviceConfig; //< internal reference pointer
     std::string _pluginDir;
-    std::map<std::string, Device *> _device;
-    SimConfigManager *simConfigManager;
+    std::map<std::string, std::shared_ptr<Device>> _device;
+    std::shared_ptr<SimConfigManager> _simConfigManager;
 
 public:
-    DeviceConfigManager(libconfig::Config *config, SimHubEventController *simhubController, std::string pluginDir = "./plugins");
+    DeviceConfigManager(libconfig::Config *config,
+                        SimHubEventController *simhubController,
+                        std::string pluginDir = "./plugins");
     ~DeviceConfigManager();
 };
 

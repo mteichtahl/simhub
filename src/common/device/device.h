@@ -11,10 +11,10 @@ class Device
 protected:
     std::string _type;
     std::string _id;
-    std::unique_ptr<libconfig::Setting> _config;
+    libconfig::Setting *_config; //< reference to setting owned by other class instance
 
 public:
-    Device(std::string type, std::string id, std::unique_ptr<libconfig::Setting> config);
+    Device(std::string type, std::string id, libconfig::Setting *config);
     ~Device(void);
     void show();
 };

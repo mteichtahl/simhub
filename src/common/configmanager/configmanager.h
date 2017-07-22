@@ -43,14 +43,14 @@ protected:
     std::string _configName;
     std::string _mappingConfigFilename;
     libconfig::Setting *_root;
-    DeviceConfigManager *_deviceConfigManager;
-    MappingConfigManager *mappingConfigManager;
-
+    std::shared_ptr<DeviceConfigManager> _deviceConfigManager;
+    std::shared_ptr<MappingConfigManager> _mappingConfigManager;
+    
     bool fileExists(std::string filename);
 
 public:
     ConfigManager(std::string);
-    ~ConfigManager(void);
+    virtual ~ConfigManager(void);
 
     std::string getConfigFilename(void);
     std::string getMappingConfigFilename(void);

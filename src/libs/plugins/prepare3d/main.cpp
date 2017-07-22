@@ -78,8 +78,17 @@ SimSourcePluginStateManager::SimSourcePluginStateManager(LoggingFunctionCB logge
 SimSourcePluginStateManager::~SimSourcePluginStateManager(void)
 {
     // TODO: enable once shtudown implemented
-    // if (_pluginThread != NULL)
-    //     delete _pluginThread;
+    if (_pluginThread != NULL) {
+        if (_pluginThread->joinable()) {
+            ceaseEventing();
+            _pluginThread->join();
+        }
+
+        delete _pluginThread;
+    }
+
+    if (_rawBuffer != NULL)
+        free(_rawBuffer);
 }
 
 int SimSourcePluginStateManager::preflightComplete(void)
