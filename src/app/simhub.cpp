@@ -13,27 +13,27 @@ std::shared_ptr<Attribute> FromCGeneric(genericTLV *generic)
 {
     std::shared_ptr<Attribute> retVal(new Attribute());
 
-    switch(generic->type) {
-        case CONFIG_BOOL:
-            retVal->setValue<bool>(generic->value.bool_value);
-            retVal->_type = BOOL_ATTRIBUTE;
-            break;
-        case CONFIG_FLOAT:
-            retVal->setValue<float>(generic->value.float_value);
-            retVal->_type = FLOAT_ATTRIBUTE;
-            break;
-        case CONFIG_INT:
-            retVal->setValue<int>(generic->value.int_value);
-            retVal->_type = INT_ATTRIBUTE;
-            break;
-        case CONFIG_STRING:
-            retVal->setValue<std::string>(generic->value.string_value);
-            retVal->_type = STRING_ATTRIBUTE;
-            break;
-        default:
-            assert(false);
-            break;
-    }    
+    switch (generic->type) {
+    case CONFIG_BOOL:
+        retVal->setValue<bool>(generic->value.bool_value);
+        retVal->_type = BOOL_ATTRIBUTE;
+        break;
+    case CONFIG_FLOAT:
+        retVal->setValue<float>(generic->value.float_value);
+        retVal->_type = FLOAT_ATTRIBUTE;
+        break;
+    case CONFIG_INT:
+        retVal->setValue<int>(generic->value.int_value);
+        retVal->_type = INT_ATTRIBUTE;
+        break;
+    case CONFIG_STRING:
+        retVal->setValue<std::string>(generic->value.string_value);
+        retVal->_type = STRING_ATTRIBUTE;
+        break;
+    default:
+        assert(false);
+        break;
+    }
 
     retVal->_name = generic->name;
 
@@ -46,7 +46,7 @@ SimHubEventController *SimHubEventController::EventControllerInstance(void)
     return SimHubEventController::_EventControllerInstance;
 }
 
-SimHubEventController::SimHubEventController(void)
+SimHubEventController::SimHubEventController()
 {
     _EventControllerInstance = this;
     _prepare3dMethods.plugin_instance = NULL;
@@ -68,7 +68,9 @@ void SimHubEventController::prepare3dEventCallback(SPHANDLE eventSource, void *e
 {
     genericTLV *data = static_cast<genericTLV *>(eventData);
     assert(data != NULL);
-    //std::cout << "prepare3d event " << data->name << ": " << attribute->getValueToString() << std::endl;
+    // std::cout << "prepare3d event " << data->name << std::endl;
+
+    // findMapping(data->name);
     std::shared_ptr<Attribute> attribute = FromCGeneric(data);
     _eventQueue.push(attribute);
 }
@@ -78,7 +80,7 @@ void SimHubEventController::pokeyEventCallback(SPHANDLE eventSource, void *event
     genericTLV *data = static_cast<genericTLV *>(eventData);
     assert(data != NULL);
     std::shared_ptr<Attribute> attribute = FromCGeneric(data);
-    //std::cout << "pokey event " << attribute->_name << ": " << attribute->getValueToString() << std::endl;
+    // std::cout << "pokey event " << attribute->_name << ": " << attribute->getValueToString() << std::endl;
     _eventQueue.push(attribute);
 }
 
@@ -109,7 +111,7 @@ simplug_vtable SimHubEventController::loadPlugin(std::string dylibName, EnqueueE
 
     if (err == 0) {
         err = pluginMethods.simplug_init(&pluginInstance, SimHubEventController::LoggerWrapper);
-        
+
         pluginMethods.plugin_instance = pluginInstance;
 
         if (pluginMethods.simplug_preflight_complete(pluginInstance) == 0) {
@@ -163,8 +165,9 @@ void SimHubEventController::shutdownPlugin(simplug_vtable &pluginMethods)
 //      will awake and pop the event
 void SimHubEventController::runEventLoop(void)
 {
-    // clearly TODO 
-    for (int i = 0; i < 100; i++) { // -- 9782 was crashing before we freed the uv buffer
+    // clearly TODO
+    // for (int i = 0; i < 100; i++) { // -- 9782 was crashing before we freed the uv buffer
+    while (true) {
         std::shared_ptr<Attribute> data = _eventQueue.pop();
         std::cout << "popped (" << data->_name << ": " << data->getValueToString() << ") off the concurrent event queue" << std::endl;
     }

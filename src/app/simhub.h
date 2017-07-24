@@ -1,5 +1,5 @@
-#ifndef __SIMHUB_H
-#define __SIMHUB_H
+#ifndef __SIMHUBEVENT_H
+#define __SIMHUBEVENT_H
 
 #include <string>
 #include <thread>
