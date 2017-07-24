@@ -3,6 +3,14 @@
 
 #include <dlfcn.h>
 
+#if defined(build_macosx)
+#define LIB_EXT ".dylib"
+#endif
+
+#if defined(build_linux)
+#define LIB_EXT ".so"
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -16,6 +24,7 @@ typedef union {
     float float_value;
     long int_value;
     char *string_value;
+    int bool_value;
 } VariantUnion;
 
 typedef struct {
@@ -48,6 +57,9 @@ typedef struct {
 
     //! release resources related to the state manager
     void (*simplug_release)(SPHANDLE plugin_instance);
+
+    //! convenience struct member so that users of this struct can store the instance with its methods
+    SPHANDLE plugin_instance;
 } simplug_vtable;
 
 /**

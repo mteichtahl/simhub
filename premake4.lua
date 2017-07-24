@@ -14,6 +14,15 @@ newaction {
 solution "simhub"
     configurations { "Debug", "Release", "Debug_AWS" }
     
+    -- pass in platform helper #defines
+    configuration {"macosx"}
+        defines {"build_macosx"}
+    configuration {""}    
+    configuration {"linux"}
+        defines {"build_linux"}
+    configuration {""}
+    
+    defines {"__PLATFORM"}
     configuration "Debug"
         defines { "DEBUG" }
         symbols "On"
@@ -62,6 +71,9 @@ solution "simhub"
         configuration { "macosx", "Debug" }
             postbuildcommands { "dsymutil bin/simhub", "gtags" }
         configuration {}
+        configuration {"linux"}
+            links {"dl"}
+        configuration {""}
                 
     project "simhub_tests"
         kind "ConsoleApp"
@@ -70,6 +82,7 @@ solution "simhub"
                 "src/common/**.cpp", 
                 "src/test/**.h", 
                 "src/test/**.cpp", 
+                "src/app/simhub.cpp",
                 "src/libs/googletest/src/gtest-all.cc" }
 
         configuration {"Debug"}
@@ -78,7 +91,8 @@ solution "simhub"
 
         includedirs { "src/libs/googletest/include", 
                       "src/libs/googletest", 
-                      "src", 
+                      "src",
+                      "src/app", 
                       "src/common", 
                       "src/libs/variant/include", 
                       "src/libs",

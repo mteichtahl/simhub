@@ -1,5 +1,7 @@
 #include <assert.h>
 #include <iostream>
+#include <vector>
+#include <memory>
 
 #include "common/simhubdeviceplugin.h"
 #include "main.h"
@@ -22,6 +24,7 @@ int simplug_preflight_complete(SPHANDLE plugin_instance)
 {
     return static_cast<PluginStateManager *>(plugin_instance)->preflightComplete();
 }
+
 void simplug_commence_eventing(SPHANDLE plugin_instance, EnqueueEventHandler enqueue_callback, void *arg)
 {
     static_cast<PluginStateManager *>(plugin_instance)->commenceEventing(enqueue_callback, arg);
@@ -41,16 +44,14 @@ void simplug_release(SPHANDLE plugin_instance)
 
 // -- internal implementation
 
+SimSourcePluginStateManager *SimSourcePluginStateManager::_StateManagerInstance = NULL;
+
 void SimSourcePluginStateManager::AllocBuffer(uv_handle_t *handle, size_t size, uv_buf_t *buf)
 {
     *buf = SimSourcePluginStateManager::StateManagerInstance()->_readBuffer;
-    ;
 }
 
-SimSourcePluginStateManager *SimSourcePluginStateManager::_StateManagerInstance = NULL;
-
 //! static getter for singleton instance of our class
-
 SimSourcePluginStateManager *SimSourcePluginStateManager::StateManagerInstance(void)
 {
     return _StateManagerInstance;
@@ -72,6 +73,22 @@ SimSourcePluginStateManager::SimSourcePluginStateManager(LoggingFunctionCB logge
     else {
         _readBuffer = ::uv_buf_init(_rawBuffer, BUFFER_LEN);
     }
+}
+
+SimSourcePluginStateManager::~SimSourcePluginStateManager(void)
+{
+    // TODO: enable once shtudown implemented
+    if (_pluginThread != NULL) {
+        if (_pluginThread->joinable()) {
+            ceaseEventing();
+            _pluginThread->join();
+        }
+
+        delete _pluginThread;
+    }
+
+    if (_rawBuffer != NULL)
+        free(_rawBuffer);
 }
 
 int SimSourcePluginStateManager::preflightComplete(void)
@@ -135,7 +152,9 @@ void SimSourcePluginStateManager::instanceReadHandler(uv_stream_t *server, ssize
     if (nread > 0) {
         uv_buf_t buffer = uv_buf_init((char *)malloc(nread), nread);
         memcpy(buffer.base, buf->base, nread);
+        buffer.base[nread - 1] = '\0';
         processData(buffer.base, nread);
+        free(buffer.base);
     }
     else if (nread < 0) {
         if (nread == UV_EOF) {
@@ -151,20 +170,34 @@ void SimSourcePluginStateManager::instanceReadHandler(uv_stream_t *server, ssize
 
 void SimSourcePluginStateManager::processData(char *data, int len)
 {
-    int elementCount = 0;
-    char *p = strtok(data, "\n\r");
-    char *array[MAX_ELEMENTS_PER_UPDATE];
+    if (len > 2) {
+        int elementCount = 0;
+        char *p = strtok(data, "\n");
+        char *array[MAX_ELEMENTS_PER_UPDATE];
 
-    while (p != NULL) {
-        array[elementCount++] = p;
-        p = strtok(NULL, "\n\r");
+
+        while (p != NULL) {
+            size_t len = strlen(p);
+
+            if (len > 2) {
+                char *buffer = (char *)malloc(1024);
+                memset(buffer, 0, 1024);
+                strncpy(buffer, p, len);
+                buffer[len] = '\0';
+                array[elementCount++] = buffer;
+            }
+
+            p = strtok(NULL, "\n");
+        }
+
+        for (int i = 0; i < elementCount; ++i) {
+            processElement(array[i]);
+            free(array[i]);
+        }
     }
-
-    for (int i = 0; i < elementCount; ++i)
-        processElement(i, array[i]);
 }
 
-void SimSourcePluginStateManager::processElement(int index, char *element)
+void SimSourcePluginStateManager::processElement(char *element)
 {
     char *name = strtok(element, "=");
     char *value = strtok(NULL, "=");
@@ -176,41 +209,34 @@ void SimSourcePluginStateManager::processElement(int index, char *element)
 
     if (type != NULL) {
         // SimSourcePluginStateManager::StateManagerInstance()->_logger(LOG_INFO, "%s %s %s", name, value, type);
-
         simElement el;
 
         el.name = name;
+
         if (strncmp(type, "float", sizeof(&type)) == 0) {
             el.type = CONFIG_FLOAT;
             el.value.float_value = atof(value);
+            el.length = sizeof(float);
         }
         else if (strncmp(type, "char", sizeof(&type)) == 0) {
             el.type = CONFIG_STRING;
             el.value.string_value = value;
+            el.length = strlen(value);
         }
         else if (strncmp(type, "integer", sizeof(&type)) == 0) {
             el.type = CONFIG_INT;
             el.value.int_value = atoi(value);
+            el.length = sizeof(int);
         }
         else if (strncmp(type, "bool", sizeof(&type)) == 0) {
             el.type = CONFIG_BOOL;
+            el.length = sizeof(int);
 
             if (strncmp(value, "OFF", sizeof(el.value)) == 0)
-                el.value.int_value = 0;
+                el.value.bool_value = 0;
             else
-                el.value.int_value = 1;
+                el.value.bool_value = 1;
         }
-
-        el.length = sizeof(&value);
-
-        // Source el("element", "desc");
-        // Attribute attr;
-        // attr._name = "at1name";
-        // attr._description = "lkfjdslfjkds";
-        // attr._type = FLOAT_ATTRIBUTE;
-        // attr.setValue<float>(1.223);
-
-        // el.addAttribute(attr);
         _enqueueCallback(this, (void *)&el, _callbackArg);
         _processedElementCount++;
     }
@@ -218,31 +244,30 @@ void SimSourcePluginStateManager::processElement(int index, char *element)
 
 char *SimSourcePluginStateManager::getElementDataType(char identifier)
 {
-
     switch (identifier) {
-    case GAUGE_IDENTIFIER:
-        return (char *)"float";
-        break;
-    case NUMBER_IDENTIFIER:
-        return (char *)"float";
-        break;
-    case INDICATOR_IDENTIFIER:
-        return (char *)"bool";
-        break;
-    case VALUE_IDENTIFIER:
-        return (char *)"uint";
-        break;
-    case ANALOG_IDENTIFIER:
-        return (char *)"char";
-        break;
-    case ROTARY_IDENTIFIER:
-        return (char *)"char";
-        break;
-    case BOOLEAN_IDENTIFIER:
-        return (char *)"bool";
-        break;
-    default:
-        return NULL;
+        case GAUGE_IDENTIFIER:
+            return (char *)"float";
+            break;
+        case NUMBER_IDENTIFIER:
+            return (char *)"float";
+            break;
+        case INDICATOR_IDENTIFIER:
+            return (char *)"bool";
+            break;
+        case VALUE_IDENTIFIER:
+            return (char *)"uint";
+            break;
+        case ANALOG_IDENTIFIER:
+            return (char *)"char";
+            break;
+        case ROTARY_IDENTIFIER:
+            return (char *)"char";
+            break;
+        case BOOLEAN_IDENTIFIER:
+            return (char *)"bool";
+            break;
+        default:
+            return NULL;
     }
 
     return NULL;
@@ -264,5 +289,10 @@ void SimSourcePluginStateManager::commenceEventing(EnqueueEventHandler enqueueCa
 {
     _enqueueCallback = enqueueCallback;
     _callbackArg = arg;
-    check_uv(uv_run(_eventLoop, UV_RUN_DEFAULT));
+
+    // this is wrong in a number of ways - it needs to be cancel-able being its chief sin
+    // TODO: unbreak
+    _pluginThread = new std::thread([=] {
+        check_uv(uv_run(_eventLoop, UV_RUN_DEFAULT));
+    });
 }

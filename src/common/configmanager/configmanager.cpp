@@ -7,6 +7,8 @@
  */
 ConfigManager::ConfigManager(std::string filename)
 {
+	libconfig::Config test;
+	
     if (fileExists(filename)) {
         _configFilename = filename;
     }
@@ -79,7 +81,7 @@ int ConfigManager::init(SimHubEventController *simhubController)
 
     /** load the device configuration mapping file **/
     try {
-        _deviceConfigManager = new DeviceConfigManager(&_config, simhubController);
+        _deviceConfigManager.reset(new DeviceConfigManager(&_config, simhubController));
     }
     catch (std::exception &e) {
         logger.log(LOG_ERROR, "%s", e.what());
@@ -88,8 +90,8 @@ int ConfigManager::init(SimHubEventController *simhubController)
 
     /** load the mapping configuration mapping file **/
     try {
-        mappingConfigManager = new MappingConfigManager(getMappingConfigFilename());
-        mappingConfigManager->init();
+        _mappingConfigManager.reset(new MappingConfigManager(getMappingConfigFilename()));
+        _mappingConfigManager->init();
     }
     catch (std::exception &e) {
         logger.log(LOG_ERROR, "%s", e.what());

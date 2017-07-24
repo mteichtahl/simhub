@@ -22,16 +22,36 @@ public:
     eAttribute_t _type;
 
     Attribute(void);
+    virtual ~Attribute(void);
+    
     template <typename T> void setValue(T value)
     {
         _value = value;
         _timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
     };
     template <typename T> T getValue(void) { return mpark::get<T>(_value); };
-    template <typename T> std::string getValueToString(void)
+    
+    std::string getValueToString(void)
     {
         std::ostringstream oss; // create a stream
-        oss << mpark::get<T>(_value); // insert value to stream
+
+        switch (_type) {
+            case INT_ATTRIBUTE:
+                oss << mpark::get<int>(_value); // insert value to stream
+                break;
+            case FLOAT_ATTRIBUTE:
+                oss << mpark::get<float>(_value); // insert value to stream
+                break;
+            case STRING_ATTRIBUTE:
+                oss << mpark::get<std::string>(_value); // insert value to stream
+                break;
+            case BOOL_ATTRIBUTE:
+                oss << mpark::get<bool>(_value); // insert value to stream
+                break;
+            default:
+                assert(false);
+                break;
+        }
         return oss.str(); // extract value and return
     }
 

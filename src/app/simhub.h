@@ -2,7 +2,9 @@
 #define __SIMHUB_H
 
 #include <string>
+#include <thread>
 
+#include "elements/attributes/attribute.h"
 #include "libs/plugins/common/queue/concurrent_queue.h"
 #include "plugins/common/simhubdeviceplugin.h"
 
@@ -21,12 +23,14 @@ class SimHubEventController
 protected:
     void prepare3dEventCallback(SPHANDLE eventSource, void *eventData);
     void pokeyEventCallback(SPHANDLE eventSource, void *eventData);
-    void loadPlugin(std::string dylibName, EnqueueEventHandler eventCallback);
+    simplug_vtable loadPlugin(std::string dylibName, EnqueueEventHandler eventCallback);
+    void shutdownPlugin(simplug_vtable &pluginMethods);
 
-    ConcurrentQueue<std::string> _eventQueue;
+    ConcurrentQueue<std::shared_ptr<Attribute>> _eventQueue;
+    simplug_vtable _prepare3dMethods;
+    simplug_vtable _pokeyMethods;
 
     static SimHubEventController *EventControllerInstance(void);
-    static void LoggerWrapper(const int category, const char *msg, ...);
     static SimHubEventController *_EventControllerInstance;
 
 public:
@@ -35,6 +39,10 @@ public:
 
     void loadPrepare3dPlugin(void);
     void loadPokeyPlugin(void);
+    void runEventLoop(void);
+    void terminate(void);
+
+    static void LoggerWrapper(const int category, const char *msg, ...);
 };
 
 #endif

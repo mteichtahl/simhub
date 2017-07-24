@@ -1,9 +1,14 @@
+#include <iostream>
 #include "attribute.h"
 
-Attribute::Attribute()
+Attribute::Attribute(void)
 {
     // _defaultValue = "0";
     // _value = 0;
+}
+
+Attribute::~Attribute(void)
+{
 }
 
 std::string Attribute::timestampString()
