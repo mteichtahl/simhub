@@ -47,8 +47,8 @@ DeviceConfigManager::DeviceConfigManager(libconfig::Config *config,
             logger.log(LOG_ERROR, "Config file parse error at %s. Skipping....", nfex.getPath());
             continue;
         }
-        newDevice = new Device(type, id, tmpDeviceConfig);
-        _device.emplace(id, newDevice);
+
+        _device.emplace(id, std::make_shared<Device>(type, id, tmpDeviceConfig));
     }
 }
 
