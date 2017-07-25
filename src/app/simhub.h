@@ -8,6 +8,8 @@
 #include "libs/plugins/common/queue/concurrent_queue.h"
 #include "plugins/common/simhubdeviceplugin.h"
 
+class ConfigManager; // forward reference 
+
 /**
  * Base of the simhub app controller logic
  *
@@ -35,7 +37,7 @@ protected:
     ConcurrentQueue<std::shared_ptr<Attribute>> _eventQueue;
     simplug_vtable _prepare3dMethods;
     simplug_vtable _pokeyMethods;
-
+    ConfigManager* _configManager;
 
 public:
     virtual ~SimHubEventController(void);
@@ -44,6 +46,7 @@ public:
     void loadPokeyPlugin(void);
 
     bool deliverPokeyPluginValue(std::shared_ptr<Attribute> value);
+    void setConfigManager(ConfigManager *configManager) { _configManager = configManager; };
 	
     template <class F> void runEventLoop(F&& eventProcessorFunctor);
 

@@ -40,8 +40,9 @@ int main(int argc, char *argv[])
     logger.init(cli.get<std::string>("logConfig"));
 
     ConfigManager config(cli.get<std::string>("config"));
-
     std::shared_ptr<SimHubEventController> simhubController = SimHubEventController::EventControllerInstance();
+
+    simhubController->setConfigManager(&config);
 
 #if defined(_AWS_SDK)
     awsHelper.init();
@@ -92,6 +93,6 @@ int main(int argc, char *argv[])
     if (awsHelper.polly()->isJoinable())
         awsHelper.polly()->thread()->join();
 #endif
-
+    
     return 0;
 }
