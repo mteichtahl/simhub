@@ -83,7 +83,7 @@ int MappingConfigManager::init(void)
                 continue;
             }
 
-            std::pair<std::map<std::string, std::pair<std::string, std::string>>::iterator, bool> ret;
+            std::pair<std::map<std::string, mapEntry>::iterator, bool> ret;
             auto pair = std::make_pair(source, target);
             ret = _mapping.insert(std::make_pair(source, pair));
 
@@ -117,4 +117,17 @@ std::string MappingConfigManager::version(void)
     }
 
     return _mappingConfigFileVersion;
+}
+
+bool MappingConfigManager::findMapping(std::string source, mapEntry *retMapEntry)
+{
+    auto ret = _mapping.find(source);
+    if (ret != _mapping.end()) {
+        printf("%s", (char *)(&ret->second.second));
+        retMapEntry = &ret->second;
+        return true;
+    }
+    else {
+        return false;
+    }
 }

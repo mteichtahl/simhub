@@ -19,6 +19,9 @@
 #define RETURN_OK 1
 #define RETURN_ERROR 0
 
+typedef std::pair<std::string, std::string> mapEntry;
+typedef std::map<std::string, mapEntry> ElementMap;
+
 class MappingConfigManager
 {
 protected:
@@ -28,7 +31,7 @@ protected:
     std::string _mappingConfigFileVersion;
     std::string _configName;
     libconfig::Setting *_root;
-    std::map<std::string, std::pair<std::string, std::string>> _mapping;
+    ElementMap _mapping;
 
 public:
     MappingConfigManager(std::string);
@@ -38,6 +41,7 @@ public:
     bool fileExists(std::string filename);
     std::string getConfigFilename(void);
     std::string version(void);
+    bool findMapping(std::string, mapEntry *);
 };
 
 #endif
