@@ -31,10 +31,12 @@ protected:
     libconfig::Setting *_simConfig;
     std::string _pluginDir;
     std::string _pluginName;
-    SimHubEventController *_simhubController;
+    std::shared_ptr<SimHubEventController> _simhubController;
 
 public:
-    SimConfigManager(libconfig::Setting *config, SimHubEventController *simhubController, std::string pluginDir = "./plugins");
+    SimConfigManager(libconfig::Setting *config, 
+                     std::shared_ptr<SimHubEventController> simhubController, 
+                     std::string pluginDir = "./plugins");
     const libconfig::Setting *config(void);
     bool validateConfig(void);
     bool fileExists(std::string filename);

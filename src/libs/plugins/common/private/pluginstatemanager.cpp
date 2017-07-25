@@ -37,6 +37,11 @@ int PluginStateManager::preflightComplete(void)
     return 0;
 }
 
+int PluginStateManager::deliverValue(genericTLV *value)
+{
+    return 0;
+}
+
 void PluginStateManager::commenceEventing(EnqueueEventHandler enqueueCallback, void *arg)
 {
     _logger(LOG_INFO, "  - commence eventing");

@@ -54,7 +54,7 @@ public:
 
     std::string getConfigFilename(void);
     std::string getMappingConfigFilename(void);
-    int init(SimHubEventController *simhubController);
+    int init(std::shared_ptr<SimHubEventController> simhubController);
     std::string version(void);
     std::string name(void);
 };

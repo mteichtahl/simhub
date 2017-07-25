@@ -14,8 +14,11 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 #define SPHANDLE void *
+
 typedef void (*EnqueueEventHandler)(SPHANDLE eventSource, void *event, void *arg);
+
 typedef void (*LoggingFunctionCB)(const int category, const char *msg, ...);
 
 typedef enum { CONFIG_INT = 0, CONFIG_STRING, CONFIG_FLOAT, CONFIG_BOOL } ConfigType;
@@ -41,6 +44,7 @@ typedef struct {
 
     //! pass in named config key/val pair group
     int (*simplug_bind_config_values)(SPHANDLE plugin_instance, char *group_name, genericTLV **values, int count);
+
     //! pre-flight checks method
     int (*simplug_preflight_complete)(SPHANDLE plugin_instance);
 
@@ -51,6 +55,12 @@ typedef struct {
      * is used in pthread_create
      */
     void (*simplug_commence_eventing)(SPHANDLE plugin_instance, EnqueueEventHandler event_callback, void *arg);
+
+    /**
+     * instruct the plugin instance to synchronously deliver a value to the value name
+     * - the name is actually a name-spaced endpoint
+     */
+    int (*simplug_deliver_value)(SPHANDLE plugin_instance, genericTLV *value);
 
     //! tell the manager to tear down the event loop
     void (*simplug_cease_eventing)(SPHANDLE plugin_instance);
@@ -80,16 +90,31 @@ inline int simplug_bootstrap(const char *plugin_path, simplug_vtable *plugin_vta
     // functions
 
     plugin_vtable->simplug_init = (int (*)(SPHANDLE *, LoggingFunctionCB))dlsym(handle, "simplug_init");
+    if (!plugin_vtable->simplug_init)
+        return -1;
 
     plugin_vtable->simplug_bind_config_values = (int (*)(SPHANDLE, char *, genericTLV **, int))dlsym(handle, "simplug_bind_config_values");
+    if (!plugin_vtable->simplug_bind_config_values)
+        return -1;
 
     plugin_vtable->simplug_preflight_complete = (int (*)(SPHANDLE))dlsym(handle, "simplug_preflight_complete");
+    if (!plugin_vtable->simplug_preflight_complete)
+        return -1;
 
     plugin_vtable->simplug_commence_eventing = (void (*)(SPHANDLE, EnqueueEventHandler, void *))dlsym(handle, "simplug_commence_eventing");
+    if (!plugin_vtable->simplug_commence_eventing)
+        return -1;
 
+    plugin_vtable->simplug_deliver_value = (int (*)(SPHANDLE, genericTLV *))dlsym(handle, "simplug_deliver_value");
+    // NOTE: at this point plugins can optionally implement the deliver_value function
+    
     plugin_vtable->simplug_cease_eventing = (void (*)(SPHANDLE))dlsym(handle, "simplug_cease_eventing");
+    if (!plugin_vtable->simplug_cease_eventing)
+        return -1;
 
     plugin_vtable->simplug_release = (void (*)(SPHANDLE))dlsym(handle, "simplug_release");
+    if (!plugin_vtable->simplug_release)
+        return -1;
 
     return 0;
 };

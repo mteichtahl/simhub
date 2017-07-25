@@ -8,7 +8,7 @@
  *
  *   @return nothing
  */
-SimConfigManager::SimConfigManager(libconfig::Setting *setting, SimHubEventController *simhubController, std::string pluginDir)
+SimConfigManager::SimConfigManager(libconfig::Setting *setting, std::shared_ptr<SimHubEventController> simhubController, std::string pluginDir)
     : _simConfig(setting)
     , _simhubController(simhubController)
     , _pluginDir(pluginDir)
@@ -18,6 +18,7 @@ SimConfigManager::SimConfigManager(libconfig::Setting *setting, SimHubEventContr
     }
 
     _simhubController->loadPrepare3dPlugin();
+    _simhubController->loadPokeyPlugin();
 }
 
 /**
