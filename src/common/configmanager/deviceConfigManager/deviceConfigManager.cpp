@@ -7,7 +7,7 @@
  *   @return nothing
  */
 DeviceConfigManager::DeviceConfigManager(libconfig::Config *config,
-                                         SimHubEventController *simhubController,
+                                         std::shared_ptr<SimHubEventController> simhubController,
                                          std::string pluginDir)
     : _config(config)
     , _pluginDir(pluginDir)

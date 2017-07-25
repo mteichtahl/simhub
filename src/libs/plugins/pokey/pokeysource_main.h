@@ -14,6 +14,8 @@ class PokeyDevicePluginStateManager : public PluginStateManager
 {
 public:
     PokeyDevicePluginStateManager(LoggingFunctionCB logger) : PluginStateManager(logger) {};
+
+    virtual int deliverValue(genericTLV *value);
 };
 
 #endif

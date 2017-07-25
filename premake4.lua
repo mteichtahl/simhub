@@ -71,6 +71,7 @@ solution "simhub"
         configuration { "macosx", "Debug" }
             postbuildcommands { "dsymutil bin/simhub", "gtags" }
         configuration {}
+		
         configuration {"linux"}
             links {"dl"}
         configuration {""}
