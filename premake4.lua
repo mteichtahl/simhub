@@ -71,6 +71,7 @@ solution "simhub"
         configuration { "macosx", "Debug" }
             postbuildcommands { "dsymutil bin/simhub", "gtags" }
         configuration {}
+		
         configuration {"linux"}
             links {"dl"}
         configuration {""}
@@ -105,6 +106,9 @@ solution "simhub"
 
         targetdir ("bin")
         buildoptions { "--std=c++14" }
+        configuration { "macosx", "Debug" }
+            postbuildcommands { "dsymutil bin/simhub_tests", "gtags" }
+        configuration {}
 
     project "prepare3d_plugin"
 	    kind "SharedLib"
@@ -125,6 +129,9 @@ solution "simhub"
                       "src/libs/variant/include/mpark",
 					  "src/libs/queue" }
         buildoptions { "--std=c++14" }
+        configuration { "macosx", "Debug" }
+            postbuildcommands { "dsymutil bin/plugins/libprepare3d.dylib", "gtags" }
+        configuration {}
 
 project "simplug_devicesource"
 	    kind "SharedLib"
@@ -143,4 +150,7 @@ project "simplug_devicesource"
                       "src/libs/variant/include/mpark",
 					  "src/libs/queue" }
         buildoptions { "--std=c++14" }
+        configuration { "macosx", "Debug" }
+            postbuildcommands { "dsymutil bin/plugins/libpokey.dylib", "gtags" }
+        configuration {}
 		

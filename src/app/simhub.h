@@ -8,6 +8,8 @@
 #include "libs/plugins/common/queue/concurrent_queue.h"
 #include "plugins/common/simhubdeviceplugin.h"
 
+class ConfigManager; // forward reference 
+
 /**
  * Base of the simhub app controller logic
  *
@@ -21,28 +23,55 @@
 class SimHubEventController
 {
 protected:
+    static std::shared_ptr<SimHubEventController> _EventControllerInstance;
+
+protected:
+    SimHubEventController(void);
+
     void prepare3dEventCallback(SPHANDLE eventSource, void *eventData);
     void pokeyEventCallback(SPHANDLE eventSource, void *eventData);
     simplug_vtable loadPlugin(std::string dylibName, EnqueueEventHandler eventCallback);
+    void terminate(void);
     void shutdownPlugin(simplug_vtable &pluginMethods);
 
     ConcurrentQueue<std::shared_ptr<Attribute>> _eventQueue;
     simplug_vtable _prepare3dMethods;
     simplug_vtable _pokeyMethods;
-
-    static SimHubEventController *EventControllerInstance(void);
-    static SimHubEventController *_EventControllerInstance;
+    ConfigManager* _configManager;
 
 public:
-    SimHubEventController(void);
     virtual ~SimHubEventController(void);
 
     void loadPrepare3dPlugin(void);
     void loadPokeyPlugin(void);
-    void runEventLoop(void);
-    void terminate(void);
 
+    bool deliverPokeyPluginValue(std::shared_ptr<Attribute> value);
+    void setConfigManager(ConfigManager *configManager) { _configManager = configManager; };
+	
+    template <class F> void runEventLoop(F&& eventProcessorFunctor);
+
+public:
     static void LoggerWrapper(const int category, const char *msg, ...);
+    static std::shared_ptr<SimHubEventController> EventControllerInstance(void);
 };
+
+//! TODO - add perpetual and cancellable loop
+// - currently just waits on the concurrent event queue
+//   -> when another thread pushes an event on the queue, this thread
+//      will awake and pop the event
+
+template <class F>
+void SimHubEventController::runEventLoop(F&& eventProcessorFunctor)
+{
+    bool breakLoop = false;
+
+    while (!breakLoop) {
+        std::shared_ptr<Attribute> data = _eventQueue.pop();
+        logger.log(LOG_INFO, "popped (%s: %s) off the concurrent event queue", data->_name.c_str(), data->getValueToString().c_str());
+        breakLoop = !eventProcessorFunctor(data);
+    }
+
+    terminate();
+}
 
 #endif

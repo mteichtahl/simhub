@@ -59,7 +59,7 @@ std::string ConfigManager::getMappingConfigFilename(void)
     return _mappingConfigFilename;
 }
 
-int ConfigManager::init(SimHubEventController *simhubController)
+int ConfigManager::init(std::shared_ptr<SimHubEventController> simhubController)
 {
     // read the config file and handle any errors
     try {
