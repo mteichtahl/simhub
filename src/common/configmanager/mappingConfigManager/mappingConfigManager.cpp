@@ -83,7 +83,7 @@ int MappingConfigManager::init(void)
                 continue;
             }
 
-            std::pair<std::map<std::string, mapEntry>::iterator, bool> ret;
+            std::pair<std::map<std::string, MapEntry>::iterator, bool> ret;
             auto pair = std::make_pair(source, target);
             ret = _mapping.insert(std::make_pair(source, pair));
 
@@ -119,12 +119,19 @@ std::string MappingConfigManager::version(void)
     return _mappingConfigFileVersion;
 }
 
-bool MappingConfigManager::findMapping(std::string source, mapEntry *retMapEntry)
+/**
+ *   @brief find a source and target pair based on a source
+ *
+ *   @param  std::string A string representing the name of the source element
+ *   @param  MapEntry MapEntry to return into
+ *
+ *   @return bool true if file exists, otherwise false
+ */
+bool MappingConfigManager::find(std::string key, MapEntry **retMapEntry)
 {
-    auto ret = _mapping.find(source);
+    ElementMap::iterator ret = _mapping.find(key);
     if (ret != _mapping.end()) {
-        printf("%s", (char *)(&ret->second.second));
-        retMapEntry = &ret->second;
+        *retMapEntry = &(ret->second);
         return true;
     }
     else {
