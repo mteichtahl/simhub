@@ -125,9 +125,12 @@ void SimHubEventController::prepare3dEventCallback(SPHANDLE eventSource, void *e
     assert(data != NULL);
 
     std::shared_ptr<Attribute> attribute = AttributeFromCGeneric(data);
-    // findMapping(data->name);
-    _configManager->mapManager();
-    _eventQueue.push(attribute);
+    MapEntry *mapEntry;
+
+    if (_configManager->mapManager()->find(data->name, &mapEntry)) {
+        std::cout << data->name << "--->" << mapEntry->second.c_str() << std::endl;
+        _eventQueue.push(attribute);
+    }
 }
 
 void SimHubEventController::pokeyEventCallback(SPHANDLE eventSource, void *eventData)
