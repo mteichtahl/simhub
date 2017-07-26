@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <utility>
 
+#include "common/configmanager/configmanager.h"
 #include "log/clog.h"
 #include "simhub.h"
 
@@ -15,31 +16,31 @@ genericTLV *AttributeToCGeneric(std::shared_ptr<Attribute> value)
     retVal->name = (char *)calloc(value->_name.size() + 1, 1);
     strncpy(retVal->name, value->_name.c_str(), value->_name.size());
 
-    switch(value->_type) {
-        case BOOL_ATTRIBUTE:
-            retVal->type = CONFIG_BOOL;
-            retVal->value.bool_value = value->getValue<bool>();
-            break;
+    switch (value->_type) {
+    case BOOL_ATTRIBUTE:
+        retVal->type = CONFIG_BOOL;
+        retVal->value.bool_value = value->getValue<bool>();
+        break;
 
-        case FLOAT_ATTRIBUTE:
-            retVal->type = CONFIG_FLOAT;
-            retVal->value.float_value = value->getValue<float>();
-            break;
+    case FLOAT_ATTRIBUTE:
+        retVal->type = CONFIG_FLOAT;
+        retVal->value.float_value = value->getValue<float>();
+        break;
 
-        case INT_ATTRIBUTE:
-            retVal->type = CONFIG_INT;
-            retVal->value.int_value = value->getValue<int>();
-            break;
+    case INT_ATTRIBUTE:
+        retVal->type = CONFIG_INT;
+        retVal->value.int_value = value->getValue<int>();
+        break;
 
-        case STRING_ATTRIBUTE:
-            retVal->type = CONFIG_STRING;
-            retVal->value.string_value = (char *)calloc(value->getValue<std::string>().size() + 1, 1);
-            strncpy(retVal->value.string_value, value->getValue<std::string>().c_str(), value->getValue<std::string>().size());
-            break;
+    case STRING_ATTRIBUTE:
+        retVal->type = CONFIG_STRING;
+        retVal->value.string_value = (char *)calloc(value->getValue<std::string>().size() + 1, 1);
+        strncpy(retVal->value.string_value, value->getValue<std::string>().c_str(), value->getValue<std::string>().size());
+        break;
 
-        default:
-            assert(false);
-            break;
+    default:
+        assert(false);
+        break;
     }
 
     return retVal;
@@ -90,6 +91,7 @@ SimHubEventController::SimHubEventController()
 {
     _prepare3dMethods.plugin_instance = NULL;
     _pokeyMethods.plugin_instance = NULL;
+    _configManager = NULL;
 
     logger.log(LOG_INFO, "Starting event controller");
 }
@@ -105,12 +107,12 @@ bool SimHubEventController::deliverPokeyPluginValue(std::shared_ptr<Attribute> v
 
     genericTLV *c_value = AttributeToCGeneric(value);
     bool retVal = !_pokeyMethods.simplug_deliver_value(_pokeyMethods.plugin_instance, c_value);
-    
-    if(c_value->type == CONFIG_STRING)
+
+    if (c_value->type == CONFIG_STRING)
         free(c_value->value.string_value);
     free(c_value->name);
     free(c_value);
-    
+
     return retVal;
 }
 // these callbacks will be called from the thread of the event
@@ -124,6 +126,7 @@ void SimHubEventController::prepare3dEventCallback(SPHANDLE eventSource, void *e
 
     std::shared_ptr<Attribute> attribute = AttributeFromCGeneric(data);
     // findMapping(data->name);
+    _configManager->mapManager();
     _eventQueue.push(attribute);
 }
 
@@ -132,7 +135,6 @@ void SimHubEventController::pokeyEventCallback(SPHANDLE eventSource, void *event
     genericTLV *data = static_cast<genericTLV *>(eventData);
     assert(data != NULL);
     std::shared_ptr<Attribute> attribute = AttributeFromCGeneric(data);
-    //std::cout << "pokey event " << attribute->_name << ": " << attribute->getValueToString() << std::endl;
     _eventQueue.push(attribute);
 }
 
@@ -210,4 +212,3 @@ void SimHubEventController::shutdownPlugin(simplug_vtable &pluginMethods)
         pluginMethods.plugin_instance = NULL;
     }
 }
-

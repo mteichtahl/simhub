@@ -1,5 +1,5 @@
-#ifndef __SIMHUBEVENT_H
-#define __SIMHUBEVENT_H
+#ifndef __SIMHUB_H
+#define __SIMHUB_H
 
 #include <string>
 #include <thread>
@@ -7,6 +7,8 @@
 #include "elements/attributes/attribute.h"
 #include "libs/plugins/common/queue/concurrent_queue.h"
 #include "plugins/common/simhubdeviceplugin.h"
+
+class ConfigManager; // forward reference
 
 /**
  * Base of the simhub app controller logic
@@ -35,7 +37,7 @@ protected:
     ConcurrentQueue<std::shared_ptr<Attribute>> _eventQueue;
     simplug_vtable _prepare3dMethods;
     simplug_vtable _pokeyMethods;
-
+    ConfigManager *_configManager;
 
 public:
     virtual ~SimHubEventController(void);
@@ -44,8 +46,9 @@ public:
     void loadPokeyPlugin(void);
 
     bool deliverPokeyPluginValue(std::shared_ptr<Attribute> value);
-	
-    template <class F> void runEventLoop(F&& eventProcessorFunctor);
+    void setConfigManager(ConfigManager *configManager) { _configManager = configManager; };
+
+    template <class F> void runEventLoop(F &&eventProcessorFunctor);
 
 public:
     static void LoggerWrapper(const int category, const char *msg, ...);
@@ -57,8 +60,7 @@ public:
 //   -> when another thread pushes an event on the queue, this thread
 //      will awake and pop the event
 
-template <class F>
-void SimHubEventController::runEventLoop(F&& eventProcessorFunctor)
+template <class F> void SimHubEventController::runEventLoop(F &&eventProcessorFunctor)
 {
     bool breakLoop = false;
 

@@ -7,8 +7,8 @@
  */
 ConfigManager::ConfigManager(std::string filename)
 {
-	libconfig::Config test;
-	
+    libconfig::Config test;
+
     if (fileExists(filename)) {
         _configFilename = filename;
     }
@@ -16,6 +16,12 @@ ConfigManager::ConfigManager(std::string filename)
         logger.log(LOG_ERROR, "Config file %s does not exist", filename.c_str());
         throw std::runtime_error("Config I/O error - See log file");
     }
+}
+
+std::shared_ptr<MappingConfigManager> ConfigManager::mapManager(void)
+{
+    assert(_mappingConfigManager != NULL);
+    return _mappingConfigManager;
 }
 
 /**

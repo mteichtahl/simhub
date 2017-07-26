@@ -45,7 +45,7 @@ protected:
     libconfig::Setting *_root;
     std::shared_ptr<DeviceConfigManager> _deviceConfigManager;
     std::shared_ptr<MappingConfigManager> _mappingConfigManager;
-    
+
     bool fileExists(std::string filename);
 
 public:
@@ -57,6 +57,7 @@ public:
     int init(std::shared_ptr<SimHubEventController> simhubController);
     std::string version(void);
     std::string name(void);
+    std::shared_ptr<MappingConfigManager> mapManager(void);
 };
 
 #endif
