@@ -128,7 +128,7 @@ void SimHubEventController::prepare3dEventCallback(SPHANDLE eventSource, void *e
     MapEntry *mapEntry;
 
     if (_configManager->mapManager()->find(data->name, &mapEntry)) {
-        std::cout << data->name << "--->" << mapEntry->second.c_str() << std::endl;
+        std::cout << data->name << "--->" << mapEntry->second.c_str() << " FIND TARGET HERE" << std::endl;
         _eventQueue.push(attribute);
     }
 }

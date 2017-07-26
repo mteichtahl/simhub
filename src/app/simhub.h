@@ -66,7 +66,7 @@ template <class F> void SimHubEventController::runEventLoop(F &&eventProcessorFu
 
     while (!breakLoop) {
         std::shared_ptr<Attribute> data = _eventQueue.pop();
-        logger.log(LOG_INFO, "popped (%s: %s) off the concurrent event queue", data->_name.c_str(), data->getValueToString().c_str());
+        // logger.log(LOG_INFO, "popped (%s: %s) off the concurrent event queue", data->_name.c_str(), data->getValueToString().c_str());
         breakLoop = !eventProcessorFunctor(data);
     }
 
