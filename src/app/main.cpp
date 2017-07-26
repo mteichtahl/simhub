@@ -30,7 +30,6 @@ void configureCli(cmdline::parser *cli)
     cli->footer("\n");
 }
 
-
 int main(int argc, char *argv[])
 {
     cmdline::parser cli;
@@ -40,8 +39,9 @@ int main(int argc, char *argv[])
     logger.init(cli.get<std::string>("logConfig"));
 
     ConfigManager config(cli.get<std::string>("config"));
-
     std::shared_ptr<SimHubEventController> simhubController = SimHubEventController::EventControllerInstance();
+
+    simhubController->setConfigManager(&config);
 
 #if defined(_AWS_SDK)
     awsHelper.init();
@@ -55,19 +55,18 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    simhubController->runEventLoop([=](std::shared_ptr<Attribute> value)
-								   {
-                                       static size_t counter = 0;
+    simhubController->runEventLoop([=](std::shared_ptr<Attribute> value) {
+        static size_t counter = 0;
 
-                                       bool deliveryResult = simhubController->deliverPokeyPluginValue(value);
+        bool deliveryResult = simhubController->deliverPokeyPluginValue(value);
 
-                                       // demonstrate loop control
-                                       
-                                       if (counter++ == 100)
-                                           deliveryResult = false;
+        // demonstrate loop control
 
-									   return deliveryResult;
-								   });
+        if (counter++ == 100)
+            deliveryResult = false;
+
+        return deliveryResult;
+    });
 
 #if defined(_AWS_SDK)
     awsHelper.polly()->say("system ready %d %s", 1, "test");
