@@ -5,8 +5,10 @@
  *
  *   @return nothing
  */
-CConfigManager::CConfigManager(std::string filename)
+ConfigManager::ConfigManager(std::string filename)
 {
+    libconfig::Config test;
+
     if (fileExists(filename)) {
         _configFilename = filename;
     }
@@ -16,12 +18,18 @@ CConfigManager::CConfigManager(std::string filename)
     }
 }
 
+std::shared_ptr<MappingConfigManager> ConfigManager::mapManager(void)
+{
+    assert(_mappingConfigManager != NULL);
+    return _mappingConfigManager;
+}
+
 /**
  *   @brief  Default  destructor for CConfigManager
  *
  *   @return nothing
  */
-CConfigManager::~CConfigManager()
+ConfigManager::~ConfigManager()
 {
     logger.log(LOG_INFO, "Closing configuration");
 }
@@ -33,17 +41,17 @@ CConfigManager::~CConfigManager()
  *
  *   @return bool true if file exists, otherwise false
  */
-bool CConfigManager::fileExists(std::string filename)
+bool ConfigManager::fileExists(std::string filename)
 {
     return (filename.size() > 0 && access(filename.c_str(), 0) == 0);
 }
 
-std::string CConfigManager::getConfigFilename(void)
+std::string ConfigManager::getConfigFilename(void)
 {
     return _configFilename;
 }
 
-std::string CConfigManager::getMappingConfigFilename(void)
+std::string ConfigManager::getMappingConfigFilename(void)
 {
     if (_mappingConfigFilename.empty()) {
         try {
@@ -57,7 +65,7 @@ std::string CConfigManager::getMappingConfigFilename(void)
     return _mappingConfigFilename;
 }
 
-int CConfigManager::init(void)
+int ConfigManager::init(std::shared_ptr<SimHubEventController> simhubController)
 {
     // read the config file and handle any errors
     try {
@@ -79,7 +87,7 @@ int CConfigManager::init(void)
 
     /** load the device configuration mapping file **/
     try {
-        _deviceConfigManager = new DeviceConfigManager(&_config);
+        _deviceConfigManager.reset(new DeviceConfigManager(&_config, simhubController));
     }
     catch (std::exception &e) {
         logger.log(LOG_ERROR, "%s", e.what());
@@ -88,8 +96,8 @@ int CConfigManager::init(void)
 
     /** load the mapping configuration mapping file **/
     try {
-        mappingConfigManager = new MappingConfigManager(getMappingConfigFilename());
-        mappingConfigManager->init();
+        _mappingConfigManager.reset(new MappingConfigManager(getMappingConfigFilename()));
+        _mappingConfigManager->init();
     }
     catch (std::exception &e) {
         logger.log(LOG_ERROR, "%s", e.what());
@@ -99,7 +107,7 @@ int CConfigManager::init(void)
     return RETURN_OK;
 }
 
-std::string CConfigManager::version(void)
+std::string ConfigManager::version(void)
 {
     if (_configFileVersion.empty()) {
         try {
@@ -113,7 +121,7 @@ std::string CConfigManager::version(void)
     return _configFileVersion;
 }
 
-std::string CConfigManager::name(void)
+std::string ConfigManager::name(void)
 {
     if (_configName.empty()) {
         try {

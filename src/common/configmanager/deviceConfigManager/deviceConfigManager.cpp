@@ -6,14 +6,16 @@
  *
  *   @return nothing
  */
-DeviceConfigManager::DeviceConfigManager(libconfig::Config *config, std::string pluginDir)
+DeviceConfigManager::DeviceConfigManager(libconfig::Config *config,
+                                         std::shared_ptr<SimHubEventController> simhubController,
+                                         std::string pluginDir)
     : _config(config)
     , _pluginDir(pluginDir)
 {
 
     Device *newDevice;
 
-    _deviceConfig = &_config->lookup("configuration.devices");
+    _deviceConfig  = &_config->lookup("configuration.devices");
     logger.log(LOG_INFO, "Found %d devices", _deviceConfig->getLength());
 
     for (int i = 0; i <= _deviceConfig->getLength() - 1; i++) {
@@ -27,7 +29,7 @@ DeviceConfigManager::DeviceConfigManager(libconfig::Config *config, std::string 
             if (type == PREPARE3D) {
                 logger.log(LOG_INFO, " - Creating %s simulator device", type.c_str());
                 try {
-                    simConfigManager = new SimConfigManager(tmpDeviceConfig);
+                    _simConfigManager.reset(new SimConfigManager(tmpDeviceConfig, simhubController));
                     continue;
                 }
                 catch (libconfig::SettingNotFoundException &nfex) {
@@ -45,8 +47,8 @@ DeviceConfigManager::DeviceConfigManager(libconfig::Config *config, std::string 
             logger.log(LOG_ERROR, "Config file parse error at %s. Skipping....", nfex.getPath());
             continue;
         }
-        newDevice = new Device(type, id, std::unique_ptr<libconfig::Setting>(tmpDeviceConfig));
-        _device.emplace(id, newDevice);
+
+        _device.emplace(id, std::make_shared<Device>(type, id, tmpDeviceConfig));
     }
 }
 

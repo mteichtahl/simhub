@@ -3,17 +3,17 @@
 
 #include "pluginstatemanager.h"
 
-PluginStateManager::PluginStateManager(void)
+PluginStateManager::PluginStateManager(LoggingFunctionCB logger)
     : _enqueueCallback(NULL)
+    , _logger(logger)
 {
-    std::cout << "simplugin init'd" << std::endl;
-    _testEventThread = std::thread(std::bind(&PluginStateManager::runTestEventLoop, this));
 }
 
 PluginStateManager::~PluginStateManager(void)
 {
-    std::cout << "simplugin release" << std::endl;
-    _testEventThread.join();
+
+    // TODO: move these into proper test class
+    //_testEventThread.join();
 }
 
 void PluginStateManager::runTestEventLoop(void)
@@ -26,7 +26,7 @@ void PluginStateManager::runTestEventLoop(void)
     std::cout << "done" << std::endl;
 }
 
-int PluginStateManager::bindConfigValues(char *group_name, ConfigEntry **values, int count)
+int PluginStateManager::bindConfigValues(char *group_name, genericTLV **values, int count)
 {
     std::cout << "bindConfigValues: " << group_name << ", " << count << std::endl;
     return 0;
@@ -37,14 +37,20 @@ int PluginStateManager::preflightComplete(void)
     return 0;
 }
 
+int PluginStateManager::deliverValue(genericTLV *value)
+{
+    return 0;
+}
+
 void PluginStateManager::commenceEventing(EnqueueEventHandler enqueueCallback, void *arg)
 {
-    std::cout << "commence eventing" << std::endl;
+    _logger(LOG_INFO, "  - commence eventing");
     _enqueueCallback = enqueueCallback;
     _callbackArg = arg;
+    //_testEventThread = std::thread(std::bind(&PluginStateManager::runTestEventLoop, this));
 }
 
 void PluginStateManager::ceaseEventing(void)
 {
-    std::cout << "cease eventing" << std::endl;
+    _logger(LOG_INFO, "  - Cease eventing");
 }

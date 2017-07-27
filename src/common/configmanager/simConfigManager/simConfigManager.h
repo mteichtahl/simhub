@@ -20,24 +20,29 @@
 #define RETURN_ERROR 0
 #define PREPARE3D "prepare3d"
 
+#include "simhub.h"
+
 class SimConfigManager
 {
 protected:
-    bool isValidConfig;
     std::vector<std::string> _requiredSimulatorConfigurationFields = { "ipAddress", "port", "type" };
+
+    bool isValidConfig;
     libconfig::Setting *_simConfig;
     std::string _pluginDir;
     std::string _pluginName;
-    bool loadPlugin();
+    std::shared_ptr<SimHubEventController> _simhubController;
 
 public:
-    SimConfigManager(libconfig::Setting *config, std::string pluginDir = "./plugins");
-    const libconfig::Setting *getConfig(void);
+    SimConfigManager(libconfig::Setting *config, 
+                     std::shared_ptr<SimHubEventController> simhubController, 
+                     std::string pluginDir = "./plugins");
+    const libconfig::Setting *config(void);
     bool validateConfig(void);
     bool fileExists(std::string filename);
-    const std::string getIPAddress(void);
-    const int getPort(void);
-    const std::string getType(void);
+    const std::string IPAddress(void);
+    const int port(void);
+    const std::string type(void);
 };
 
 #endif

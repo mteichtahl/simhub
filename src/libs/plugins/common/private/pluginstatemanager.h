@@ -1,9 +1,13 @@
 #ifndef __PLUGINSTATEMANAGER_H
 #define __PLUGINSTATEMANAGER_H
 
+#include "common/simhubdeviceplugin.h"
 #include <thread>
 
-#include "common/simhubdeviceplugin.h"
+#define PREFLIGHT_OK 0
+#define PREFLIGHT_FAIL 1
+
+enum logCategory { LOG_INFO = 1, LOG_ERROR = 2, LOG_DEBUG = 3 };
 
 /**
  * This base class serves as the definition of shared supporting
@@ -23,14 +27,16 @@ protected:
     EnqueueEventHandler _enqueueCallback;
     std::thread _testEventThread;
     void *_callbackArg;
+    LoggingFunctionCB _logger;
 
 public:
-    PluginStateManager(void);
+    PluginStateManager(LoggingFunctionCB logger);
     virtual ~PluginStateManager(void);
 
-    virtual int bindConfigValues(char *group_name, ConfigEntry **values, int count);
+    virtual int bindConfigValues(char *group_name, genericTLV **values, int count);
     virtual int preflightComplete(void);
     virtual void commenceEventing(EnqueueEventHandler enqueueCallback, void *arg);
+    virtual int deliverValue(genericTLV *value);
     virtual void ceaseEventing(void);
 };
 

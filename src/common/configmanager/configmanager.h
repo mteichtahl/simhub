@@ -22,6 +22,7 @@
 #include "deviceConfigManager/deviceConfigManager.h"
 #include "log/clog.h"
 #include "mappingConfigManager/mappingConfigManager.h"
+#include "simhub.h"
 
 #ifndef RETURN_OK
 #define RETURN_OK 1
@@ -33,7 +34,7 @@
 /**
  * Base class for all pin based classes
  **/
-class CConfigManager
+class ConfigManager
 {
 protected:
     libconfig::Config _config;
@@ -42,20 +43,21 @@ protected:
     std::string _configName;
     std::string _mappingConfigFilename;
     libconfig::Setting *_root;
-    DeviceConfigManager *_deviceConfigManager;
-    MappingConfigManager *mappingConfigManager;
+    std::shared_ptr<DeviceConfigManager> _deviceConfigManager;
+    std::shared_ptr<MappingConfigManager> _mappingConfigManager;
 
     bool fileExists(std::string filename);
 
 public:
-    CConfigManager(std::string);
-    ~CConfigManager();
+    ConfigManager(std::string);
+    virtual ~ConfigManager(void);
 
     std::string getConfigFilename(void);
     std::string getMappingConfigFilename(void);
-    int init(void);
+    int init(std::shared_ptr<SimHubEventController> simhubController);
     std::string version(void);
     std::string name(void);
+    std::shared_ptr<MappingConfigManager> mapManager(void);
 };
 
 #endif

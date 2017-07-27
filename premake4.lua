@@ -14,6 +14,15 @@ newaction {
 solution "simhub"
     configurations { "Debug", "Release", "Debug_AWS" }
     
+    -- pass in platform helper #defines
+    configuration {"macosx"}
+        defines {"build_macosx"}
+    configuration {""}    
+    configuration {"linux"}
+        defines {"build_linux"}
+    configuration {""}
+    
+    defines {"__PLATFORM"}
     configuration "Debug"
         defines { "DEBUG" }
         symbols "On"
@@ -44,6 +53,7 @@ solution "simhub"
         configuration {}
 
         includedirs { "src",
+                      "src/app",
 					  "src/common",
 					  "src/libs",
 					  "src/libs/variant/include",
@@ -61,6 +71,10 @@ solution "simhub"
         configuration { "macosx", "Debug" }
             postbuildcommands { "dsymutil bin/simhub", "gtags" }
         configuration {}
+		
+        configuration {"linux"}
+            links {"dl"}
+        configuration {""}
                 
     project "simhub_tests"
         kind "ConsoleApp"
@@ -69,6 +83,7 @@ solution "simhub"
                 "src/common/**.cpp", 
                 "src/test/**.h", 
                 "src/test/**.cpp", 
+                "src/app/simhub.cpp",
                 "src/libs/googletest/src/gtest-all.cc" }
 
         configuration {"Debug"}
@@ -77,7 +92,8 @@ solution "simhub"
 
         includedirs { "src/libs/googletest/include", 
                       "src/libs/googletest", 
-                      "src", 
+                      "src",
+                      "src/app", 
                       "src/common", 
                       "src/libs/variant/include", 
                       "src/libs",
@@ -91,14 +107,16 @@ solution "simhub"
         targetdir ("bin")
         buildoptions { "--std=c++14" }
 
-    project "simplug_simsource"
+    project "prepare3d_plugin"
 	    kind "SharedLib"
 		language "C++"
         targetname "prepare3d"
         targetdir ("bin/plugins")
-		files { "src/libs/plugins/simsource/**.h",
+        links { 'uv',
+                'pthread'}
+		files { "src/libs/plugins/prepare3d/**.h",
                 "src/libs/plugins/common/**.cpp",
-			    "src/libs/plugins/simsource/**.cpp" }
+			    "src/libs/plugins/prepare3d/**.cpp" }
         includedirs { "src/libs/googletest/include", 
                       "src/libs/googletest", 
                       "src/common",

@@ -14,8 +14,8 @@
 #include "common/elements/sources/source.h"
 #include "libs/commandLine.h" // https://github.com/tanakh/cmdline
 #include "log/clog.h"
-#include "plugins/common/queue/concurrent_queue.h"
 #include "plugins/common/simhubdeviceplugin.h"
+#include "simhub.h"
 
 void configureCli(cmdline::parser *cli)
 {
@@ -38,7 +38,10 @@ int main(int argc, char *argv[])
 
     logger.init(cli.get<std::string>("logConfig"));
 
-    CConfigManager config(cli.get<std::string>("config"));
+    ConfigManager config(cli.get<std::string>("config"));
+    std::shared_ptr<SimHubEventController> simhubController = SimHubEventController::EventControllerInstance();
+
+    simhubController->setConfigManager(&config);
 
 #if defined(_AWS_SDK)
     awsHelper.init();
@@ -47,10 +50,23 @@ int main(int argc, char *argv[])
     }
 #endif
 
-    if (!config.init()) {
+    if (!config.init(simhubController)) {
         logger.log(LOG_ERROR, "Could not initialise configuration");
         exit(1);
     }
+
+    simhubController->runEventLoop([=](std::shared_ptr<Attribute> value) {
+        static size_t counter = 0;
+
+        bool deliveryResult = simhubController->deliverPokeyPluginValue(value);
+
+        // demonstrate loop control
+
+        if (counter++ == 100)
+            deliveryResult = false;
+
+        return deliveryResult;
+    });
 
 #if defined(_AWS_SDK)
     awsHelper.polly()->say("system ready %d %s", 1, "test");
