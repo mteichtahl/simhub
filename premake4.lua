@@ -133,7 +133,8 @@ project "pokey_plugin"
         targetname "pokey"
         targetdir ("bin/plugins")
         links {
-            "bin/plugins/Pokeys"
+            "bin/plugins/PoKeys",
+            "usb"
         }
 		files { "src/libs/plugins/pokey/**.h",
                 "src/libs/plugins/common/**.cpp",
