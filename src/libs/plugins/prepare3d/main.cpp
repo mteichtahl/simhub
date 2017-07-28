@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <iostream>
-#include <vector>
 #include <memory>
+#include <vector>
 
 #include "common/simhubdeviceplugin.h"
 #include "main.h"
@@ -28,6 +28,11 @@ int simplug_preflight_complete(SPHANDLE plugin_instance)
 void simplug_commence_eventing(SPHANDLE plugin_instance, EnqueueEventHandler enqueue_callback, void *arg)
 {
     static_cast<PluginStateManager *>(plugin_instance)->commenceEventing(enqueue_callback, arg);
+}
+
+int simplug_deliver_value(SPHANDLE plugin_instance, genericTLV *value)
+{
+    return static_cast<PluginStateManager *>(plugin_instance)->deliverValue(value);
 }
 
 void simplug_cease_eventing(SPHANDLE plugin_instance)
@@ -106,7 +111,7 @@ int SimSourcePluginStateManager::preflightComplete(void)
 
     int connectErr = uv_tcp_connect(&_connectReq, &_tcpClient, (struct sockaddr *)&req_addr, &SimSourcePluginStateManager::OnConnect);
 
-    if (connectErr != 0) {
+    if (connectErr < 0) {
         retVal = PREFLIGHT_FAIL;
     }
 
@@ -174,7 +179,6 @@ void SimSourcePluginStateManager::processData(char *data, int len)
         int elementCount = 0;
         char *p = strtok(data, "\n");
         char *array[MAX_ELEMENTS_PER_UPDATE];
-
 
         while (p != NULL) {
             size_t len = strlen(p);
@@ -245,29 +249,29 @@ void SimSourcePluginStateManager::processElement(char *element)
 char *SimSourcePluginStateManager::getElementDataType(char identifier)
 {
     switch (identifier) {
-        case GAUGE_IDENTIFIER:
-            return (char *)"float";
-            break;
-        case NUMBER_IDENTIFIER:
-            return (char *)"float";
-            break;
-        case INDICATOR_IDENTIFIER:
-            return (char *)"bool";
-            break;
-        case VALUE_IDENTIFIER:
-            return (char *)"uint";
-            break;
-        case ANALOG_IDENTIFIER:
-            return (char *)"char";
-            break;
-        case ROTARY_IDENTIFIER:
-            return (char *)"char";
-            break;
-        case BOOLEAN_IDENTIFIER:
-            return (char *)"bool";
-            break;
-        default:
-            return NULL;
+    case GAUGE_IDENTIFIER:
+        return (char *)"float";
+        break;
+    case NUMBER_IDENTIFIER:
+        return (char *)"float";
+        break;
+    case INDICATOR_IDENTIFIER:
+        return (char *)"bool";
+        break;
+    case VALUE_IDENTIFIER:
+        return (char *)"uint";
+        break;
+    case ANALOG_IDENTIFIER:
+        return (char *)"char";
+        break;
+    case ROTARY_IDENTIFIER:
+        return (char *)"char";
+        break;
+    case BOOLEAN_IDENTIFIER:
+        return (char *)"bool";
+        break;
+    default:
+        return NULL;
     }
 
     return NULL;
@@ -292,7 +296,5 @@ void SimSourcePluginStateManager::commenceEventing(EnqueueEventHandler enqueueCa
 
     // this is wrong in a number of ways - it needs to be cancel-able being its chief sin
     // TODO: unbreak
-    _pluginThread = new std::thread([=] {
-        check_uv(uv_run(_eventLoop, UV_RUN_DEFAULT));
-    });
+    _pluginThread = new std::thread([=] { check_uv(uv_run(_eventLoop, UV_RUN_DEFAULT)); });
 }

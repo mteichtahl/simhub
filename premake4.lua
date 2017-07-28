@@ -127,11 +127,14 @@ solution "simhub"
 					  "src/libs/queue" }
         buildoptions { "--std=c++14" }
 
-project "simplug_devicesource"
+project "pokey_plugin"
 	    kind "SharedLib"
 		language "C++"
         targetname "pokey"
         targetdir ("bin/plugins")
+        links {
+            "bin/plugins/Pokeys"
+        }
 		files { "src/libs/plugins/pokey/**.h",
                 "src/libs/plugins/common/**.cpp",
 			    "src/libs/plugins/pokey/**.cpp" }

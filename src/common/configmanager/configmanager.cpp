@@ -87,6 +87,7 @@ int ConfigManager::init(std::shared_ptr<SimHubEventController> simhubController)
 
     /** load the device configuration mapping file **/
     try {
+        _mappingConfigManager.reset(new MappingConfigManager(getMappingConfigFilename()));
         _deviceConfigManager.reset(new DeviceConfigManager(&_config, simhubController));
     }
     catch (std::exception &e) {
@@ -96,7 +97,7 @@ int ConfigManager::init(std::shared_ptr<SimHubEventController> simhubController)
 
     /** load the mapping configuration mapping file **/
     try {
-        _mappingConfigManager.reset(new MappingConfigManager(getMappingConfigFilename()));
+
         _mappingConfigManager->init();
     }
     catch (std::exception &e) {

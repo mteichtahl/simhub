@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
 
         // demonstrate loop control
 
-        if (counter++ == 100)
+        if (counter++ == 10000)
             deliveryResult = false;
 
         return deliveryResult;

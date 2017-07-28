@@ -7,8 +7,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <uv.h>
 #include <thread>
+#include <uv.h>
 
 #define BUFFER_LEN 4096
 #define MAX_ELEMENTS_PER_UPDATE 512
