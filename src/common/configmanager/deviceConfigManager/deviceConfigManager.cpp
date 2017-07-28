@@ -28,18 +28,13 @@ DeviceConfigManager::DeviceConfigManager(libconfig::Config *config,
 
             if (type == PREPARE3D) {
                 logger.log(LOG_INFO, " - Creating %s simulator device", type.c_str());
-                try {
-                    _simConfigManager.reset(new SimConfigManager(tmpDeviceConfig, simhubController));
-                    continue;
-                }
-                catch (libconfig::SettingNotFoundException &nfex) {
-                    logger.log(LOG_ERROR, "No simulator section set in config [%s]", nfex.what());
-                    continue;
-                }
-                catch (std::logic_error &e) {
-                    logger.log(LOG_ERROR, "%s", e.what());
-                    continue;
-                }
+
+                simhubController->addPrepare3dConfig(tmpDeviceConfig);
+            }
+            else if (type == POKEYDEV) {
+                logger.log(LOG_INFO, " - Creating %s simulator device", type.c_str());
+    
+                simhubController->addPokeyConfig(tmpDeviceConfig);
             }
             id = tmpDeviceConfig->lookup("id").c_str();
         }

@@ -104,6 +104,8 @@ int ConfigManager::init(std::shared_ptr<SimHubEventController> simhubController)
         return RETURN_ERROR;
     }
 
+    simhubController->setConfigManager(this);
+
     return RETURN_OK;
 }
 

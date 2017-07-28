@@ -41,8 +41,6 @@ int main(int argc, char *argv[])
     ConfigManager config(cli.get<std::string>("config"));
     std::shared_ptr<SimHubEventController> simhubController = SimHubEventController::EventControllerInstance();
 
-    simhubController->setConfigManager(&config);
-
 #if defined(_AWS_SDK)
     awsHelper.init();
     if (cli.get<bool>("polly")) {
@@ -54,6 +52,9 @@ int main(int argc, char *argv[])
         logger.log(LOG_ERROR, "Could not initialise configuration");
         exit(1);
     }
+
+    simhubController->loadPokeyPlugin();
+    simhubController->loadPrepare3dPlugin();
 
     simhubController->runEventLoop([=](std::shared_ptr<Attribute> value) {
         static size_t counter = 0;
@@ -71,6 +72,7 @@ int main(int argc, char *argv[])
 #if defined(_AWS_SDK)
     awsHelper.polly()->say("system ready %d %s", 1, "test");
 #endif
+
 // Source el("element", "desc");
 
 // Attribute attr;

@@ -45,6 +45,9 @@ typedef struct {
     //! pass in named config key/val pair group
     int (*simplug_bind_config_values)(SPHANDLE plugin_instance, char *group_name, genericTLV **values, int count);
 
+    //! pass through kludge until we split out config files
+    int (*simplug_config_passthrough)(SPHANDLE plugin_instance, void* libconfig_instance);
+
     //! pre-flight checks method
     int (*simplug_preflight_complete)(SPHANDLE plugin_instance);
 
@@ -95,6 +98,10 @@ inline int simplug_bootstrap(const char *plugin_path, simplug_vtable *plugin_vta
 
     plugin_vtable->simplug_bind_config_values = (int (*)(SPHANDLE, char *, genericTLV **, int))dlsym(handle, "simplug_bind_config_values");
     if (!plugin_vtable->simplug_bind_config_values)
+        return -1;
+
+    plugin_vtable->simplug_config_passthrough = (int (*)(SPHANDLE, void *))dlsym(handle, "simplug_config_passthrough");
+    if (!plugin_vtable->simplug_config_passthrough)
         return -1;
 
     plugin_vtable->simplug_preflight_complete = (int (*)(SPHANDLE))dlsym(handle, "simplug_preflight_complete");

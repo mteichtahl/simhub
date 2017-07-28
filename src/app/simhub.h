@@ -3,6 +3,7 @@
 
 #include <string>
 #include <thread>
+#include <list>
 
 #include "elements/attributes/attribute.h"
 #include "libs/plugins/common/queue/concurrent_queue.h"
@@ -30,7 +31,7 @@ protected:
 
     void prepare3dEventCallback(SPHANDLE eventSource, void *eventData);
     void pokeyEventCallback(SPHANDLE eventSource, void *eventData);
-    simplug_vtable loadPlugin(std::string dylibName, EnqueueEventHandler eventCallback);
+    simplug_vtable loadPlugin(std::string dylibName, std::list<libconfig::Setting *> &pluginConfigs, EnqueueEventHandler eventCallback);
     void terminate(void);
     void shutdownPlugin(simplug_vtable &pluginMethods);
 
@@ -38,15 +39,21 @@ protected:
     simplug_vtable _prepare3dMethods;
     simplug_vtable _pokeyMethods;
     ConfigManager *_configManager;
+    
+    // -- temp solution to plugin device configuration conundrum
+    std::list<libconfig::Setting *> _pokeyDeviceConfigs;
+    std::list<libconfig::Setting *> _prepare3dDeviceConfigs;
 
 public:
     virtual ~SimHubEventController(void);
-
     void loadPrepare3dPlugin(void);
     void loadPokeyPlugin(void);
-
     bool deliverPokeyPluginValue(std::shared_ptr<Attribute> value);
-    void setConfigManager(ConfigManager *configManager) { _configManager = configManager; };
+    void setConfigManager(ConfigManager *configManager);
+
+    // -- temp solution to plugin device configuration conundrum
+    void addPrepare3dConfig(libconfig::Setting * prepare3dConfig) { assert(prepare3dConfig != NULL); _prepare3dDeviceConfigs.push_back(prepare3dConfig); };;
+    void addPokeyConfig(libconfig::Setting *pokeyConfig) { assert(pokeyConfig != NULL); _pokeyDeviceConfigs.push_back(pokeyConfig); };
 
     template <class F> void runEventLoop(F &&eventProcessorFunctor);
 

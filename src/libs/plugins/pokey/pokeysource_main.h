@@ -16,6 +16,7 @@ public:
     PokeyDevicePluginStateManager(LoggingFunctionCB logger) : PluginStateManager(logger) {};
 
     virtual int deliverValue(genericTLV *value);
+    virtual int preflightComplete(void);
 };
 
 #endif

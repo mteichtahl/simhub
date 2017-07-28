@@ -113,6 +113,7 @@ solution "simhub"
         targetname "prepare3d"
         targetdir ("bin/plugins")
         links { 'uv',
+                'config++',
                 'pthread'}
 		files { "src/libs/plugins/prepare3d/**.h",
                 "src/libs/plugins/common/**.cpp",
@@ -127,7 +128,7 @@ solution "simhub"
 					  "src/libs/queue" }
         buildoptions { "--std=c++14" }
 
-project "simplug_devicesource"
+    project "simplug_devicesource"
 	    kind "SharedLib"
 		language "C++"
         targetname "pokey"
@@ -143,5 +144,7 @@ project "simplug_devicesource"
                       "src/libs",
                       "src/libs/variant/include/mpark",
 					  "src/libs/queue" }
+        links { 'config++',
+                'pthread'}
         buildoptions { "--std=c++14" }
 		
