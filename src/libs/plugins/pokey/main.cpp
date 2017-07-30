@@ -56,6 +56,7 @@ PokeyDevicePluginStateManager::PokeyDevicePluginStateManager(LoggingFunctionCB l
     : PluginStateManager(logger)
 {
     _numberOfDevices = 0; ///< 0 devices discovered
+    _networkDeviceSummary = (sPoKeysNetworkDeviceSummary *)calloc(sizeof(sPoKeysNetworkDeviceSummary), 16); ///<0 initialise the network device summary
 }
 
 //! static getter for singleton instance of our class
@@ -72,7 +73,7 @@ PokeyDevicePluginStateManager::~PokeyDevicePluginStateManager(void)
             ceaseEventing();
             _pluginThread->join();
         }
-
+        free(_networkDeviceSummary);
         delete _pluginThread;
     }
 }
@@ -92,7 +93,7 @@ void PokeyDevicePluginStateManager::discoverDevices()
 
 int PokeyDevicePluginStateManager::preflightComplete(void)
 {
-    int retVal = PREFLIGHT_FAIL;
+    int retVal = PREFLIGHT_OK;
 
     discoverDevices();
     if (_numberOfDevices > 0) {
