@@ -74,7 +74,7 @@ PokeyDevicePluginStateManager::~PokeyDevicePluginStateManager(void)
             ceaseEventing();
             _pluginThread->join();
         }
-        free(_devices);
+        _deviceList.clear();
         delete _pluginThread;
     }
 }
@@ -100,15 +100,31 @@ void PokeyDevicePluginStateManager::enumerateDevices(void) {
        
         PokeyDevice* device = new PokeyDevice(_devices[i],i);
 
-        _logger(LOG_INFO, "    - Serial #%d",device->serialNumber());
-        _logger(LOG_INFO, "    - Index %d",device->index());
-        _logger(LOG_INFO, "    - firmwareMinorVersion %d",device->firmwareMinorVersion());
-        _logger(LOG_INFO, "    - firwareVersionMajor %d",device->firmwareMajorVersion());
-        _logger(LOG_INFO, "    - hardwareType %u",device->hardwareType());
-        _logger(LOG_INFO, "    - dhcp %u",device->dhcp());
-        _logger(LOG_INFO, "    - IP Address %u.%u.%u.%u", device->ipAddress()[0],device->ipAddress()[1],device->ipAddress()[2],device->ipAddress()[3]);
+        _logger(LOG_INFO, "    - #%d %s (v%d.%d.%d) - %u.%u.%u.%u ", device->serialNumber(),
+                                                            device->hardwareTypeString().c_str(),
+                                                            device->firmwareMajorMajorVersion(),
+                                                            device->firmwareMajorVersion(),
+                                                            device->firmwareMinorVersion(),
+                                                            device->ipAddress()[0],
+                                                            device->ipAddress()[1],
+                                                            device->ipAddress()[2],
+                                                            device->ipAddress()[3]
+                                                            );
+        _deviceList.emplace(device->serialNumber(),device);
     }
 }
+
+PokeyDevice* PokeyDevicePluginStateManager::device(int serialNumber){
+    pokeyDeviceList::iterator it;
+    it = _deviceList.find(serialNumber);
+    
+    if (it != _deviceList.end())
+        return it->second;
+    else 
+        return NULL;
+    
+}
+
 
 int PokeyDevicePluginStateManager::preflightComplete(void)
 {
