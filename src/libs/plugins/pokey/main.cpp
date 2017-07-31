@@ -98,7 +98,7 @@ void PokeyDevicePluginStateManager::enumerateDevices(void) {
     for (int i=0; i< _numberOfDevices; i++){
         _logger(LOG_INFO, "  - Enumerating device %d",i);
        
-        PokeyDevice* device = new PokeyDevice(_devices[i],i);
+        std::shared_ptr<PokeyDevice> device = std::make_shared<PokeyDevice>(_devices[i],i);
 
         _logger(LOG_INFO, "    - #%d %s %s (v%d.%d.%d) - %u.%u.%u.%u ", device->serialNumber(),
                                                             device->hardwareTypeString().c_str(),
@@ -111,11 +111,12 @@ void PokeyDevicePluginStateManager::enumerateDevices(void) {
                                                             device->ipAddress()[2],
                                                             device->ipAddress()[3]
                                                             );
-        _deviceList.emplace(device->serialNumber(),device);
+
+        _deviceList.emplace(device->serialNumber(), device);
     }
 }
 
-PokeyDevice* PokeyDevicePluginStateManager::device(int serialNumber){
+std::shared_ptr<PokeyDevice> PokeyDevicePluginStateManager::device(int serialNumber){
     pokeyDeviceList::iterator it;
     it = _deviceList.find(serialNumber);
     
@@ -133,7 +134,7 @@ int PokeyDevicePluginStateManager::preflightComplete(void)
 
     discoverDevices();
     if (_numberOfDevices > 0) {
-        _logger(LOG_INFO, "  - Discovered %d", _numberOfDevices);
+        _logger(LOG_INFO, "  - Discovered %d pokey devices", _numberOfDevices);
         enumerateDevices();
         retVal = PREFLIGHT_OK;
     }
