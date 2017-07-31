@@ -9,6 +9,7 @@
 #include "PoKeysLib.h"
 #include "common/private/pluginstatemanager.h"
 #include "common/simhubdeviceplugin.h"
+#include "pokeyDevice.h"
 
 #define PREFLIGHT_OK 0
 #define PREFLIGHT_FAIL 1
@@ -32,9 +33,7 @@ protected:
 public:
     PokeyDevicePluginStateManager(LoggingFunctionCB logger);
     virtual ~PokeyDevicePluginStateManager(void);
-
     int preflightComplete(void);
-
     virtual int deliverValue(genericTLV *value);
 };
 
