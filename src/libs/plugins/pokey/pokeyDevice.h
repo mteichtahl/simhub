@@ -41,6 +41,7 @@ public:
     uint8_t *ipAddress() { return _ipAddress;}
     inline sPoKeysDevice* pokey() { return _pokey; }
     inline sPoKeysDevice_Info info() { return _pokey->info; }
+    inline sPoKeysDevice_Data deviceData() { return _pokey->DeviceData; }
 };
 
 #endif

@@ -100,8 +100,9 @@ void PokeyDevicePluginStateManager::enumerateDevices(void) {
        
         PokeyDevice* device = new PokeyDevice(_devices[i],i);
 
-        _logger(LOG_INFO, "    - #%d %s (v%d.%d.%d) - %u.%u.%u.%u ", device->serialNumber(),
+        _logger(LOG_INFO, "    - #%d %s %s (v%d.%d.%d) - %u.%u.%u.%u ", device->serialNumber(),
                                                             device->hardwareTypeString().c_str(),
+                                                            device->deviceData().DeviceName,
                                                             device->firmwareMajorMajorVersion(),
                                                             device->firmwareMajorVersion(),
                                                             device->firmwareMinorVersion(),
