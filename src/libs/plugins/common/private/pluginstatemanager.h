@@ -33,7 +33,7 @@ public:
     PluginStateManager(LoggingFunctionCB logger);
     virtual ~PluginStateManager(void);
 
-    virtual int bindConfigValues(char *group_name, genericTLV **values, int count);
+    // virtual int bindConfigValues(char *group_name, genericTLV **values, int count);
     virtual int preflightComplete(void);
     virtual void commenceEventing(EnqueueEventHandler enqueueCallback, void *arg);
     virtual int deliverValue(genericTLV *value);
