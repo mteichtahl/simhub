@@ -5,7 +5,9 @@ newaction {
    description = "clean the software",
    execute     = function ()
       print("clean the build...")
-      os.rmdir("./build")
+      os.rmdir("./obj")
+      os.remove("./*.make")
+      os.remove("./Makefile")
       print("done.")
    end
 }
