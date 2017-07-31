@@ -20,6 +20,11 @@ int simplug_bind_config_values(SPHANDLE plugin_instance, char *group_name, gener
     return static_cast<PluginStateManager *>(plugin_instance)->bindConfigValues(group_name, values, count);
 }
 
+int simplug_config_passthrough(SPHANDLE plugin_instance, void* libconfig_instance)
+{
+     return static_cast<PluginStateManager *>(plugin_instance)->configPassthrough(static_cast<libconfig::Setting *>(libconfig_instance));
+}
+
 int simplug_preflight_complete(SPHANDLE plugin_instance)
 {
     return static_cast<PluginStateManager *>(plugin_instance)->preflightComplete();

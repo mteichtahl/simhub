@@ -5,7 +5,9 @@ newaction {
    description = "clean the software",
    execute     = function ()
       print("clean the build...")
-      os.rmdir("./build")
+      os.rmdir("./obj")
+      os.remove("./*.make")
+      os.remove("./Makefile")
       print("done.")
    end
 }
@@ -113,6 +115,7 @@ solution "simhub"
         targetname "prepare3d"
         targetdir ("bin/plugins")
         links { 'uv',
+                'config++',
                 'pthread'}
 		files { "src/libs/plugins/prepare3d/**.h",
                 "src/libs/plugins/common/**.cpp",
@@ -147,5 +150,7 @@ project "pokey_plugin"
                       "src/libs",
                       "src/libs/variant/include/mpark",
 					  "src/libs/queue" }
+        links { 'config++',
+                'pthread'}
         buildoptions { "--std=c++14" }
 		
