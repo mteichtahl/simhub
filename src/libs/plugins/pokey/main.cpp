@@ -1,8 +1,8 @@
 #include <assert.h>
 #include <iostream>
+#include <map>
 #include <memory>
 #include <vector>
-#include <map>
 
 #include "common/simhubdeviceplugin.h"
 #include "main.h"
@@ -15,11 +15,6 @@ int simplug_init(SPHANDLE *plugin_instance, LoggingFunctionCB logger)
 {
     *plugin_instance = new PokeyDevicePluginStateManager(logger);
     return 0;
-}
-
-int simplug_bind_config_values(SPHANDLE plugin_instance, char *group_name, genericTLV **values, int count)
-{
-    return static_cast<PluginStateManager *>(plugin_instance)->bindConfigValues(group_name, values, count);
 }
 
 int simplug_preflight_complete(SPHANDLE plugin_instance)
@@ -92,41 +87,33 @@ void PokeyDevicePluginStateManager::discoverDevices(void)
     _numberOfDevices = PK_EnumerateNetworkDevices(_devices, 800);
 }
 
-void PokeyDevicePluginStateManager::enumerateDevices(void) {
+void PokeyDevicePluginStateManager::enumerateDevices(void)
+{
     assert(_numberOfDevices > 0);
 
-    for (int i=0; i< _numberOfDevices; i++){
-        _logger(LOG_INFO, "  - Enumerating device %d",i);
-       
-        std::shared_ptr<PokeyDevice> device = std::make_shared<PokeyDevice>(_devices[i],i);
+    for (int i = 0; i < _numberOfDevices; i++) {
+        _logger(LOG_INFO, "  - Enumerating device %d", i);
 
-        _logger(LOG_INFO, "    - #%d %s %s (v%d.%d.%d) - %u.%u.%u.%u ", device->serialNumber(),
-                                                            device->hardwareTypeString().c_str(),
-                                                            device->deviceData().DeviceName,
-                                                            device->firmwareMajorMajorVersion(),
-                                                            device->firmwareMajorVersion(),
-                                                            device->firmwareMinorVersion(),
-                                                            device->ipAddress()[0],
-                                                            device->ipAddress()[1],
-                                                            device->ipAddress()[2],
-                                                            device->ipAddress()[3]
-                                                            );
+        pokeyDeviceSharedPointer device = std::make_shared<PokeyDevice>(_devices[i], i);
+
+        _logger(LOG_INFO, "    - #%d %s %s (v%d.%d.%d) - %u.%u.%u.%u ", device->serialNumber(), device->hardwareTypeString().c_str(), device->deviceData().DeviceName,
+            device->firmwareMajorMajorVersion(), device->firmwareMajorVersion(), device->firmwareMinorVersion(), device->ipAddress()[0], device->ipAddress()[1],
+            device->ipAddress()[2], device->ipAddress()[3]);
 
         _deviceList.emplace(device->serialNumber(), device);
     }
 }
 
-std::shared_ptr<PokeyDevice> PokeyDevicePluginStateManager::device(int serialNumber){
+pokeyDeviceSharedPointer PokeyDevicePluginStateManager::device(int serialNumber)
+{
     pokeyDeviceList::iterator it;
     it = _deviceList.find(serialNumber);
-    
+
     if (it != _deviceList.end())
         return it->second;
-    else 
+    else
         return NULL;
-    
 }
-
 
 int PokeyDevicePluginStateManager::preflightComplete(void)
 {
