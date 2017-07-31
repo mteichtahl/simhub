@@ -133,7 +133,7 @@ int PokeyDevicePluginStateManager::preflightComplete(void)
 
     discoverDevices();
     if (_numberOfDevices > 0) {
-        _logger(LOG_INFO, "  - Discovered %d", _numberOfDevices);
+        _logger(LOG_INFO, "  - Discovered %d pokey devices", _numberOfDevices);
         enumerateDevices();
         retVal = PREFLIGHT_OK;
     }
