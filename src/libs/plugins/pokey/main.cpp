@@ -2,6 +2,7 @@
 #include <iostream>
 #include <memory>
 #include <vector>
+#include <map>
 
 #include "common/simhubdeviceplugin.h"
 #include "main.h"
@@ -56,7 +57,7 @@ PokeyDevicePluginStateManager::PokeyDevicePluginStateManager(LoggingFunctionCB l
     : PluginStateManager(logger)
 {
     _numberOfDevices = 0; ///< 0 devices discovered
-    _networkDeviceSummary = (sPoKeysNetworkDeviceSummary *)calloc(sizeof(sPoKeysNetworkDeviceSummary), 16); ///<0 initialise the network device summary
+    _devices = (sPoKeysNetworkDeviceSummary *)calloc(sizeof(sPoKeysNetworkDeviceSummary), 16); ///<0 initialise the network device summary
 }
 
 //! static getter for singleton instance of our class
@@ -73,7 +74,7 @@ PokeyDevicePluginStateManager::~PokeyDevicePluginStateManager(void)
             ceaseEventing();
             _pluginThread->join();
         }
-        free(_networkDeviceSummary);
+        free(_devices);
         delete _pluginThread;
     }
 }
@@ -85,10 +86,28 @@ int PokeyDevicePluginStateManager::deliverValue(genericTLV *value)
     return 0;
 }
 
-void PokeyDevicePluginStateManager::discoverDevices()
+void PokeyDevicePluginStateManager::discoverDevices(void)
 {
     _logger(LOG_INFO, " - Discovering Pokey Devices");
-    _numberOfDevices = PK_EnumerateNetworkDevices(_networkDeviceSummary, 800);
+    _numberOfDevices = PK_EnumerateNetworkDevices(_devices, 800);
+}
+
+void PokeyDevicePluginStateManager::enumerateDevices(void) {
+    assert(_numberOfDevices > 0);
+
+    for (int i=0; i< _numberOfDevices; i++){
+        _logger(LOG_INFO, "  - Enumerating device %d",i);
+       
+        PokeyDevice* device = new PokeyDevice(_devices[i],i);
+
+        _logger(LOG_INFO, "    - Serial #%d",device->serialNumber());
+        _logger(LOG_INFO, "    - Index %d",device->index());
+        _logger(LOG_INFO, "    - firmwareMinorVersion %d",device->firmwareMinorVersion());
+        _logger(LOG_INFO, "    - firwareVersionMajor %d",device->firmwareMajorVersion());
+        _logger(LOG_INFO, "    - hardwareType %u",device->hardwareType());
+        _logger(LOG_INFO, "    - dhcp %u",device->dhcp());
+        _logger(LOG_INFO, "    - IP Address %u.%u.%u.%u", device->ipAddress()[0],device->ipAddress()[1],device->ipAddress()[2],device->ipAddress()[3]);
+    }
 }
 
 int PokeyDevicePluginStateManager::preflightComplete(void)
@@ -98,6 +117,7 @@ int PokeyDevicePluginStateManager::preflightComplete(void)
     discoverDevices();
     if (_numberOfDevices > 0) {
         _logger(LOG_INFO, "  - Discovered %d", _numberOfDevices);
+        enumerateDevices();
         retVal = PREFLIGHT_OK;
     }
     else {

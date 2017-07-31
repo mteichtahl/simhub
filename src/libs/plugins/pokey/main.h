@@ -19,16 +19,20 @@ class PokeyDevicePluginStateManager : public PluginStateManager
 {
 
 private:
-    sPoKeysNetworkDeviceSummary *_networkDeviceSummary;
     //! simple implementation of class instance singleton
     static PokeyDevicePluginStateManager *_StateManagerInstance;
 
     static PokeyDevicePluginStateManager *StateManagerInstance(void);
     std::thread *_pluginThread;
 
+    sPoKeysNetworkDeviceSummary *_devices;
+
+
 protected:
     int _numberOfDevices;
-    void discoverDevices();
+    void discoverDevices(void);
+    void enumerateDevices(void);
+    std::map<std::string, PokeyDevice*> _deviceList;
 
 public:
     PokeyDevicePluginStateManager(LoggingFunctionCB logger);
