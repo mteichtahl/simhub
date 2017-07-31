@@ -14,7 +14,7 @@
 #define PREFLIGHT_OK 0
 #define PREFLIGHT_FAIL 1
 
-typedef std::map<uint8_t, PokeyDevice*> pokeyDeviceList;
+typedef std::map<uint8_t, std::shared_ptr<PokeyDevice>> pokeyDeviceList;
 
 //! barest specialisation of the internal plugin management support base class
 class PokeyDevicePluginStateManager : public PluginStateManager
@@ -41,7 +41,7 @@ public:
     virtual ~PokeyDevicePluginStateManager(void);
     int preflightComplete(void);
     virtual int deliverValue(genericTLV *value);
-    PokeyDevice* device(int);
+    std::shared_ptr<PokeyDevice> device(int);
 };
 
 #endif
