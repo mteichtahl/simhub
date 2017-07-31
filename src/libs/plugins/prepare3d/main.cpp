@@ -128,7 +128,7 @@ void SimSourcePluginStateManager::OnConnect(uv_connect_t *req, int status)
     assert(SimSourcePluginStateManager::StateManagerInstance());
 
     if (status == SIM_CONNECT_NOT_FOUND) {
-        SimSourcePluginStateManager::StateManagerInstance()->_logger(LOG_INFO, " - Failed to connect to simulator");
+        SimSourcePluginStateManager::StateManagerInstance()->_logger(LOG_ERROR, "   - Failed to connect to simulator");
     }
     else {
         SimSourcePluginStateManager::StateManagerInstance()->_logger(LOG_INFO, " - Connected to simulator %d", status);
