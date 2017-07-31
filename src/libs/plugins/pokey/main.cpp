@@ -97,11 +97,11 @@ int PokeyDevicePluginStateManager::preflightComplete(void)
 
     discoverDevices();
     if (_numberOfDevices > 0) {
-        _logger(LOG_INFO, "  - discovered %d", _numberOfDevices);
+        _logger(LOG_INFO, "  - Discovered %d", _numberOfDevices);
         retVal = PREFLIGHT_OK;
     }
     else {
-        _logger(LOG_INFO, "  - No devices discovered");
+        _logger(LOG_INFO, "   - No Pokey devices discovered");
     }
 
     return retVal;
