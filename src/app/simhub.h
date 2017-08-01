@@ -1,9 +1,9 @@
 #ifndef __SIMHUB_H
 #define __SIMHUB_H
 
+#include <list>
 #include <string>
 #include <thread>
-#include <list>
 
 #include "elements/attributes/attribute.h"
 #include "libs/plugins/common/queue/concurrent_queue.h"
@@ -31,7 +31,7 @@ protected:
 
     void prepare3dEventCallback(SPHANDLE eventSource, void *eventData);
     void pokeyEventCallback(SPHANDLE eventSource, void *eventData);
-    simplug_vtable loadPlugin(std::string dylibName, std::list<libconfig::Setting *> &pluginConfigs, EnqueueEventHandler eventCallback);
+    simplug_vtable loadPlugin(std::string dylibName, std::list<libconfig::Config *> &pluginConfigs, EnqueueEventHandler eventCallback);
     void terminate(void);
     void shutdownPlugin(simplug_vtable &pluginMethods);
 
@@ -39,10 +39,10 @@ protected:
     simplug_vtable _prepare3dMethods;
     simplug_vtable _pokeyMethods;
     ConfigManager *_configManager;
-    
+
     // -- temp solution to plugin device configuration conundrum
-    std::list<libconfig::Setting *> _pokeyDeviceConfigs;
-    std::list<libconfig::Setting *> _prepare3dDeviceConfigs;
+    std::list<libconfig::Config *> _pokeyDeviceConfigs;
+    std::list<libconfig::Config *> _prepare3dDeviceConfigs;
 
 public:
     virtual ~SimHubEventController(void);
@@ -52,8 +52,17 @@ public:
     void setConfigManager(ConfigManager *configManager);
 
     // -- temp solution to plugin device configuration conundrum
-    void addPrepare3dConfig(libconfig::Setting * prepare3dConfig) { assert(prepare3dConfig != NULL); _prepare3dDeviceConfigs.push_back(prepare3dConfig); };;
-    void addPokeyConfig(libconfig::Setting *pokeyConfig) { assert(pokeyConfig != NULL); _pokeyDeviceConfigs.push_back(pokeyConfig); };
+    void addPrepare3dConfig(libconfig::Config *prepare3dConfig)
+    {
+        assert(prepare3dConfig != NULL);
+        _prepare3dDeviceConfigs.push_back(prepare3dConfig);
+    };
+    ;
+    void addPokeyConfig(libconfig::Config *pokeyConfig)
+    {
+        assert(pokeyConfig != NULL);
+        _pokeyDeviceConfigs.push_back(pokeyConfig);
+    };
 
     template <class F> void runEventLoop(F &&eventProcessorFunctor);
 

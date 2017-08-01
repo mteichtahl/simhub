@@ -1,9 +1,9 @@
 #ifndef __PLUGINSTATEMANAGER_H
 #define __PLUGINSTATEMANAGER_H
 
-#include <thread>
 #include <libconfig.h++>
 #include <list>
+#include <thread>
 
 #include "common/simhubdeviceplugin.h"
 
@@ -33,14 +33,13 @@ protected:
     LoggingFunctionCB _logger;
 
     //! list of device settings for use in preflightComplete
-    std::list<libconfig::Setting *> _pluginConfigurations;
+    std::list<libconfig::Config *> _pluginConfigurations;
 
 public:
     PluginStateManager(LoggingFunctionCB logger);
     virtual ~PluginStateManager(void);
 
-    virtual int bindConfigValues(char *group_name, genericTLV **values, int count);
-    virtual int configPassthrough(libconfig::Setting *pluginConfiguration);
+    virtual int configPassthrough(libconfig::Config *pluginConfiguration);
     virtual int preflightComplete(void);
     virtual void commenceEventing(EnqueueEventHandler enqueueCallback, void *arg);
     virtual int deliverValue(genericTLV *value);

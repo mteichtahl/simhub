@@ -19,7 +19,6 @@
 #include "aws/aws.h"
 #endif
 
-#include "deviceConfigManager/deviceConfigManager.h"
 #include "log/clog.h"
 #include "mappingConfigManager/mappingConfigManager.h"
 #include "simhub.h"
@@ -41,10 +40,17 @@ protected:
     std::string _configFilename;
     std::string _configFileVersion;
     std::string _configName;
+
     std::string _mappingConfigFilename;
-    libconfig::Setting *_root;
-    std::shared_ptr<DeviceConfigManager> _deviceConfigManager;
     std::shared_ptr<MappingConfigManager> _mappingConfigManager;
+
+    libconfig::Config _prepare3dConfig;
+    std::string _prepare3dConfigurationFilename;
+
+    libconfig::Config _pokeyConfig;
+    std::string _pokeyConfigurationFilename;
+
+    libconfig::Setting *_root;
 
     bool fileExists(std::string filename);
 
@@ -52,9 +58,11 @@ public:
     ConfigManager(std::string);
     virtual ~ConfigManager(void);
 
+    int init(std::shared_ptr<SimHubEventController> simhubController);
     std::string getConfigFilename(void);
     std::string getMappingConfigFilename(void);
-    int init(std::shared_ptr<SimHubEventController> simhubController);
+    std::string loadPrepare3DConfiguration(void);
+    std::string loadPokeyConfiguration(void);
     std::string version(void);
     std::string name(void);
     std::shared_ptr<MappingConfigManager> mapManager(void);

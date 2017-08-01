@@ -102,8 +102,8 @@ SimHubEventController::~SimHubEventController(void)
 }
 
 void SimHubEventController::setConfigManager(ConfigManager *configManager)
-{ 
-    _configManager = configManager; 
+{
+    _configManager = configManager;
 }
 
 bool SimHubEventController::deliverPokeyPluginValue(std::shared_ptr<Attribute> value)
@@ -158,9 +158,7 @@ void SimHubEventController::LoggerWrapper(const int category, const char *msg, .
     logger.log(category, buff);
 }
 
-simplug_vtable SimHubEventController::loadPlugin(std::string dylibName,
-                                                 std::list<libconfig::Setting *> &pluginConfigs,
-                                                 EnqueueEventHandler eventCallback)
+simplug_vtable SimHubEventController::loadPlugin(std::string dylibName, std::list<libconfig::Config *> &pluginConfigs, EnqueueEventHandler eventCallback)
 {
     SPHANDLE pluginInstance = NULL;
     simplug_vtable pluginMethods;
@@ -170,7 +168,6 @@ simplug_vtable SimHubEventController::loadPlugin(std::string dylibName,
     // TODO: use correct path
     std::string fullPath("plugins/");
     fullPath += dylibName + LIB_EXT;
-
     int err = simplug_bootstrap(fullPath.c_str(), &pluginMethods);
 
     if (err == 0) {
@@ -181,7 +178,8 @@ simplug_vtable SimHubEventController::loadPlugin(std::string dylibName,
         // -- temporary solution to the plugin configuration conundrom:
         //    - iterate over the list of libconfig::Setting instances we've
         //    - been given for this plugin and pass them through
-        for (auto config: pluginConfigs) {
+
+        for (auto config : pluginConfigs) {
             pluginMethods.simplug_config_passthrough(pluginInstance, config);
 
             // TODO: add error checking
@@ -205,20 +203,14 @@ simplug_vtable SimHubEventController::loadPlugin(std::string dylibName,
 
 void SimHubEventController::loadPrepare3dPlugin(void)
 {
-    auto prepare3dCallback = [](SPHANDLE eventSource, void *eventData, void *arg) 
-        { 
-            static_cast<SimHubEventController *>(arg)->prepare3dEventCallback(eventSource, eventData); 
-        };
+    auto prepare3dCallback = [](SPHANDLE eventSource, void *eventData, void *arg) { static_cast<SimHubEventController *>(arg)->prepare3dEventCallback(eventSource, eventData); };
 
     _prepare3dMethods = loadPlugin("libprepare3d", _prepare3dDeviceConfigs, prepare3dCallback);
 }
 
 void SimHubEventController::loadPokeyPlugin(void)
 {
-    auto pokeyCallback = [](SPHANDLE eventSource, void *eventData, void *arg) 
-        { 
-            static_cast<SimHubEventController *>(arg)->pokeyEventCallback(eventSource, eventData); 
-        };
+    auto pokeyCallback = [](SPHANDLE eventSource, void *eventData, void *arg) { static_cast<SimHubEventController *>(arg)->pokeyEventCallback(eventSource, eventData); };
 
     _pokeyMethods = loadPlugin("libpokey", _pokeyDeviceConfigs, pokeyCallback);
 }
