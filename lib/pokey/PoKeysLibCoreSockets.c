@@ -1,6 +1,6 @@
 /*
 
-Copyright (C) 2013 Matevž Bošnak (matevz@poscope.com)
+Copyright (C) 2013 Matevï¿½ Boï¿½nak (matevz@poscope.com)
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -40,7 +40,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include <sys/stat.h>
 #include "PoKeysLib.h"
 
-#define DEBUG_PoKeysLibSockets
+// #define DEBUG_PoKeysLibSockets
 
 #ifdef DEBUG_PoKeysLibSockets
     #define debug_printf printf
