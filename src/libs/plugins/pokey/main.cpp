@@ -86,23 +86,18 @@ int PokeyDevicePluginStateManager::deliverValue(genericTLV *value)
     return 0;
 }
 
-void PokeyDevicePluginStateManager::discoverDevices(void)
-{
-    _logger(LOG_INFO, " - Discovering Pokey Devices");
-    _numberOfDevices = PK_EnumerateNetworkDevices(_devices, 800);
-}
+
 
 void PokeyDevicePluginStateManager::enumerateDevices(void)
 {
+    _numberOfDevices = PK_EnumerateNetworkDevices(_devices,800);
     assert(_numberOfDevices > 0);
 
     for (int i = 0; i < _numberOfDevices; i++) {
-        _logger(LOG_INFO, "  - Enumerating device %d", i);
-
         pokeyDeviceSharedPointer device = std::make_shared<PokeyDevice>(_devices[i], i);
 
-        _logger(LOG_INFO, "    - #%d %s %s (v%d.%d.%d) - %u.%u.%u.%u ", 
-                device->serialNumber(), 
+        _logger(LOG_INFO, "    - #%s %s %s (v%d.%d.%d) - %u.%u.%u.%u ", 
+                device->serialNumber().c_str(), 
                 device->hardwareTypeString().c_str(), 
                 device->deviceData().DeviceName,
                 device->firmwareMajorMajorVersion(), 
@@ -114,29 +109,79 @@ void PokeyDevicePluginStateManager::enumerateDevices(void)
                 device->ipAddress()[3]);
 
         _deviceList.emplace(device->serialNumber(), device);
+
     }
 }
 
-pokeyDeviceSharedPointer PokeyDevicePluginStateManager::device(int serialNumber)
+pokeyDeviceSharedPointer PokeyDevicePluginStateManager::device(std::string serialNumber)
 {
-    pokeyDeviceList::iterator it;
-    it = _deviceList.find(serialNumber);
-
-    if (it != _deviceList.end())
-        return it->second;
-    else
+    if (_deviceList.count(serialNumber)){
+        return _deviceList.find(serialNumber)->second;
+    } else{
         return NULL;
+    }   
+}
+
+bool PokeyDevicePluginStateManager::validateConfig(libconfig::SettingIterator iter)
+{
+    bool retValue = true;
+     try {
+         iter->lookup("pins");
+    } catch(const libconfig::SettingNotFoundException &nfex){
+        _logger(LOG_ERROR, "Config file parse error at %s. Skipping....", nfex.getPath());
+        retValue = false;
+    }
+    return retValue;
+    
+    
 }
 
 int PokeyDevicePluginStateManager::preflightComplete(void)
 {
     int retVal = PREFLIGHT_OK;
 
-    discoverDevices();
+    enumerateDevices();
+
+    libconfig::Setting *devicesSetting;
+
+    try {
+        devicesSetting = &_config->lookup("configuration");
+    } catch(const libconfig::SettingNotFoundException &nfex){
+        _logger(LOG_ERROR, "Config file parse error at %s. Skipping....", nfex.getPath());
+    }
+
+    for (libconfig::SettingIterator iter = devicesSetting->begin(); iter != devicesSetting->end(); iter++) {
+        std::string serialNumber;
+        std::string name;
+
+        // check that the configuration has the required config sections
+        if (!validateConfig(iter)){
+            continue;
+        }
+
+        try {
+             iter->lookupValue("serialNumber",serialNumber);
+             pokeyDeviceSharedPointer pokeyDevice = device(serialNumber);
+
+             if (pokeyDevice == NULL){
+                _logger(LOG_ERROR, "    - #%s. No physical device. Skipping....", serialNumber.c_str());
+                 continue;
+             }
+
+            iter->lookupValue("name",name);
+            _logger(LOG_INFO,"^^^^ %s",pokeyDevice->name().c_str());
+          
+        }
+        catch (const libconfig::SettingNotFoundException &nfex) {
+            _logger(LOG_ERROR, "Config file parse error at %s. Skipping....", nfex.getPath());
+            continue;
+        }
+
+    
+    }
 
     if (_numberOfDevices > 0) {
         _logger(LOG_INFO, "  - Discovered %d pokey devices", _numberOfDevices);
-        enumerateDevices();
         retVal = PREFLIGHT_OK;
     }
     else {

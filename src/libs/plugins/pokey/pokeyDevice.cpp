@@ -3,11 +3,10 @@
 
 PokeyDevice::PokeyDevice(sPoKeysNetworkDeviceSummary deviceSummary, uint8_t index)
 {
-
-    _pokey = ::PK_ConnectToNetworkDevice(&deviceSummary);
+    _pokey = std::make_shared<sPoKeysDevice>(*PK_ConnectToNetworkDevice(&deviceSummary));   
     _index = index;
     _userId = deviceSummary.UserID;
-    _serialNumber = deviceSummary.SerialNumber;
+    _serialNumber = std::to_string(deviceSummary.SerialNumber);
     _firwareVersionMajorMajor = (deviceSummary.FirmwareVersionMajor>> 4) + 1;
     _firwareVersionMajor = deviceSummary.FirmwareVersionMajor & 0x0F;
     _firwareVersionMinor = deviceSummary.FirmwareVersionMinor;
@@ -23,7 +22,7 @@ PokeyDevice::PokeyDevice(sPoKeysNetworkDeviceSummary deviceSummary, uint8_t inde
  */
 PokeyDevice::~PokeyDevice()
 {
-    
+    //PK_DisconnectNetworkDevice(_pokey);
 }
 
 std::string PokeyDevice::hardwareTypeString()

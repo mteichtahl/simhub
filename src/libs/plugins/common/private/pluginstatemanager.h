@@ -32,8 +32,8 @@ protected:
     void *_callbackArg;
     LoggingFunctionCB _logger;
 
-    //! list of device settings for use in preflightComplete
-    std::list<libconfig::Config *> _pluginConfigurations;
+    //! config for use in preflightComplete
+    libconfig::Config *_config;
 
 public:
     PluginStateManager(LoggingFunctionCB logger);

@@ -26,7 +26,7 @@ void PluginStateManager::runTestEventLoop(void)
 //! just queue up a copy of the device settings for use in preflightComplete
 int PluginStateManager::configPassthrough(libconfig::Config *pluginConfiguration)
 {
-    _pluginConfigurations.push_back(pluginConfiguration);
+    _config = pluginConfiguration;
     return 0;
 }
 
