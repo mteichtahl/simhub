@@ -130,27 +130,42 @@ solution "simhub"
 					  "src/libs/queue" }
         buildoptions { "--std=c++14" }
 
-project "pokey_plugin"
-	    kind "SharedLib"
-		language "C++"
+    project "pokey_dev_support"
+        kind "Makefile"
+        basedir ("lib/pokey")
+
+        buildcommands {
+            "cd lib/pokey && make -j12 -f Makefile.noqmake.osx && cp lib/libPokeys.so ../../bin"
+        }
+        rebuildcommands {
+            "cd lib/pokey && make -f Makefile.noqmake.osx clean ; make -j12 -f Makefile.noqmake.osx && cp lib/libPokeys.so ../../bin"
+        }
+        cleancommands {
+            "cd lib/pokey && make -f Makefile.noqmake.osx clean ; make -j12 -f Makefile.noqmake.osx && cp lib/libPokeys.so ../../bin"
+        }
+
+    project "pokey_plugin"
+        kind "SharedLib"
+        language "C++"
         targetname "pokey"
         targetdir ("bin/plugins")
+        libdirs { "lib/pokey/lib" }
         links {
-            "bin/plugins/PoKeys",
-            "usb"
+            "PoKeys",
+            "usb-1.0"
         }
-		files { "src/libs/plugins/pokey/**.h",
+        files { "src/libs/plugins/pokey/**.h",
                 "src/libs/plugins/common/**.cpp",
-			    "src/libs/plugins/pokey/**.cpp" }
+                "src/libs/plugins/pokey/**.cpp" }
         includedirs { "src/libs/googletest/include", 
-                      "src/libs/googletest", 
-                      "src/common",
-                      "src/libs/plugins",
-                      "src/libs/variant/include", 
-                      "src/libs",
-                      "src/libs/variant/include/mpark",
-					  "src/libs/queue" }
+                    "src/libs/googletest", 
+                    "src/common",
+                    "src/libs/plugins",
+                    "src/libs/variant/include", 
+                    "src/libs",
+                    "src/libs/variant/include/mpark",
+                    "src/libs/queue" }
         links { 'config++',
                 'pthread'}
         buildoptions { "--std=c++14" }
-		
+            
