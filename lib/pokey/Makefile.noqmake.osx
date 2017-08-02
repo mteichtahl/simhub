@@ -1,18 +1,21 @@
 CC = gcc
 AR = ar
 
+CFLAGS=-fPIC -fPIC
+LDFLAGS=-lusb-1.0 -framework IOKit -framework CoreFoundation -L/usr/lib/ -L/opt/local/lib/ -lusb-1.0 
 
-CFLAGS = -shared -fPIC -I/usr/local/include/libusb-1.0/
-LIBS = -framework IOKit -framework CoreFoundation -L/usr/lib/ -L/usr/local/lib/ -lusb-1.0 
-OBJECTS = PoKeysLibCore.o PoKeysLibPoNET.o PoKeysLibI2C.o PoKeysLibEncoders.o PoKeysLibPulseEngine.o PoKeysLibMatrixLED.o PoKeysLibMatrixKB.o PoKeysLibLCD.o PoKeysLibIO.o PoKeysLibDeviceData.o PoKeysLibCoreSockets.o hid-mac.o
+SOURCES=PoKeysLibCore.c PoKeysLibCoreSockets.c hid-mac.c PoKeysLibFastUSB.c \
+        PoKeysLibDeviceData.c \
+        PoKeysLibIO.c PoKeysLibEncoders.c PoKeysLibMatrixLED.c PoKeysLibMatrixKB.c \
+        PoKeysLibPoNET.c PoKeysLibLCD.c PoKeysLibRTC.c \
+        PoKeysLibEasySensors.c PoKeysLibI2C.c PoKeysLib1Wire.c PoKeysLibSPI.c \
+        PoKeysLibPulseEngine_v2.c \
+        PoKeysLibUART.c \
+        PoKeysLibCAN.c
 
-install: all
-	mkdir -p lib
-	mkdir -p include
-	cp libPoKeys.so lib
-	cp PoKeysLib.h include
+OBJECTS=$(SOURCES:.c=.o)
 
-all: libPoKeys.so
+all: $(SOURCES) libPoKeys.so
 
 static: libPoKeys.a
 
@@ -20,45 +23,9 @@ libPoKeys.a: $(OBJECTS)
 	$(AR) rcs libPoKeys.a $(OBJECTS)
 
 libPoKeys.so: $(OBJECTS)
-	$(CC) $(CFLAGS) $(LIBS) $(OBJECTS) -o libPoKeys.so 
-	
-PoKeysLibCore.o: PoKeysLibCore.c
-	$(CC) $(CFLAGS) -c PoKeysLibCore.c
-
-PoKeysLibI2C.o: PoKeysLibI2C.c
-	$(CC) $(CFLAGS) -c PoKeysLibI2C.c
-  
-PoKeysLibEncoders.o: PoKeysLibEncoders.c
-	$(CC) $(CFLAGS) -c PoKeysLibEncoders.c
-	
-PoKeysLibPulseEngine.o: PoKeysLibPulseEngine.c
-	$(CC) $(CFLAGS) -c PoKeysLibPulseEngine.c
-	
-PoKeysLibMatrixLED.o: PoKeysLibMatrixLED.c
-	$(CC) $(CFLAGS) -c PoKeysLibMatrixLED.c
-	
-PoKeysLibMatrixKB.o: PoKeysLibMatrixKB.c
-	$(CC) $(CFLAGS) -c PoKeysLibMatrixKB.c
-	
-PoKeysLibLCD.o: PoKeysLibLCD.c
-	$(CC) $(CFLAGS) -c PoKeysLibLCD.c
-	
-PoKeysLibIO.o: PoKeysLibIO.c
-	$(CC) $(CFLAGS) -c PoKeysLibIO.c
-	
-PoKeysLibDeviceData.o: PoKeysLibDeviceData.c
-	$(CC) $(CFLAGS) -c PoKeysLibDeviceData.c
-	
-PoKeysLibCoreSockets.o: PoKeysLibCoreSockets.c
-	$(CC) $(CFLAGS) -c PoKeysLibCoreSockets.c
-	
-PoKeysLibPoNET.o: PoKeysLibPoNET.c
-	$(CC) $(CFLAGS) -c PoKeysLibPoNET.c
-	
-hid-mac.o: hid-mac.c
-	$(CC) $(CFLAGS) -c hid-mac.c
+	$(CC) -shared $(OBJECTS) -o libPoKeys.so $(LDFLAGS)
 	
 clean:
-	rm *.o
-	rm *.a
-	rm *.so
+	-rm *.a
+	-rm *.o
+	-rm *.so

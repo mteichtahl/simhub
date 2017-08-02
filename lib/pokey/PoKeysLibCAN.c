@@ -1,6 +1,6 @@
 /*
 
-Copyright (C) 2013 Matevž Bošnak (matevz@poscope.com)
+Copyright (C) 2016 Matevž Bošnak (matevz@poscope.com)
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -17,54 +17,52 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 */
-
 #include "PoKeysLib.h"
 #include "PoKeysLibCore.h"
 
-int32_t PK_SPIConfigure(sPoKeysDevice * device, uint8_t prescaler, uint8_t frameFormat)
+int32_t PK_CANConfigure(sPoKeysDevice* device, uint32_t bitrate)
 {
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
-    // Configure SPI
-    CreateRequest(device->request, 0xE5, 0x01, prescaler, frameFormat, 0);
+    // Configure UART
+    CreateRequest(device->request, 0x86, 0x01, 0, 0, 0);
+    *(uint32_t*)(device->request + 8) = bitrate;
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
     return PK_OK;
 }
 
-int32_t PK_SPIWrite(sPoKeysDevice * device, uint8_t * buffer, uint8_t iDataLength, uint8_t pinCS)
+int32_t PK_CANRegisterFilter(sPoKeysDevice* device, uint8_t format, uint32_t CANid)
 {
-    uint8_t i;
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
-    if (iDataLength > 55) iDataLength = 55;
-
-    CreateRequest(device->request, 0xE5, 0x10, iDataLength, pinCS, 0);
-    for (i = 0; i < iDataLength; i++)
-    {
-        device->request[8+i] = buffer[i];
-    }
+    // Configure UART
+    CreateRequest(device->request, 0x86, 0x10, format, 0, 0);
+    *(uint32_t*)(device->request + 8) = CANid;
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
-
-    if (device->response[3] == 1) return PK_OK; else return PK_ERR_GENERIC;
+    return PK_OK;
 }
 
-int32_t PK_SPIRead(sPoKeysDevice * device, uint8_t * buffer, uint8_t iDataLength)
+int32_t PK_CANWrite(sPoKeysDevice* device, sPoKeysCANmsg * msg)
 {
-    uint8_t i;
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
-    if (iDataLength > 55) iDataLength = 55;
-
-    CreateRequest(device->request, 0xE5, 0x20, iDataLength, 0, 0);
+    // Configure UART
+    CreateRequest(device->request, 0x86, 0x20, 0, 0, 0);
+    memcpy(device->request + 8, msg, sizeof(sPoKeysCANmsg));
     if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
-
-    if (device->response[3] == 1)
-    {
-        for (i = 0; i < iDataLength; i++)
-        {
-            buffer[i] = device->response[8+i];
-        }
-        return PK_OK;
-    } else return PK_ERR_GENERIC;
+    return PK_OK;
 }
 
+int32_t PK_CANRead(sPoKeysDevice* device, sPoKeysCANmsg * msg, uint8_t * status)
+{
+    if (device == NULL) return PK_ERR_NOT_CONNECTED;
+
+    // Configure UART
+    CreateRequest(device->request, 0x86, 0x30, 0, 0, 0);
+    if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
+
+    *status = device->response[3];
+    if (*status)
+        memcpy(msg, device->response + 8, sizeof(sPoKeysCANmsg));
+    return PK_OK;
+}

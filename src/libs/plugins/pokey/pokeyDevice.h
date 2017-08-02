@@ -23,7 +23,7 @@ protected:
     uint8_t _ipAddress[4];
     uint8_t _hardwareType;
     uint8_t _dhcp;
-    std::shared_ptr<sPoKeysDevice> _pokey;
+    sPoKeysDevice *_pokey;
 
 public:
     PokeyDevice(sPoKeysNetworkDeviceSummary , uint8_t);
@@ -39,7 +39,7 @@ public:
     inline uint8_t dhcp() { return _dhcp; }
     uint8_t index() { return _index; }
     uint8_t *ipAddress() { return _ipAddress;}
-    inline std::shared_ptr<sPoKeysDevice> pokey() { return std::shared_ptr<sPoKeysDevice>(_pokey); }
+    inline sPoKeysDevice *pokey() { return _pokey; }
     inline sPoKeysDevice_Info info() { return _pokey->info; }
     inline sPoKeysDevice_Data deviceData() { return _pokey->DeviceData; }
     inline std::string name() { std::string poo((char*)deviceData().DeviceName); return poo; }

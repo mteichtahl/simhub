@@ -3,7 +3,7 @@
 
 PokeyDevice::PokeyDevice(sPoKeysNetworkDeviceSummary deviceSummary, uint8_t index)
 {
-    _pokey = std::make_shared<sPoKeysDevice>(*PK_ConnectToNetworkDevice(&deviceSummary));   
+    _pokey = PK_ConnectToNetworkDevice(&deviceSummary);   
     _index = index;
     _userId = deviceSummary.UserID;
     _serialNumber = std::to_string(deviceSummary.SerialNumber);
@@ -22,7 +22,7 @@ PokeyDevice::PokeyDevice(sPoKeysNetworkDeviceSummary deviceSummary, uint8_t inde
  */
 PokeyDevice::~PokeyDevice()
 {
-    //PK_DisconnectNetworkDevice(_pokey);
+    PK_DisconnectDevice(_pokey);
 }
 
 std::string PokeyDevice::hardwareTypeString()

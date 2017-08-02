@@ -21,5 +21,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef __POKEYSLIBSOCKETS
 	#define __POKEYSLIBSOCKETS
 
-	int SendEthRequest(sPoKeysDevice* device);
+    #include "PoKeysLib.h"
+
+    int32_t SendEthRequest(sPoKeysDevice* device);
+    int32_t SendEthRequestBig(sPoKeysDevice* device);
 #endif

@@ -300,17 +300,78 @@ int32_t PK_IsCounterAvailableByDevice(uint32_t deviceTypeMask, uint8_t pinID)
                               1,  1,  1,  1,  0 , 1,  0 , 1,  1,  0 ,
                               0 , 0 , 0 , 0 , 0 , 0 , 0 };
 
+    //                          1   2   3   4   5   6   7   8   9   10
+    int counters_57CNC[]  =   { 1,  1,  1,  1,  1,  1,  0,  0,  1,  1,
+                                1,	0,	0,	0,	1,	1,	0,	0,	1,	1,
+                                0,	0,	0,  0,  0,  0,	0,  0,	0,	0,
+                                0,  0,	1,	1,	1,	1,	1,	1,	0,  0,
+                                1,	1,	1,	1,	0,  0,  0,  0,  0,  0,
+                                0,  0,  0,	0,  0};
+
     if (deviceTypeMask & PK_DeviceMask_Bootloader) return 0;
 
-    if (deviceTypeMask & PK_DeviceMask_PoPLC58)
+	if ((deviceTypeMask & PK_DeviceMask_PoPLC58) || (deviceTypeMask & PK_DeviceMask_57CNCdb25))
     {
         return 0;
-    } else
+    } else               
     {
-        if (!(deviceTypeMask & PK_DeviceMask_56)) return 0;
         if (pinID >= 55) return 0;
+
+        if (deviceTypeMask & PK_DeviceMask_57CNC) return counters_57CNC[pinID];
+        if (!(deviceTypeMask & (PK_DeviceMask_56 | PK_DeviceMask_57))) return 0;
         return counterSupported[pinID];
     }
+}
+
+int32_t PK_IsCounterAvailableByTypeID(uint32_t deviceTypeID, uint8_t pinID)
+{
+    //                        1   2   3   4   5   6   7   8   9   10
+    int counterSupported[] = {1,  1,  0 , 0 , 1,  1,  0 , 0 , 1,  0 ,
+                              1,  0 , 0 , 0 , 1,  1,  0 , 0 , 1,  1,
+                              1,  1,  1,  1,  1,  1,  1,  1,  0 , 0 ,
+                              0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ,
+                              1,  1,  1,  1,  0 , 1,  0 , 1,  1,  0 ,
+                              0 , 0 , 0 , 0 , 0 , 0 , 0 };
+
+    //                          1   2   3   4   5   6   7   8   9   10
+    int counters_57CNC[]  =   { 1,  1,  1,  1,  1,  1,  0,  0,  1,  1,
+                                1,	0,	0,	0,	1,	1,	0,	0,	1,	1,
+                                0,	0,	0,  0,  0,  0,	0,  0,	0,	0,
+                                0,  0,	1,	1,	1,	1,	1,	1,	0,  0,
+                                1,	1,	1,	1,	0,  0,  0,  0,  0,  0,
+                                0,  0,  0,	0,  0};
+
+    switch (deviceTypeID)
+    {
+        case PK_DeviceID_27E:
+        case PK_DeviceID_27U:
+            return 0;
+
+        case PK_DeviceID_55v1:
+        case PK_DeviceID_55v2:
+        case PK_DeviceID_55v3:
+            return 0;
+
+        case PK_DeviceID_56E:
+        case PK_DeviceID_56U:
+        case PK_DeviceID_57E:
+        case PK_DeviceID_57E_v0:
+        case PK_DeviceID_57U:
+        case PK_DeviceID_57U_v0:
+            if (pinID >= 55) return 0;
+            return counterSupported[pinID];
+
+        case PK_DeviceID_PoKeys57CNC:
+            if (pinID >= 55) return 0;
+            return counters_57CNC[pinID];
+
+        case PK_DeviceID_58EU:
+            return 0;
+        case PK_DeviceID_PoPLC58:
+            return 0;
+    }
+
+    return 0;
 }
 
 int32_t PK_DigitalIOSet(sPoKeysDevice* device)
@@ -322,7 +383,10 @@ int32_t PK_DigitalIOSet(sPoKeysDevice* device)
 	CreateRequest(device->request, 0xCC, 1, 0, 0, 0);
 	for (i = 0; i < device->info.iPinCount; i++)
     {
-        if (device->Pins[i].DigitalValueSet > 0)
+        if (device->Pins[i].preventUpdate > 0)
+        {
+            device->request[20 + i / 8] |= (unsigned char)(1 << (i % 8));
+        } else if (device->Pins[i].DigitalValueSet > 0)
         {
             device->request[8 + i / 8] |= (unsigned char)(1 << (i % 8));
         }
@@ -358,7 +422,10 @@ int32_t PK_DigitalIOSetGet(sPoKeysDevice* device)
 	CreateRequest(device->request, 0xCC, 1, 0, 0, 0);
 	for (i = 0; i < device->info.iPinCount; i++)
     {
-        if (device->Pins[i].DigitalValueSet > 0)
+        if (device->Pins[i].preventUpdate > 0)
+        {
+            device->request[20 + i / 8] |= (unsigned char)(1 << (i % 8));
+        } else if (device->Pins[i].DigitalValueSet > 0)
         {
             device->request[8 + i / 8] |= (unsigned char)(1 << (i % 8));
         }
@@ -406,6 +473,8 @@ int32_t PK_AnalogIOGet(sPoKeysDevice* device)
     uint32_t i;
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
+	if (device->info.iAnalogInputs == 0) return PK_ERR_NOT_SUPPORTED;
+
 	// Get analog inputs
 	CreateRequest(device->request, 0x3A, 1, 0, 0, 0);
 	if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;   
@@ -425,6 +494,8 @@ int32_t PK_AnalogIOGetAsArray(sPoKeysDevice* device, uint32_t * buffer)
 
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
 
+	if (device->info.iAnalogInputs == 0) return PK_ERR_NOT_SUPPORTED;
+
     result = PK_AnalogIOGet(device);
     if (result == PK_OK)
     {
@@ -436,6 +507,36 @@ int32_t PK_AnalogIOGetAsArray(sPoKeysDevice* device, uint32_t * buffer)
     return result;
 }
 
+int32_t PK_AnalogRCFilterGet(sPoKeysDevice* device)
+{
+    if (device == NULL) return PK_ERR_NOT_CONNECTED;
+
+	if (device->info.iAnalogFiltering == 0) return PK_ERR_NOT_SUPPORTED;
+
+    // Read the value of RC filter
+    CreateRequest(device->request, 0x38, 0, 0, 0, 0);
+    if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
+
+    memcpy(&device->otherPeripherals.AnalogRCFilter, device->response + 2, 4);
+    return PK_OK;
+}
+
+int32_t PK_AnalogRCFilterSet(sPoKeysDevice* device)
+{
+    if (device == NULL) return PK_ERR_NOT_CONNECTED;
+
+	if (device->info.iAnalogFiltering == 0) return PK_ERR_NOT_SUPPORTED;
+
+	// Set the value of RC filter
+    CreateRequest(device->request, 0x39, 0, 0, 0, 0);
+
+    memcpy(device->request + 2, &device->otherPeripherals.AnalogRCFilter, 4);
+    if (SendRequest(device) != PK_OK) return PK_ERR_TRANSFER;
+
+    return PK_OK;
+}
+
+
 int32_t PK_DigitalCounterGet(sPoKeysDevice* device)
 {
     // Get digital counter values
@@ -445,6 +546,8 @@ int32_t PK_DigitalCounterGet(sPoKeysDevice* device)
     uint32_t i, j;
 
     if (device == NULL) return PK_ERR_NOT_CONNECTED;
+
+	if (device->info.iDigitalCounters == 0) return PK_ERR_NOT_SUPPORTED;
 
     CreateRequest(device->request, 0xD8, 0, 0, 0, 0);
 
@@ -574,6 +677,31 @@ int32_t PK_PWMUpdateDirectly(sPoKeysDevice * device, uint32_t * dutyCycles)
     return PK_PWMUpdate(device);
 }
 
+int32_t PK_SL_PWM_SetPeriod(sPoKeysDevice* device, uint32_t PWMperiod)
+{
+    if (device == NULL) return PK_ERR_NOT_CONNECTED;
+
+    if (PK_PWMConfigurationGet(device) != PK_OK) return PK_ERR_GENERIC;
+    device->PWM.PWMperiod = PWMperiod;
+    return PK_PWMConfigurationSet(device);
+}
+
+int32_t PK_SL_PWM_SetChannelEnabled(sPoKeysDevice* device, uint8_t channel, uint8_t enabled, uint32_t defaultDuty)
+{
+    if (device == NULL) return PK_ERR_NOT_CONNECTED;
+
+    device->PWM.PWMenabledChannels[channel] = enabled;
+    device->PWM.PWMduty[channel] = defaultDuty;
+    return PK_PWMConfigurationSet(device);
+}
+
+int32_t PK_SL_PWM_SetDuty(sPoKeysDevice* device, uint8_t channel, uint32_t duty)
+{
+    if (device == NULL) return PK_ERR_NOT_CONNECTED;
+
+    device->PWM.PWMduty[channel] = duty;
+    return PK_OK;
+}
 
 int32_t PK_PoExtBusSet(sPoKeysDevice* device)
 {

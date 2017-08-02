@@ -26,6 +26,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "stdio.h"
 //#define PK_COM_DEBUG
 
+int32_t PKI_CheckInterface(struct hid_device_info * devInfo)
+{
+    if (devInfo->interface_number == 1)
+        return 1;
+
+    return 0;
+}
+
 // Connection specific commands
 int32_t PK_EnumerateUSBDevices()
 {
@@ -42,11 +50,34 @@ int32_t PK_EnumerateUSBDevices()
         printf("  Product:      %ls\n", cur_dev->product_string);
         printf("  Interface:    %d\n",  cur_dev->interface_number);
         printf("\n");*/
-        if (cur_dev->interface_number == 1) numDevices++;
+
+        if (PKI_CheckInterface(cur_dev))
+        {
+            numDevices++;
+        }
+
         cur_dev = cur_dev->next;
     }
     hid_free_enumeration(devs);
 
+    devs = hid_enumerate(0x1DC3, 0x1002);
+    cur_dev = devs;
+
+    while (cur_dev)
+    {
+        /*printf("Device Found\n");
+        printf("  Serial:      %ls\n", cur_dev->serial_number);
+        printf("  Product:      %ls\n", cur_dev->product_string);
+        printf("  Interface:    %d\n",  cur_dev->interface_number);
+        printf("\n");*/
+        if (cur_dev->interface_number == -1) numDevices++;
+        cur_dev = cur_dev->next;
+    }
+    hid_free_enumeration(devs);
+
+#ifdef POKEYSLIB_USE_LIBUSB
+	numDevices += PK_EnumerateFastUSBDevices();
+#endif
     return numDevices;
 }
 
@@ -57,7 +88,7 @@ int32_t PK_GetCurrentDeviceConnectionType(sPoKeysDevice* device)
 
 void InitializeNewDevice(sPoKeysDevice* device)
 {
-    uint32_t i;
+    uint32_t i;    
 	memset(&device->info, 0, sizeof(sPoKeysDevice_Info));
     memset(&device->DeviceData, 0, sizeof(sPoKeysDevice_Data));
 
@@ -77,6 +108,10 @@ void InitializeNewDevice(sPoKeysDevice* device)
 
 	memset(device->request, 0, 64);
 	memset(device->response, 0, 64);
+
+	device->sendRetries = 3;
+    device->readRetries = 10;
+    device->socketTimeout = 100;
 
     PK_DeviceDataGet(device);
 
@@ -98,84 +133,84 @@ void InitializeNewDevice(sPoKeysDevice* device)
 	device->Encoders = (sPoKeysEncoder*)malloc(sizeof(sPoKeysEncoder) * device->info.iEncodersCount);
 	memset(device->Encoders, 0, sizeof(sPoKeysEncoder) * device->info.iEncodersCount);
 
+    if (device->info.iEasySensors)
+    {
+        device->EasySensors = (sPoKeysEasySensor*)malloc(sizeof(sPoKeysEasySensor) * device->info.iEasySensors);
+        memset(device->EasySensors, 0, sizeof(sPoKeysEasySensor) * device->info.iEasySensors);
+    } else
+    {
+        device->EasySensors = NULL;
+    }
+
 	device->PWM.PWMduty = (uint32_t*)malloc(sizeof(uint32_t) * device->info.iPWMCount);
 	memset(device->PWM.PWMduty, 0, sizeof(uint32_t) * device->info.iPWMCount);
 
 	device->PWM.PWMenabledChannels = (unsigned char*)malloc(sizeof(unsigned char) * device->info.iPWMCount);
 	memset(device->PWM.PWMenabledChannels, 0, sizeof(unsigned char) * device->info.iPWMCount);
+	device->PWM.PWMpinIDs = (unsigned char*)malloc(sizeof(unsigned char) * device->info.iPWMCount);
+	memset(device->PWM.PWMpinIDs, 0, sizeof(unsigned char) * device->info.iPWMCount);
+
+	PK_FillPWMPinNumbers(device);
 
 	device->PoExtBusData = (unsigned char*)malloc(sizeof(unsigned char) * device->info.iPoExtBus);
 
     device->MatrixLED = (sPoKeysMatrixLED*)malloc(sizeof(sPoKeysMatrixLED) * device->info.iMatrixLED);
 	memset(device->MatrixLED, 0, sizeof(sPoKeysMatrixLED) * device->info.iMatrixLED);
 
-	if (device->info.iPulseEngine)
-	{
-		device->PulseEngine = (sPoKeysPE*)malloc(sizeof(sPoKeysPE));
-
-		PK_PEInfoGet(device);
-
-		// Allocate buffer
-		device->PulseEngine->buffer.buffer = (unsigned char*)malloc(sizeof(unsigned char) * device->PulseEngine->info.bufferDepth);
-		memset(device->PulseEngine->buffer.buffer, 0, sizeof(unsigned char) * device->PulseEngine->info.bufferDepth);
-
-		device->PulseEngine->ReferencePosition = (uint32_t*)malloc(sizeof(uint32_t) * device->PulseEngine->info.nrOfAxes);
-		memset(device->PulseEngine->ReferencePosition, 0, sizeof(uint32_t) * device->PulseEngine->info.nrOfAxes);
-		device->PulseEngine->CurrentPosition = (uint32_t*)malloc(sizeof(uint32_t) * device->PulseEngine->info.nrOfAxes);
-		memset(device->PulseEngine->CurrentPosition, 0, sizeof(uint32_t) * device->PulseEngine->info.nrOfAxes);
-		device->PulseEngine->MaxSpeed = (uint32_t*)malloc(sizeof(uint32_t) * device->PulseEngine->info.nrOfAxes);
-		memset(device->PulseEngine->MaxSpeed, 0, sizeof(uint32_t) * device->PulseEngine->info.nrOfAxes);
-		device->PulseEngine->MaxAcceleration = (uint32_t*)malloc(sizeof(uint32_t) * device->PulseEngine->info.nrOfAxes);
-		memset(device->PulseEngine->MaxAcceleration, 0, sizeof(uint32_t) * device->PulseEngine->info.nrOfAxes);
-		device->PulseEngine->MaxDecceleration = (uint32_t*)malloc(sizeof(uint32_t) * device->PulseEngine->info.nrOfAxes);
-		memset(device->PulseEngine->MaxDecceleration, 0, sizeof(uint32_t) * device->PulseEngine->info.nrOfAxes);
-		device->PulseEngine->AxisState = (unsigned char*)malloc(sizeof(unsigned char) * device->PulseEngine->info.nrOfAxes);
-		memset(device->PulseEngine->AxisState, 0, sizeof(unsigned char) * device->PulseEngine->info.nrOfAxes);
-
-		device->PulseEngine->MPGjogMultiplier = (uint32_t*)malloc(sizeof(uint32_t) * device->PulseEngine->info.nrOfAxes);
-		memset(device->PulseEngine->MPGjogMultiplier, 0, sizeof(uint32_t) * device->PulseEngine->info.nrOfAxes);
-		device->PulseEngine->MPGaxisEncoder = (unsigned char*)malloc(sizeof(unsigned char) * device->PulseEngine->info.nrOfAxes);
-		memset(device->PulseEngine->MPGaxisEncoder, 0, sizeof(unsigned char) * device->PulseEngine->info.nrOfAxes);
-
-	} else device->PulseEngine = NULL;
-
     memset(&device->PEv2, 0, sizeof(sPoKeysPEv2));
 
-    device->sendRetries = 3;
-    device->readRetries = 10;
-    device->socketTimeout = 100;
+    device-> multiPartBuffer = malloc(512);
+    if (device->multiPartBuffer <= 0) device->multiPartBuffer = 0;
+
+#ifdef USE_ALIGN_TEST
+    device->alignTest1 = 1;
+    device->alignTest2 = 2;
+    device->alignTest3 = 3;
+    device->alignTest4 = 4;
+    device->alignTest5 = 5;
+    device->alignTest6 = 6;
+    device->alignTest7 = 7;
+    device->alignTest8 = 8;
+    device->alignTest9 = 9;
+    device->alignTest10 = 10;
+    device->alignTest11 = 11;
+#endif
 }
 
 void CleanDevice(sPoKeysDevice* device)
-{
+{    
 	free(device->Pins);
+	device->Pins = NULL;
 	free(device->Encoders);
+	device->Encoders = NULL;
 	free(device->PWM.PWMduty);
+	device->PWM.PWMduty = NULL;
 	free(device->PWM.PWMenabledChannels);
+	device->PWM.PWMenabledChannels = NULL;
+	free(device->PWM.PWMpinIDs);
+	device->PWM.PWMpinIDs = NULL;
 	free(device->PoExtBusData);
+	device->PoExtBusData = NULL;
 	free(device->MatrixLED);
+	device->MatrixLED = NULL;
 
-    if (device->netDeviceData != 0)
+    if (device->multiPartBuffer != NULL)
     {
-        free(device->netDeviceData);
-        device->netDeviceData = 0;
+        free(device->multiPartBuffer);
+        device->multiPartBuffer = NULL;
     }
 
-	if (device->PulseEngine != NULL)
-	{
-		free(device->PulseEngine->buffer.buffer);
-		
-		free(device->PulseEngine->ReferencePosition);
-		free(device->PulseEngine->CurrentPosition);
-		free(device->PulseEngine->MaxSpeed);
-		free(device->PulseEngine->MaxAcceleration);
-		free(device->PulseEngine->MaxDecceleration);
-		free(device->PulseEngine->AxisState);
+    if (device->EasySensors != NULL)
+    {
+        free(device->EasySensors);
+        device->EasySensors = NULL;
+    }
 
-		free(device->PulseEngine->MPGjogMultiplier);
-		free(device->PulseEngine->MPGaxisEncoder);
-		free(device->PulseEngine);
-	}
+    if (device->netDeviceData != NULL)
+    {
+        free(device->netDeviceData);
+        device->netDeviceData = NULL;
+    }
 }
 
 void PK_ReleaseDeviceStructure(sPoKeysDevice* device)
@@ -190,7 +225,16 @@ void PK_CloneDeviceStructure(sPoKeysDevice* original, sPoKeysDevice *destination
     destination->Encoders = (sPoKeysEncoder*)malloc(sizeof(sPoKeysEncoder) * original->info.iEncodersCount);
     destination->PWM.PWMduty = (uint32_t*)malloc(sizeof(uint32_t) * original->info.iPWMCount);
     destination->PWM.PWMenabledChannels = (unsigned char*)malloc(sizeof(unsigned char) * original->info.iPWMCount);
+    destination->PWM.PWMpinIDs = (unsigned char*)malloc(sizeof(unsigned char) * original->info.iPWMCount);
     destination->MatrixLED = (sPoKeysMatrixLED*)malloc(sizeof(sPoKeysMatrixLED) * original->info.iMatrixLED);
+
+    if (original->info.iEasySensors)
+    {
+        destination->EasySensors = (sPoKeysEasySensor*)malloc(sizeof(sPoKeysEasySensor) * original->info.iEasySensors);
+    } else
+    {
+        destination->EasySensors = 0;
+    }
 
     // Network device information structure...
     if (original->netDeviceData != 0)
@@ -201,38 +245,7 @@ void PK_CloneDeviceStructure(sPoKeysDevice* original, sPoKeysDevice *destination
     {
         destination->netDeviceData = 0;
     }
-
-    if (original->info.iPulseEngine)
-    {
-        destination->PulseEngine = (sPoKeysPE*)malloc(sizeof(sPoKeysPE));
-
-        // Allocate buffer
-        destination->PulseEngine->buffer.buffer
-                = (unsigned char*)malloc(sizeof(unsigned char) * original->PulseEngine->info.bufferDepth);
-        memset(destination->PulseEngine->buffer.buffer, 0,
-               sizeof(unsigned char) * original->PulseEngine->info.bufferDepth);
-
-        destination->PulseEngine->ReferencePosition
-                = (uint32_t*)malloc(sizeof(uint32_t) * original->PulseEngine->info.nrOfAxes);
-        destination->PulseEngine->CurrentPosition
-                = (uint32_t*)malloc(sizeof(uint32_t) * original->PulseEngine->info.nrOfAxes);
-        destination->PulseEngine->MaxSpeed
-                = (uint32_t*)malloc(sizeof(uint32_t) * original->PulseEngine->info.nrOfAxes);
-        destination->PulseEngine->MaxAcceleration
-                = (uint32_t*)malloc(sizeof(uint32_t) * original->PulseEngine->info.nrOfAxes);
-        destination->PulseEngine->MaxDecceleration
-                = (uint32_t*)malloc(sizeof(uint32_t) * original->PulseEngine->info.nrOfAxes);
-        destination->PulseEngine->AxisState
-                = (unsigned char*)malloc(sizeof(unsigned char) * original->PulseEngine->info.nrOfAxes);
-
-        destination->PulseEngine->MPGjogMultiplier
-                = (uint32_t*)malloc(sizeof(uint32_t) * original->PulseEngine->info.nrOfAxes);
-        destination->PulseEngine->MPGaxisEncoder
-                = (unsigned char*)malloc(sizeof(unsigned char) * original->PulseEngine->info.nrOfAxes);
-
-    } else destination->PulseEngine = NULL;
     destination->PoExtBusData = (unsigned char*)malloc(sizeof(unsigned char) * original->info.iPoExtBus);
-
 
 
     // Copy data
@@ -247,6 +260,13 @@ void PK_CloneDeviceStructure(sPoKeysDevice* original, sPoKeysDevice *destination
     memcpy(&destination->Encoders[0], &original->Encoders[0],
             original->info.iEncodersCount * sizeof(sPoKeysEncoder));
 
+
+    if (original->info.iEasySensors)
+    {
+        memcpy(&destination->EasySensors[0], &original->EasySensors[0],
+                original->info.iEasySensors * sizeof(sPoKeysEasySensor));
+    }
+
     destination->matrixKB = original->matrixKB;
 
     destination->PWM.PWMperiod = original->PWM.PWMperiod;
@@ -254,54 +274,17 @@ void PK_CloneDeviceStructure(sPoKeysDevice* original, sPoKeysDevice *destination
            sizeof(uint32_t) * original->info.iPWMCount);
     memcpy(destination->PWM.PWMenabledChannels, original->PWM.PWMenabledChannels,
            sizeof(unsigned char) * original->info.iPWMCount);
+	memcpy(destination->PWM.PWMpinIDs, original->PWM.PWMpinIDs,
+           sizeof(unsigned char) * original->info.iPWMCount);
 
     memcpy(destination->MatrixLED, original->MatrixLED,
            sizeof(sPoKeysMatrixLED) * original->info.iMatrixLED);
 
     destination->LCD = original->LCD;
 
-    if (original->info.iPulseEngine)
-    {
-        destination->PulseEngine->info = original->PulseEngine->info;
-
-        memcpy(destination->PulseEngine->ReferencePosition, original->PulseEngine->ReferencePosition, sizeof(uint32_t) * original->PulseEngine->info.nrOfAxes);
-        memcpy(destination->PulseEngine->CurrentPosition,   original->PulseEngine->CurrentPosition, sizeof(uint32_t) * original->PulseEngine->info.nrOfAxes);
-        memcpy(destination->PulseEngine->MaxSpeed,          original->PulseEngine->MaxSpeed, sizeof(uint32_t) * original->PulseEngine->info.nrOfAxes);
-        memcpy(destination->PulseEngine->MaxAcceleration,   original->PulseEngine->MaxAcceleration, sizeof(uint32_t) * original->PulseEngine->info.nrOfAxes);
-        memcpy(destination->PulseEngine->MaxDecceleration,  original->PulseEngine->MaxDecceleration, sizeof(uint32_t) * original->PulseEngine->info.nrOfAxes);
-        memcpy(destination->PulseEngine->AxisState,         original->PulseEngine->AxisState, sizeof(unsigned char) * original->PulseEngine->info.nrOfAxes);
-        memcpy(destination->PulseEngine->MPGjogMultiplier,  original->PulseEngine->MPGjogMultiplier, sizeof(uint32_t) * original->PulseEngine->info.nrOfAxes);
-        memcpy(destination->PulseEngine->MPGaxisEncoder,    original->PulseEngine->MPGaxisEncoder, sizeof(unsigned char) * original->PulseEngine->info.nrOfAxes);
-
-        destination->PulseEngine->MPGjogActivated = original->PulseEngine->MPGjogActivated;
-
-        destination->PulseEngine->PulseEngineEnabled = original->PulseEngine->PulseEngineEnabled;
-        destination->PulseEngine->PulseEngineState = original->PulseEngine->PulseEngineState;
-
-        destination->PulseEngine->LimitConfigP = original->PulseEngine->LimitConfigP;
-        destination->PulseEngine->LimitConfigN = original->PulseEngine->LimitConfigN;
-        destination->PulseEngine->LimitStatusP = original->PulseEngine->LimitStatusP;
-        destination->PulseEngine->LimitStatusN = original->PulseEngine->LimitStatusN;
-        destination->PulseEngine->HomeConfig = original->PulseEngine->HomeConfig;
-        destination->PulseEngine->HomeStatus = original->PulseEngine->HomeStatus;
-
-        destination->PulseEngine->DirectionChange = original->PulseEngine->DirectionChange;
-
-        destination->PulseEngine->HomingDirectionChange = original->PulseEngine->HomingDirectionChange;
-        destination->PulseEngine->HomingSpeed = original->PulseEngine->HomingSpeed;
-        destination->PulseEngine->HomingReturnSpeed = original->PulseEngine->HomingReturnSpeed;
-        destination->PulseEngine->AxesHomingFlags = original->PulseEngine->AxesHomingFlags;
-
-        destination->PulseEngine->kb48CNCenabled = original->PulseEngine->kb48CNCenabled;
-        destination->PulseEngine->ChargePumpEnabled = original->PulseEngine->ChargePumpEnabled;
-
-        destination->PulseEngine->EmergencySwitchPolarity = original->PulseEngine->EmergencySwitchPolarity;
-    }
-
     destination->PoNETmodule = original->PoNETmodule;
     destination->PoIL = original->PoIL;
     destination->RTC = original->RTC;
-
 
     destination->FastEncodersConfiguration =    original->FastEncodersConfiguration;
     destination->FastEncodersOptions =          original->FastEncodersOptions;
@@ -316,11 +299,14 @@ void PK_CloneDeviceStructure(sPoKeysDevice* original, sPoKeysDevice *destination
 
 }
 
+void * PK_FastUSBConnectToDevice(uint32_t deviceIndex);
+
 sPoKeysDevice* PK_ConnectToDevice(uint32_t deviceIndex)
 {
     int32_t numDevices = 0;
     struct hid_device_info *devs, *cur_dev;
     sPoKeysDevice* tmpDevice;
+    void * devData;
 
     devs = hid_enumerate(0x1DC3, 0x1001);
     cur_dev = devs;
@@ -338,6 +324,7 @@ sPoKeysDevice* PK_ConnectToDevice(uint32_t deviceIndex)
                 tmpDevice->devHandle2 = NULL;
 
 				tmpDevice->connectionType = PK_DeviceType_USBDevice;
+
 
 				if (tmpDevice->devHandle != NULL)
 				{
@@ -357,9 +344,65 @@ sPoKeysDevice* PK_ConnectToDevice(uint32_t deviceIndex)
     }
     hid_free_enumeration(devs);
 
+    // Continue with 0x1002 devices
+    devs = hid_enumerate(0x1DC3, 0x1002);
+    cur_dev = devs;
+
+    while (cur_dev)
+    {
+        if (cur_dev->interface_number == -1)
+        {
+            if (numDevices == deviceIndex)
+            {
+                tmpDevice = (sPoKeysDevice*)malloc(sizeof(sPoKeysDevice));
+
+                //printf("Connect to this device...");
+                tmpDevice->devHandle = (void*)hid_open_path(cur_dev->path);
+                tmpDevice->devHandle2 = NULL;
+
+                tmpDevice->connectionType = PK_DeviceType_USBDevice;
+
+                if (tmpDevice->devHandle != NULL)
+                {
+                    InitializeNewDevice(tmpDevice);
+                } else
+                {
+                    free(tmpDevice);
+                    tmpDevice = NULL;
+                }
+                //hid_set_nonblocking(devHandle);
+                hid_free_enumeration(devs);
+                return tmpDevice;
+            }
+            numDevices++;
+        }
+        cur_dev = cur_dev->next;
+    }
+    hid_free_enumeration(devs);
+
+#ifdef POKEYSLIB_USE_LIBUSB
+	// Try connecting to the bulk interface of the PoKeys device...
+    devData = PK_FastUSBConnectToDevice(deviceIndex - numDevices);
+
+	//void * devData = ConnectToFastUSBInterface(serialNumber);
+	if (devData != NULL)
+	{
+		tmpDevice = (sPoKeysDevice*)malloc(sizeof(sPoKeysDevice));
+
+		tmpDevice->devHandle = NULL;
+		tmpDevice->devHandle2 = devData;
+
+		tmpDevice->connectionType = PK_DeviceType_FastUSBDevice;
+		InitializeNewDevice(tmpDevice);
+		return tmpDevice;
+	}
+#endif
     return NULL;
 }
 
+// Flags:
+// bits 7-1: deviceType specifier (2 - PoKeys56, 3 - PoKeys58, 4 - PoKeys16)
+// bit 0: use UDP
 sPoKeysDevice* PK_ConnectToPoKeysDevice(uint32_t serialNumber, uint32_t checkForNetworkDevicesAndTimeout, uint32_t flags)
 {
     int32_t numDevices = 0;
@@ -367,23 +410,56 @@ sPoKeysDevice* PK_ConnectToPoKeysDevice(uint32_t serialNumber, uint32_t checkFor
     int32_t k;
     sPoKeysDevice* tmpDevice;
     uint8_t serialSearch[8];
-    uint8_t serialSearch58[8];
+    //uint8_t serialSearch58[8];
 
     sPoKeysNetworkDeviceSummary * devices;
     int32_t iNet;
 
+    int devRange = 0;
+    uint8_t deviceTypeRequested = (flags >> 1) & 0x7F;
+
+	
+
+#ifdef POKEYSLIB_USE_LIBUSB
+	// Try connecting to fast USB interface first
+	void * devData = ConnectToFastUSBInterface(serialNumber);
+	if (devData != NULL)
+	{
+		tmpDevice = (sPoKeysDevice*)malloc(sizeof(sPoKeysDevice));
+
+		tmpDevice->devHandle = NULL;
+        tmpDevice->devHandle2 = devData;
+
+        tmpDevice->connectionType = PK_DeviceType_FastUSBDevice;
+        InitializeNewDevice(tmpDevice);	
+		return tmpDevice;
+	}
+#endif
+
     devs = hid_enumerate(0x1DC3, 0x1001);
     cur_dev = devs;
 
-    sprintf(serialSearch, "2.%05lu", serialNumber % 100000);
-    sprintf(serialSearch58, "3.%05lu", serialNumber % 100000);
+    sprintf((char*)serialSearch, "x.%05u", serialNumber % 100000);
+    //sprintf(serialSearch58, "3.%05u", serialNumber % 100000);
 
     while (cur_dev)
     {
-        if (cur_dev->interface_number == 1)
+        if ((cur_dev->interface_number == 1 && devRange == 0) ||
+            (cur_dev->interface_number == 0 && devRange == 1))
         {
-            if (cur_dev->serial_number[0] != 'P')
+            if (cur_dev->serial_number != 0 && cur_dev->serial_number[0] != 'P')
             {
+                // Check the serial number first
+                for (k = 1; k < 8 && cur_dev->serial_number[k] != 0; k++)
+                {
+                    if (cur_dev->serial_number[k] != serialSearch[k]) break;
+                }
+
+                if (deviceTypeRequested == 2 && cur_dev->serial_number[0] != '2') k = 0;
+                if (deviceTypeRequested == 3 && cur_dev->serial_number[0] != '3') k = 0;
+                if (deviceTypeRequested == 4 && cur_dev->serial_number[0] != '4') k = 0;
+
+                /*
                 for (k = 0; k < 8 && cur_dev->serial_number[k] != 0; k++)
                 {
                     if (cur_dev->serial_number[k] != serialSearch[k]) break;
@@ -395,7 +471,7 @@ sPoKeysDevice* PK_ConnectToPoKeysDevice(uint32_t serialNumber, uint32_t checkFor
                     {
                         if (cur_dev->serial_number[k] != serialSearch58[k]) break;
                     }
-                }
+                }*/
 
                 if (k == 7)
                 {
@@ -435,11 +511,11 @@ sPoKeysDevice* PK_ConnectToPoKeysDevice(uint32_t serialNumber, uint32_t checkFor
                     hid_free_enumeration(devs);
                     return NULL;
                 }
-                hid_free_enumeration(devs);
 
                 tmpDevice->connectionType = PK_DeviceType_USBDevice;
                 if (tmpDevice->DeviceData.SerialNumber == serialNumber)
                 {
+	                hid_free_enumeration(devs);
                     return tmpDevice;
                 } else
                 {
@@ -451,6 +527,19 @@ sPoKeysDevice* PK_ConnectToPoKeysDevice(uint32_t serialNumber, uint32_t checkFor
             numDevices++;
         }
         cur_dev = cur_dev->next;
+
+        if (cur_dev == NULL)
+        {
+            devRange++;
+            switch (devRange)
+            {
+                case 1:
+                    hid_free_enumeration(devs);
+                    devs = hid_enumerate(0x1DC3, 0x1001);
+                    cur_dev = devs;
+                    break;
+            }
+        }
     }
     hid_free_enumeration(devs);
 
@@ -507,6 +596,12 @@ void PK_DisconnectDevice(sPoKeysDevice* device)
 			PK_DisconnectNetworkDevice(device);
 		} else
 		{
+#ifdef POKEYSLIB_USE_LIBUSB
+			// Disconnect the fast USB interface...
+			DisconnectFromFastUSBInterface(device->devHandle2);
+			device->devHandle2 = NULL;
+#endif
+
 			if ((hid_device*)device->devHandle != NULL)
 			{
 				hid_close((hid_device*)device->devHandle);
@@ -533,6 +628,17 @@ int32_t CreateRequest(unsigned char * request, unsigned char type, unsigned char
     return PK_OK;
 }
 
+int32_t PK_CustomRequest(sPoKeysDevice* device, unsigned char type, unsigned char param1, unsigned char param2, unsigned char param3, unsigned char param4)
+{
+    device->request[1] = type;
+    device->request[2] = param1;
+    device->request[3] = param2;
+    device->request[4] = param3;
+    device->request[5] = param4;
+
+    return SendRequest(device);
+}
+
 uint8_t getChecksum(uint8_t * data)
 {
     uint8_t temp = 0;
@@ -547,6 +653,28 @@ uint8_t getChecksum(uint8_t * data)
 
 int32_t LastRetryCount = 0;
 int32_t LastWaitCount = 0;
+
+
+//#define PK_COM_DEBUG
+int32_t SendRequest_multiPart(sPoKeysDevice* device)
+{
+    if (device == NULL) return PK_ERR_GENERIC;
+	if (device->connectionType == PK_DeviceType_NetworkDevice)
+	{
+        return SendEthRequestBig(device);
+		//return SendEthRequest(device);
+        //return PK_ERR_TRANSFER;
+	}
+
+#ifdef POKEYSLIB_USE_LIBUSB
+	if (device->connectionType == PK_DeviceType_FastUSBDevice)
+		return SendRequestFastUSB_multiPart(device);
+	else
+		return PK_ERR_TRANSFER;
+#else
+    return PK_ERR_TRANSFER;
+#endif
+}
 
 
 //#define PK_COM_DEBUG
@@ -571,7 +699,10 @@ int32_t SendRequest(sPoKeysDevice* device)
 	{
 		return SendEthRequest(device);
 	}
-
+#ifdef POKEYSLIB_USE_LIBUSB
+		if (device->connectionType == PK_DeviceType_FastUSBDevice)
+			return SendRequestFastUSB(device);
+#endif
     devHandle = (hid_device*)device->devHandle;
 
 
@@ -644,3 +775,33 @@ int32_t SendRequest(sPoKeysDevice* device)
 
     return PK_ERR_TRANSFER;
 }
+
+
+// ******************************************************************************************
+// These functions are used to access the device data without using the structures...
+// ******************************************************************************************
+void PK_SL_SetPinFunction(sPoKeysDevice* device, uint8_t pin, uint8_t function)
+{
+    device->Pins[pin].PinFunction = function;
+}
+
+uint8_t PK_SL_GetPinFunction(sPoKeysDevice* device, uint8_t pin)
+{
+    return device->Pins[pin].PinFunction;
+}
+
+void PK_SL_DigitalOutputSet(sPoKeysDevice* device, uint8_t pin, uint8_t value)
+{
+    device->Pins[pin].DigitalValueSet = value;
+}
+
+uint8_t PK_SL_DigitalInputGet(sPoKeysDevice* device, uint8_t pin)
+{
+    return device->Pins[pin].DigitalValueGet;
+}
+
+uint32_t PK_SL_AnalogInputGet(sPoKeysDevice* device, uint8_t pin)
+{
+    return device->Pins[pin].AnalogValue;
+}
+

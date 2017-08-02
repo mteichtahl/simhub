@@ -164,6 +164,7 @@ solution "simhub"
                     "src/libs/variant/include", 
                     "src/libs",
                     "src/libs/variant/include/mpark",
+                    "lib/pokey/include",
                     "src/libs/queue" }
         links { 'config++',
                 'pthread'}

@@ -43,7 +43,7 @@
 #include <wchar.h>
 
 /* GNU / LibUSB */
-#include "libusb.h"
+#include "libusb-1.0/libusb.h"
 #include "iconv.h"
 
 #include "hidapi.h"
