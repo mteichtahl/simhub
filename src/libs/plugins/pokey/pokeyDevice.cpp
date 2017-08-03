@@ -4,6 +4,7 @@
 PokeyDevice::PokeyDevice(sPoKeysNetworkDeviceSummary deviceSummary, uint8_t index)
 {
     _pokey = PK_ConnectToNetworkDevice(&deviceSummary);
+
     _index = index;
     _userId = deviceSummary.UserID;
     _serialNumber = std::to_string(deviceSummary.SerialNumber);
@@ -13,6 +14,8 @@ PokeyDevice::PokeyDevice(sPoKeysNetworkDeviceSummary deviceSummary, uint8_t inde
     memcpy(&_ipAddress, &deviceSummary.IPaddress, 4);
     _hardwareType = deviceSummary.HWtype;
     _dhcp = deviceSummary.DHCP;
+
+    loadPinConfiguration();
 }
 
 /**
@@ -31,4 +34,12 @@ std::string PokeyDevice::hardwareTypeString()
         return "Pokey 57E";
     }
     return "Unknown";
+}
+
+bool PokeyDevice::validatePinCapability(int number, std::string type)
+{
+    // assert(_pokey);
+    bool retVal = true;
+
+    return retVal;
 }

@@ -28,6 +28,8 @@ public:
     PokeyDevice(sPoKeysNetworkDeviceSummary, uint8_t);
     virtual ~PokeyDevice(void);
 
+    bool validatePinCapability(int, std::string);
+
     inline std::string serialNumber() { return _serialNumber; };
     inline uint8_t userId() { return _userId; };
     inline uint8_t firmwareMajorMajorVersion() { return _firwareVersionMajorMajor; };
@@ -41,10 +43,11 @@ public:
     inline sPoKeysDevice *pokey() { return _pokey; }
     inline sPoKeysDevice_Info info() { return _pokey->info; }
     inline sPoKeysDevice_Data deviceData() { return _pokey->DeviceData; }
+    inline uint8_t loadPinConfiguration() { return PK_PinConfigurationGet(_pokey); }
     inline std::string name()
     {
-        std::string poo((char *)deviceData().DeviceName);
-        return poo;
+        std::string tmp((char *)deviceData().DeviceName);
+        return tmp;
     }
 };
 

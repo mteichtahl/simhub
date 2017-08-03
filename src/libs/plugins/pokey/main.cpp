@@ -187,7 +187,13 @@ bool PokeyDevicePluginStateManager::getDevicePinsConfiguration(libconfig::Settin
                 _logger(LOG_ERROR, "Config file parse error at %s. Skipping....", nfex.getPath());
             }
 
-            _logger(LOG_INFO, "        - %s %s %d", pinName.c_str(), pinType.c_str(), pinNumber);
+            if (pokeyDevice->validatePinCapability(pinNumber, pinType)) {
+                _logger(LOG_INFO, "        - [%d] %s --> %s %d", pinIndex, pinName.c_str(), pinType.c_str(), pinNumber);
+                pinIndex++;
+            }
+            else {
+                continue;
+            }
         }
     }
     else {
