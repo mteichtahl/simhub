@@ -25,10 +25,10 @@ private:
     static PokeyDevicePluginStateManager *_StateManagerInstance;
     static PokeyDevicePluginStateManager *StateManagerInstance(void);
 
-
 protected:
     bool validateConfig(libconfig::SettingIterator);
-    
+    bool getDeviceConfiguration(libconfig::SettingIterator iter);
+
     std::thread *_pluginThread;
     int _numberOfDevices;
     void enumerateDevices(void);

@@ -126,6 +126,38 @@ bool PokeyDevicePluginStateManager::validateConfig(libconfig::SettingIterator it
     return retValue;
 }
 
+bool PokeyDevicePluginStateManager::getDeviceConfiguration(libconfig::SettingIterator iter)
+{
+    bool retVal = true;
+    std::string configSerialNumber;
+    std::string configName;
+
+    try {
+        iter->lookupValue("serialNumber", configSerialNumber);
+        pokeyDeviceSharedPointer pokeyDevice = device(configSerialNumber);
+
+        if (pokeyDevice == NULL) {
+            _logger(LOG_ERROR, "    - #%s. No physical device. Skipping....", configSerialNumber.c_str());
+            retVal = false;
+        }
+        else {
+
+            iter->lookupValue("name", configName);
+
+            if (configName != pokeyDevice->name().c_str()) {
+                _logger(LOG_INFO, "      - Name mismatch. %s <-> %s", configName.c_str(), pokeyDevice->name().c_str());
+                retVal = false;
+            }
+        }
+    }
+    catch (const libconfig::SettingNotFoundException &nfex) {
+        _logger(LOG_ERROR, "Config file parse error at %s. Skipping....", nfex.getPath());
+        retVal = false;
+    }
+
+    return retVal;
+}
+
 int PokeyDevicePluginStateManager::preflightComplete(void)
 {
     int retVal = PREFLIGHT_OK;
@@ -142,31 +174,13 @@ int PokeyDevicePluginStateManager::preflightComplete(void)
     }
 
     for (libconfig::SettingIterator iter = devicesSetting->begin(); iter != devicesSetting->end(); iter++) {
-        std::string configSerialNumber;
-        std::string configName;
 
         // check that the configuration has the required config sections
         if (!validateConfig(iter)) {
             continue;
         }
 
-        try {
-            iter->lookupValue("serialNumber", configSerialNumber);
-            pokeyDeviceSharedPointer pokeyDevice = device(configSerialNumber);
-
-            if (pokeyDevice == NULL) {
-                _logger(LOG_ERROR, "    - #%s. No physical device. Skipping....", configSerialNumber.c_str());
-                continue;
-            }
-
-            iter->lookupValue("name", configName);
-
-            if (configName != pokeyDevice->name().c_str()) {
-                _logger(LOG_INFO, "      - Name mismatch. %s <-> %s", configName.c_str(), pokeyDevice->name().c_str());
-            }
-        }
-        catch (const libconfig::SettingNotFoundException &nfex) {
-            _logger(LOG_ERROR, "Config file parse error at %s. Skipping....", nfex.getPath());
+        if (!getDeviceConfiguration(iter)) {
             continue;
         }
     }
