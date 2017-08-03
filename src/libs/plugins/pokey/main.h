@@ -3,6 +3,7 @@
 
 #include <assert.h>
 #include <iostream>
+#include <iterator>
 #include <thread>
 #include <unistd.h>
 
@@ -14,8 +15,9 @@
 #define PREFLIGHT_OK 0
 #define PREFLIGHT_FAIL 1
 
-typedef std::shared_ptr<PokeyDevice> pokeyDeviceSharedPointer;
-typedef std::map<std::string, pokeyDeviceSharedPointer> pokeyDeviceList;
+typedef std::shared_ptr<PokeyDevice> pokeyDeviceSharedPointer; ///< shared pointer to a pokey device
+typedef std::map<std::string, pokeyDeviceSharedPointer> pokeyDeviceList; ///< a list of unique device pointers
+typedef std::pair<pokeyDeviceList::iterator, bool> deviceTargetIterator; ///< iterator for deviceTargers
 
 //! barest specialisation of the internal plugin management support base class
 class PokeyDevicePluginStateManager : public PluginStateManager
