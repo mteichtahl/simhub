@@ -27,7 +27,8 @@ private:
 
 protected:
     bool validateConfig(libconfig::SettingIterator);
-    bool getDeviceConfiguration(libconfig::SettingIterator iter);
+    bool getDeviceConfiguration(libconfig::SettingIterator iter, pokeyDeviceSharedPointer pokeyDevice);
+    bool getDevicePinsConfiguration(libconfig::Setting *pins, pokeyDeviceSharedPointer pokeyDevice);
 
     std::thread *_pluginThread;
     int _numberOfDevices;

@@ -126,7 +126,7 @@ bool PokeyDevicePluginStateManager::validateConfig(libconfig::SettingIterator it
     return retValue;
 }
 
-bool PokeyDevicePluginStateManager::getDeviceConfiguration(libconfig::SettingIterator iter)
+bool PokeyDevicePluginStateManager::getDeviceConfiguration(libconfig::SettingIterator iter, pokeyDeviceSharedPointer pokeyDevice)
 {
     bool retVal = true;
     std::string configSerialNumber;
@@ -134,7 +134,7 @@ bool PokeyDevicePluginStateManager::getDeviceConfiguration(libconfig::SettingIte
 
     try {
         iter->lookupValue("serialNumber", configSerialNumber);
-        pokeyDeviceSharedPointer pokeyDevice = device(configSerialNumber);
+        pokeyDevice = device(configSerialNumber);
 
         if (pokeyDevice == NULL) {
             _logger(LOG_ERROR, "    - #%s. No physical device. Skipping....", configSerialNumber.c_str());
@@ -146,12 +146,51 @@ bool PokeyDevicePluginStateManager::getDeviceConfiguration(libconfig::SettingIte
 
             if (configName != pokeyDevice->name().c_str()) {
                 _logger(LOG_INFO, "      - Name mismatch. %s <-> %s", configName.c_str(), pokeyDevice->name().c_str());
-                retVal = false;
+                retVal = true;
             }
         }
     }
     catch (const libconfig::SettingNotFoundException &nfex) {
         _logger(LOG_ERROR, "Config file parse error at %s. Skipping....", nfex.getPath());
+        retVal = false;
+    }
+
+    return retVal;
+}
+
+bool PokeyDevicePluginStateManager::getDevicePinsConfiguration(libconfig::Setting *pins, pokeyDeviceSharedPointer pokeyDevice)
+{
+    /** pin = 4,
+        name = "S_OH_GROUND_CALL",
+        type = "DIGITAL_INPUT",
+        default = 0
+    **/
+
+    bool retVal = true;
+    int pinCount = pins->getLength();
+
+    if (pinCount > 0) {
+        _logger(LOG_INFO, "      - Found %d pins", pinCount);
+
+        for (libconfig::SettingIterator iter = pins->begin(); iter != pins->end(); iter++) {
+            int pinNumber;
+            std::string pinName;
+            std::string pinType;
+            bool pinDefault;
+
+            try {
+                iter->lookupValue("pin", pinNumber);
+                iter->lookupValue("name", pinName);
+                iter->lookupValue("type", pinType);
+            }
+            catch (const libconfig::SettingNotFoundException &nfex) {
+                _logger(LOG_ERROR, "Config file parse error at %s. Skipping....", nfex.getPath());
+            }
+
+            _logger(LOG_INFO, "        - %s %s %d", pinName.c_str(), pinType.c_str(), pinNumber);
+        }
+    }
+    else {
         retVal = false;
     }
 
@@ -164,25 +203,25 @@ int PokeyDevicePluginStateManager::preflightComplete(void)
 
     enumerateDevices();
 
-    libconfig::Setting *devicesSetting;
+    libconfig::Setting *devicesConfiguraiton;
 
     try {
-        devicesSetting = &_config->lookup("configuration");
+        devicesConfiguraiton = &_config->lookup("configuration");
     }
     catch (const libconfig::SettingNotFoundException &nfex) {
         _logger(LOG_ERROR, "Config file parse error at %s. Skipping....", nfex.getPath());
     }
 
-    for (libconfig::SettingIterator iter = devicesSetting->begin(); iter != devicesSetting->end(); iter++) {
+    for (libconfig::SettingIterator iter = devicesConfiguraiton->begin(); iter != devicesConfiguraiton->end(); iter++) {
+
+        pokeyDeviceSharedPointer pokeyDevice;
 
         // check that the configuration has the required config sections
-        if (!validateConfig(iter)) {
+        if (!validateConfig(iter) || !getDeviceConfiguration(iter, pokeyDevice)) {
             continue;
         }
 
-        if (!getDeviceConfiguration(iter)) {
-            continue;
-        }
+        getDevicePinsConfiguration(&iter->lookup("pins"), pokeyDevice);
     }
 
     if (_numberOfDevices > 0) {
