@@ -142,8 +142,8 @@ int PokeyDevicePluginStateManager::preflightComplete(void)
     }
 
     for (libconfig::SettingIterator iter = devicesSetting->begin(); iter != devicesSetting->end(); iter++) {
-        std::string serialNumber;
-        std::string name;
+        std::string configSerialNumber;
+        std::string configName;
 
         // check that the configuration has the required config sections
         if (!validateConfig(iter)) {
@@ -151,18 +151,18 @@ int PokeyDevicePluginStateManager::preflightComplete(void)
         }
 
         try {
-            iter->lookupValue("serialNumber", serialNumber);
-            pokeyDeviceSharedPointer pokeyDevice = device(serialNumber);
+            iter->lookupValue("serialNumber", configSerialNumber);
+            pokeyDeviceSharedPointer pokeyDevice = device(configSerialNumber);
 
             if (pokeyDevice == NULL) {
-                _logger(LOG_ERROR, "    - #%s. No physical device. Skipping....", serialNumber.c_str());
+                _logger(LOG_ERROR, "    - #%s. No physical device. Skipping....", configSerialNumber.c_str());
                 continue;
             }
 
-            iter->lookupValue("name", name);
+            iter->lookupValue("name", configName);
 
-            if (name != pokeyDevice->name().c_str()) {
-                _logger(LOG_INFO, "      - Name mismatch. %s <-> %s", name.c_str(), pokeyDevice->name().c_str());
+            if (configName != pokeyDevice->name().c_str()) {
+                _logger(LOG_INFO, "      - Name mismatch. %s <-> %s", configName.c_str(), pokeyDevice->name().c_str());
             }
         }
         catch (const libconfig::SettingNotFoundException &nfex) {
