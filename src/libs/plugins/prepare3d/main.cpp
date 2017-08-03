@@ -15,9 +15,9 @@ int simplug_init(SPHANDLE *plugin_instance, LoggingFunctionCB logger)
     return 0;
 }
 
-int simplug_bind_config_values(SPHANDLE plugin_instance, char *group_name, genericTLV **values, int count)
+int simplug_config_passthrough(SPHANDLE plugin_instance, void *libconfig_instance)
 {
-    return static_cast<PluginStateManager *>(plugin_instance)->bindConfigValues(group_name, values, count);
+    return static_cast<PluginStateManager *>(plugin_instance)->configPassthrough(static_cast<libconfig::Config *>(libconfig_instance));
 }
 
 int simplug_preflight_complete(SPHANDLE plugin_instance)
@@ -123,7 +123,7 @@ void SimSourcePluginStateManager::OnConnect(uv_connect_t *req, int status)
     assert(SimSourcePluginStateManager::StateManagerInstance());
 
     if (status == SIM_CONNECT_NOT_FOUND) {
-        SimSourcePluginStateManager::StateManagerInstance()->_logger(LOG_INFO, " - Failed to connect to simulator");
+        SimSourcePluginStateManager::StateManagerInstance()->_logger(LOG_ERROR, "   - Failed to connect to simulator");
     }
     else {
         SimSourcePluginStateManager::StateManagerInstance()->_logger(LOG_INFO, " - Connected to simulator %d", status);

@@ -7,8 +7,6 @@
  */
 ConfigManager::ConfigManager(std::string filename)
 {
-    libconfig::Config test;
-
     if (fileExists(filename)) {
         _configFilename = filename;
     }
@@ -65,6 +63,37 @@ std::string ConfigManager::getMappingConfigFilename(void)
     return _mappingConfigFilename;
 }
 
+std::string ConfigManager::loadPrepare3DConfiguration(void)
+{
+    if (_prepare3dConfigurationFilename.empty()) {
+        try {
+            _prepare3dConfigurationFilename = (const char *)_config.lookup("prepare3dConfigurationFile");
+            _prepare3dConfig.readFile(_prepare3dConfigurationFilename.c_str());
+            logger.log(LOG_INFO, " - Loading prepare3d configuration from %s", _prepare3dConfigurationFilename.c_str());
+        }
+        catch (const libconfig::SettingNotFoundException &nfex) {
+            logger.log(LOG_ERROR, "No prepare3d configuration file set in config");
+        }
+    }
+    return _prepare3dConfigurationFilename;
+}
+
+std::string ConfigManager::loadPokeyConfiguration(void)
+{
+    if (_pokeyConfigurationFilename.empty()) {
+        try {
+            _pokeyConfigurationFilename = (const char *)_config.lookup("pokeyConfigurationFile");
+            _pokeyConfig.readFile(_pokeyConfigurationFilename.c_str());
+            logger.log(LOG_INFO, " - Loading pokey configuration from %s", _pokeyConfigurationFilename.c_str());
+        }
+        catch (const libconfig::SettingNotFoundException &nfex) {
+            logger.log(LOG_ERROR, "No pokey configuration file set in config");
+        }
+    }
+
+    return _pokeyConfigurationFilename;
+}
+
 int ConfigManager::init(std::shared_ptr<SimHubEventController> simhubController)
 {
     // read the config file and handle any errors
@@ -85,10 +114,15 @@ int ConfigManager::init(std::shared_ptr<SimHubEventController> simhubController)
 
     _root = &_config.getRoot();
 
-    /** load the device configuration mapping file **/
+    /** load the various config files **/
     try {
+        loadPrepare3DConfiguration();
+        simhubController->setPrepare3dConfig(&_prepare3dConfig);
+
+        loadPokeyConfiguration();
+        simhubController->setPokeyConfig(&_pokeyConfig);
+
         _mappingConfigManager.reset(new MappingConfigManager(getMappingConfigFilename()));
-        _deviceConfigManager.reset(new DeviceConfigManager(&_config, simhubController));
     }
     catch (std::exception &e) {
         logger.log(LOG_ERROR, "%s", e.what());
@@ -97,13 +131,14 @@ int ConfigManager::init(std::shared_ptr<SimHubEventController> simhubController)
 
     /** load the mapping configuration mapping file **/
     try {
-
         _mappingConfigManager->init();
     }
     catch (std::exception &e) {
         logger.log(LOG_ERROR, "%s", e.what());
         return RETURN_ERROR;
     }
+
+    simhubController->setConfigManager(this);
 
     return RETURN_OK;
 }

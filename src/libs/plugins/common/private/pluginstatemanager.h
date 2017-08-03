@@ -1,8 +1,11 @@
 #ifndef __PLUGINSTATEMANAGER_H
 #define __PLUGINSTATEMANAGER_H
 
-#include "common/simhubdeviceplugin.h"
+#include <libconfig.h++>
+#include <list>
 #include <thread>
+
+#include "common/simhubdeviceplugin.h"
 
 #define PREFLIGHT_OK 0
 #define PREFLIGHT_FAIL 1
@@ -29,11 +32,14 @@ protected:
     void *_callbackArg;
     LoggingFunctionCB _logger;
 
+    //! config for use in preflightComplete
+    libconfig::Config *_config;
+
 public:
     PluginStateManager(LoggingFunctionCB logger);
     virtual ~PluginStateManager(void);
 
-    virtual int bindConfigValues(char *group_name, genericTLV **values, int count);
+    virtual int configPassthrough(libconfig::Config *pluginConfiguration);
     virtual int preflightComplete(void);
     virtual void commenceEventing(EnqueueEventHandler enqueueCallback, void *arg);
     virtual int deliverValue(genericTLV *value);

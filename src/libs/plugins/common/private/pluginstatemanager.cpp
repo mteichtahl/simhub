@@ -11,9 +11,6 @@ PluginStateManager::PluginStateManager(LoggingFunctionCB logger)
 
 PluginStateManager::~PluginStateManager(void)
 {
-
-    // TODO: move these into proper test class
-    //_testEventThread.join();
 }
 
 void PluginStateManager::runTestEventLoop(void)
@@ -26,9 +23,10 @@ void PluginStateManager::runTestEventLoop(void)
     std::cout << "done" << std::endl;
 }
 
-int PluginStateManager::bindConfigValues(char *group_name, genericTLV **values, int count)
+//! just queue up a copy of the device settings for use in preflightComplete
+int PluginStateManager::configPassthrough(libconfig::Config *pluginConfiguration)
 {
-    std::cout << "bindConfigValues: " << group_name << ", " << count << std::endl;
+    _config = pluginConfiguration;
     return 0;
 }
 

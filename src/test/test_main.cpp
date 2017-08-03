@@ -79,7 +79,7 @@ void EventConsumer::runConsumptionTest(void)
         configValues[2]->value.float_value = 42.42;
         configValues[2]->length = sizeof(configValues[2]->value.float_value);
 
-        pluginMethods.simplug_bind_config_values(pluginInstance, (char *)"test_group", configValues, TEST_VAL_COUNT);
+        // pluginMethods.simplug_bind_config_values(pluginInstance, (char *)"test_group", configValues, TEST_VAL_COUNT);
 
         if (pluginMethods.simplug_preflight_complete(pluginInstance) == 0) {
             // proxy the C style lambda call through to the member
