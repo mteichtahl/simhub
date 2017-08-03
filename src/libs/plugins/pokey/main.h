@@ -24,11 +24,14 @@ private:
     //! simple implementation of class instance singleton
     static PokeyDevicePluginStateManager *_StateManagerInstance;
     static PokeyDevicePluginStateManager *StateManagerInstance(void);
+    std::map<std::string, pokeyDeviceSharedPointer> _deviceTargetList;
 
 protected:
     bool validateConfig(libconfig::SettingIterator);
     bool getDeviceConfiguration(libconfig::SettingIterator iter, pokeyDeviceSharedPointer pokeyDevice);
     bool getDevicePinsConfiguration(libconfig::Setting *pins, pokeyDeviceSharedPointer pokeyDevice);
+
+    deviceTargetIterator addTargetToDeviceTargetList(std::string, pokeyDeviceSharedPointer);
 
     std::thread *_pluginThread;
     int _numberOfDevices;

@@ -103,6 +103,11 @@ void PokeyDevicePluginStateManager::enumerateDevices(void)
     }
 }
 
+deviceTargetIterator PokeyDevicePluginStateManager::addTargetToDeviceTargetList(std::string target, pokeyDeviceSharedPointer device)
+{
+    return _deviceTargetList.emplace(target, device);
+}
+
 pokeyDeviceSharedPointer PokeyDevicePluginStateManager::device(std::string serialNumber)
 {
     if (_deviceList.count(serialNumber)) {
@@ -129,8 +134,8 @@ bool PokeyDevicePluginStateManager::validateConfig(libconfig::SettingIterator it
 bool PokeyDevicePluginStateManager::getDeviceConfiguration(libconfig::SettingIterator iter, pokeyDeviceSharedPointer pokeyDevice)
 {
     bool retVal = true;
-    std::string configSerialNumber;
-    std::string configName;
+    std::string configSerialNumber = "";
+    std::string configName = "";
 
     try {
         iter->lookupValue("serialNumber", configSerialNumber);
@@ -171,12 +176,13 @@ bool PokeyDevicePluginStateManager::getDevicePinsConfiguration(libconfig::Settin
 
     if (pinCount > 0) {
         _logger(LOG_INFO, "      - Found %d pins", pinCount);
-        int pinIndex;
+        int pinIndex = 0;
+
         for (libconfig::SettingIterator iter = pins->begin(); iter != pins->end(); iter++) {
-            int pinNumber;
-            std::string pinName;
-            std::string pinType;
-            bool pinDefault;
+            int pinNumber = 0;
+            std::string pinName = "";
+            std::string pinType = "";
+            bool pinDefault = false;
 
             try {
                 iter->lookupValue("pin", pinNumber);
@@ -188,8 +194,17 @@ bool PokeyDevicePluginStateManager::getDevicePinsConfiguration(libconfig::Settin
             }
 
             if (pokeyDevice->validatePinCapability(pinNumber, pinType)) {
-                _logger(LOG_INFO, "        - [%d] %s --> %s %d", pinIndex, pinName.c_str(), pinType.c_str(), pinNumber);
-                pinIndex++;
+
+                if (pinType == "DIGITAL_OUTPUT") {
+                    deviceTargetIterator ret = addTargetToDeviceTargetList(pinName, pokeyDevice);
+                    if (ret.second == false) {
+                        _logger(LOG_INFO, "        - [%d] Failed to add target. Duplicate %s", pinIndex, pinName.c_str());
+                    }
+                    else {
+                        _logger(LOG_INFO, "        - [%d] Added target %s on pin %d", pinIndex, pinName.c_str(), pinNumber);
+                        pinIndex++;
+                    }
+                }
             }
             else {
                 continue;
@@ -199,17 +214,15 @@ bool PokeyDevicePluginStateManager::getDevicePinsConfiguration(libconfig::Settin
     else {
         retVal = false;
     }
-
     return retVal;
 }
 
 int PokeyDevicePluginStateManager::preflightComplete(void)
 {
     int retVal = PREFLIGHT_OK;
+    libconfig::Setting *devicesConfiguraiton = NULL;
 
     enumerateDevices();
-
-    libconfig::Setting *devicesConfiguraiton;
 
     try {
         devicesConfiguraiton = &_config->lookup("configuration");
