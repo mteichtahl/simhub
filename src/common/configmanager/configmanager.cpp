@@ -90,7 +90,8 @@ std::string ConfigManager::loadPokeyConfiguration(void)
             logger.log(LOG_ERROR, "No pokey configuration file set in config");
         }
     }
-    return _prepare3dConfigurationFilename;
+
+    return _pokeyConfigurationFilename;
 }
 
 int ConfigManager::init(std::shared_ptr<SimHubEventController> simhubController)
