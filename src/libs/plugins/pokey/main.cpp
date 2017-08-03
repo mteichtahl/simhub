@@ -171,7 +171,7 @@ bool PokeyDevicePluginStateManager::getDevicePinsConfiguration(libconfig::Settin
 
     if (pinCount > 0) {
         _logger(LOG_INFO, "      - Found %d pins", pinCount);
-
+        int pinIndex;
         for (libconfig::SettingIterator iter = pins->begin(); iter != pins->end(); iter++) {
             int pinNumber;
             std::string pinName;
