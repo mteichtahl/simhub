@@ -3,14 +3,14 @@
 
 PokeyDevice::PokeyDevice(sPoKeysNetworkDeviceSummary deviceSummary, uint8_t index)
 {
-    _pokey = PK_ConnectToNetworkDevice(&deviceSummary);   
+    _pokey = PK_ConnectToNetworkDevice(&deviceSummary);
     _index = index;
     _userId = deviceSummary.UserID;
     _serialNumber = std::to_string(deviceSummary.SerialNumber);
-    _firwareVersionMajorMajor = (deviceSummary.FirmwareVersionMajor>> 4) + 1;
+    _firwareVersionMajorMajor = (deviceSummary.FirmwareVersionMajor >> 4) + 1;
     _firwareVersionMajor = deviceSummary.FirmwareVersionMajor & 0x0F;
     _firwareVersionMinor = deviceSummary.FirmwareVersionMinor;
-     memcpy(&_ipAddress, &deviceSummary.IPaddress, 4);
+    memcpy(&_ipAddress, &deviceSummary.IPaddress, 4);
     _hardwareType = deviceSummary.HWtype;
     _dhcp = deviceSummary.DHCP;
 }
@@ -27,9 +27,8 @@ PokeyDevice::~PokeyDevice()
 
 std::string PokeyDevice::hardwareTypeString()
 {
-    if (_hardwareType == 31){
+    if (_hardwareType == 31) {
         return "Pokey 57E";
     }
     return "Unknown";
-
 }

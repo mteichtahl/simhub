@@ -12,7 +12,6 @@
 class PokeyDevice
 {
 private:
-
 protected:
     uint8_t _index;
     std::string _serialNumber;
@@ -26,7 +25,7 @@ protected:
     sPoKeysDevice *_pokey;
 
 public:
-    PokeyDevice(sPoKeysNetworkDeviceSummary , uint8_t);
+    PokeyDevice(sPoKeysNetworkDeviceSummary, uint8_t);
     virtual ~PokeyDevice(void);
 
     inline std::string serialNumber() { return _serialNumber; };
@@ -38,11 +37,15 @@ public:
     std::string hardwareTypeString();
     inline uint8_t dhcp() { return _dhcp; }
     uint8_t index() { return _index; }
-    uint8_t *ipAddress() { return _ipAddress;}
+    uint8_t *ipAddress() { return _ipAddress; }
     inline sPoKeysDevice *pokey() { return _pokey; }
     inline sPoKeysDevice_Info info() { return _pokey->info; }
     inline sPoKeysDevice_Data deviceData() { return _pokey->DeviceData; }
-    inline std::string name() { std::string poo((char*)deviceData().DeviceName); return poo; }
+    inline std::string name()
+    {
+        std::string poo((char *)deviceData().DeviceName);
+        return poo;
+    }
 };
 
 #endif
