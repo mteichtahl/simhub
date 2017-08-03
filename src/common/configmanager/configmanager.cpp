@@ -117,10 +117,10 @@ int ConfigManager::init(std::shared_ptr<SimHubEventController> simhubController)
     /** load the various config files **/
     try {
         loadPrepare3DConfiguration();
-        simhubController->addPrepare3dConfig(&_prepare3dConfig);
+        simhubController->setPrepare3dConfig(&_prepare3dConfig);
 
         loadPokeyConfiguration();
-        simhubController->addPokeyConfig(&_pokeyConfig);
+        simhubController->setPokeyConfig(&_pokeyConfig);
 
         _mappingConfigManager.reset(new MappingConfigManager(getMappingConfigFilename()));
     }

@@ -135,13 +135,13 @@ solution "simhub"
         basedir ("lib/pokey")
 
         buildcommands {
-            "cd lib/pokey && make -j12 -f Makefile.noqmake.osx && cp lib/libPoKeys.so ../../bin"
+            "cd lib/pokey && make -j12 -f Makefile.noqmake.osx && cp libPoKeys.so ../../bin"
         }
         rebuildcommands {
-            "cd lib/pokey && make -f Makefile.noqmake.osx clean ; make -j12 -f Makefile.noqmake.osx && cp lib/libPoKeys.so ../../bin"
+            "cd lib/pokey && make -f Makefile.noqmake.osx clean ; make -j12 -f Makefile.noqmake.osx && cp libPoKeys.so ../../bin"
         }
         cleancommands {
-            "cd lib/pokey && make -f Makefile.noqmake.osx clean ; make -j12 -f Makefile.noqmake.osx && cp lib/libPoKeys.so ../../bin"
+            "cd lib/pokey && make -f Makefile.noqmake.osx clean ; make -j12 -f Makefile.noqmake.osx && cp libPoKeys.so ../../bin"
         }
 
     project "pokey_plugin"
@@ -149,7 +149,7 @@ solution "simhub"
         language "C++"
         targetname "pokey"
         targetdir ("bin/plugins")
-        libdirs { "lib/pokey/lib" }
+        libdirs { "lib/pokey" }
         links {
             "PoKeys",
             "usb-1.0"

@@ -158,7 +158,9 @@ void SimHubEventController::LoggerWrapper(const int category, const char *msg, .
     logger.log(category, buff);
 }
 
-simplug_vtable SimHubEventController::loadPlugin(std::string dylibName, std::list<libconfig::Config *> &pluginConfigs, EnqueueEventHandler eventCallback)
+simplug_vtable SimHubEventController::loadPlugin(std::string dylibName, 
+                                                 libconfig::Config *pluginConfig, 
+                                                 EnqueueEventHandler eventCallback)
 {
     SPHANDLE pluginInstance = NULL;
     simplug_vtable pluginMethods;
@@ -179,11 +181,8 @@ simplug_vtable SimHubEventController::loadPlugin(std::string dylibName, std::lis
         //    - iterate over the list of libconfig::Setting instances we've
         //    - been given for this plugin and pass them through
 
-        for (auto config : pluginConfigs) {
-            pluginMethods.simplug_config_passthrough(pluginInstance, config);
-
-            // TODO: add error checking
-        }
+        pluginMethods.simplug_config_passthrough(pluginInstance, pluginConfig);
+        // TODO: add error checking
 
         if (pluginMethods.simplug_preflight_complete(pluginInstance) == 0) {
             // proxy the C style lambda call through to the member
@@ -205,14 +204,14 @@ void SimHubEventController::loadPrepare3dPlugin(void)
 {
     auto prepare3dCallback = [](SPHANDLE eventSource, void *eventData, void *arg) { static_cast<SimHubEventController *>(arg)->prepare3dEventCallback(eventSource, eventData); };
 
-    _prepare3dMethods = loadPlugin("libprepare3d", _prepare3dDeviceConfigs, prepare3dCallback);
+    _prepare3dMethods = loadPlugin("libprepare3d", _prepare3dDeviceConfig, prepare3dCallback);
 }
 
 void SimHubEventController::loadPokeyPlugin(void)
 {
     auto pokeyCallback = [](SPHANDLE eventSource, void *eventData, void *arg) { static_cast<SimHubEventController *>(arg)->pokeyEventCallback(eventSource, eventData); };
 
-    _pokeyMethods = loadPlugin("libpokey", _pokeyDeviceConfigs, pokeyCallback);
+    _pokeyMethods = loadPlugin("libpokey", _pokeyDeviceConfig, pokeyCallback);
 }
 
 //! perform shutdown ceremonies on both plugins - this unloads both plugins
