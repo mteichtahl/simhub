@@ -83,11 +83,11 @@ PokeyDevicePluginStateManager::~PokeyDevicePluginStateManager(void)
 int PokeyDevicePluginStateManager::deliverValue(genericTLV *value)
 {
     assert(value);
-    PokeyDevice *device;
+    PokeyDevice *device = NULL;
 
     _logger(LOG_INFO, "IM FUCKED HERE");
 
-    bool ret = getTargetFromDeviceTargetList(value->name, device);
+    bool ret = targetFromDeviceTargetList(value->name, device);
 
     if (ret) {
         _logger(LOG_INFO, "found %s", device->name().c_str());
@@ -118,14 +118,13 @@ bool PokeyDevicePluginStateManager::addTargetToDeviceTargetList(std::string targ
     return true;
 }
 
-bool PokeyDevicePluginStateManager::getTargetFromDeviceTargetList(std::string key, PokeyDevice *ret)
+bool PokeyDevicePluginStateManager::targetFromDeviceTargetList(std::string key, PokeyDevice *&ret)
 {
     std::map<std::string, PokeyDevice *>::iterator it = _deviceTargetList.find(key);
 
     if (it != _deviceTargetList.end()) {
         ret = it->second;
         _logger(LOG_INFO, "Pokey plugin to deliver: %s ---- %s", it->first.c_str(), ret->name().c_str());
-
         return true;
     }
 

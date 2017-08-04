@@ -33,8 +33,8 @@ protected:
     bool getDeviceConfiguration(libconfig::SettingIterator iter, PokeyDevice *pokeyDevice);
     bool getDevicePinsConfiguration(libconfig::Setting *pins, PokeyDevice *pokeyDevice);
 
-    bool addTargetToDeviceTargetList(std::string, PokeyDevice *);
-    bool getTargetFromDeviceTargetList(std::string, PokeyDevice *);
+    bool addTargetToDeviceTargetList(std::string, PokeyDevice *device);
+    bool targetFromDeviceTargetList(std::string, PokeyDevice *&ret);
 
     std::thread *_pluginThread;
 
