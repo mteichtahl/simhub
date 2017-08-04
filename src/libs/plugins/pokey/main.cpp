@@ -85,12 +85,10 @@ int PokeyDevicePluginStateManager::deliverValue(genericTLV *value)
     assert(value);
     PokeyDevice *device = NULL;
 
-    _logger(LOG_INFO, "IM FUCKED HERE");
-
     bool ret = targetFromDeviceTargetList(value->name, device);
 
     if (ret) {
-        _logger(LOG_INFO, "found %s", device->name().c_str());
+        _logger(LOG_INFO, "found %s %s %s", value->name, device->name().c_str(), device->serialNumber().c_str());
     }
 
     return 0;
