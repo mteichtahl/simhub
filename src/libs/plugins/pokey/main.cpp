@@ -83,7 +83,16 @@ PokeyDevicePluginStateManager::~PokeyDevicePluginStateManager(void)
 int PokeyDevicePluginStateManager::deliverValue(genericTLV *value)
 {
     assert(value);
-    _logger(LOG_INFO, "Pokey plugin to deliver: %s", value->name);
+    PokeyDevice *device;
+
+    _logger(LOG_INFO, "IM FUCKED HERE");
+
+    bool ret = getTargetFromDeviceTargetList(value->name, device);
+
+    if (ret) {
+        _logger(LOG_INFO, "found %s", device->name().c_str());
+    }
+
     return 0;
 }
 
@@ -93,7 +102,7 @@ void PokeyDevicePluginStateManager::enumerateDevices(void)
     assert(_numberOfDevices > 0);
 
     for (int i = 0; i < _numberOfDevices; i++) {
-        pokeyDeviceSharedPointer device = std::make_shared<PokeyDevice>(_devices[i], i);
+        PokeyDevice *device = new PokeyDevice(_devices[i], i);
 
         _logger(LOG_INFO, "    - #%s %s %s (v%d.%d.%d) - %u.%u.%u.%u ", device->serialNumber().c_str(), device->hardwareTypeString().c_str(), device->deviceData().DeviceName,
             device->firmwareMajorMajorVersion(), device->firmwareMajorVersion(), device->firmwareMinorVersion(), device->ipAddress()[0], device->ipAddress()[1],
@@ -103,12 +112,27 @@ void PokeyDevicePluginStateManager::enumerateDevices(void)
     }
 }
 
-deviceTargetIterator PokeyDevicePluginStateManager::addTargetToDeviceTargetList(std::string target, pokeyDeviceSharedPointer device)
+bool PokeyDevicePluginStateManager::addTargetToDeviceTargetList(std::string target, PokeyDevice *device)
 {
-    return _deviceTargetList.emplace(target, device);
+    _deviceTargetList.emplace(target, device);
+    return true;
 }
 
-pokeyDeviceSharedPointer PokeyDevicePluginStateManager::device(std::string serialNumber)
+bool PokeyDevicePluginStateManager::getTargetFromDeviceTargetList(std::string key, PokeyDevice *ret)
+{
+    std::map<std::string, PokeyDevice *>::iterator it = _deviceTargetList.find(key);
+
+    if (it != _deviceTargetList.end()) {
+        ret = it->second;
+        _logger(LOG_INFO, "Pokey plugin to deliver: %s ---- %s", it->first.c_str(), ret->name().c_str());
+
+        return true;
+    }
+
+    return false;
+}
+
+PokeyDevice *PokeyDevicePluginStateManager::device(std::string serialNumber)
 {
     if (_deviceList.count(serialNumber)) {
         return _deviceList.find(serialNumber)->second;
@@ -131,7 +155,7 @@ bool PokeyDevicePluginStateManager::validateConfig(libconfig::SettingIterator it
     return retValue;
 }
 
-bool PokeyDevicePluginStateManager::getDeviceConfiguration(libconfig::SettingIterator iter, pokeyDeviceSharedPointer pokeyDevice)
+bool PokeyDevicePluginStateManager::getDeviceConfiguration(libconfig::SettingIterator iter, PokeyDevice *pokeyDevice)
 {
     bool retVal = true;
     std::string configSerialNumber = "";
@@ -151,7 +175,6 @@ bool PokeyDevicePluginStateManager::getDeviceConfiguration(libconfig::SettingIte
 
             if (configName != pokeyDevice->name().c_str()) {
                 _logger(LOG_INFO, "      - Name mismatch. %s <-> %s", configName.c_str(), pokeyDevice->name().c_str());
-                retVal = true;
             }
         }
     }
@@ -163,13 +186,14 @@ bool PokeyDevicePluginStateManager::getDeviceConfiguration(libconfig::SettingIte
     return retVal;
 }
 
-bool PokeyDevicePluginStateManager::getDevicePinsConfiguration(libconfig::Setting *pins, pokeyDeviceSharedPointer pokeyDevice)
+bool PokeyDevicePluginStateManager::getDevicePinsConfiguration(libconfig::Setting *pins, PokeyDevice *pokeyDevice)
 {
     /** pin = 4,
         name = "S_OH_GROUND_CALL",
         type = "DIGITAL_INPUT",
         default = 0
     **/
+    _logger(LOG_INFO, "------- %s", pokeyDevice->name().c_str());
 
     bool retVal = true;
     int pinCount = pins->getLength();
@@ -196,8 +220,9 @@ bool PokeyDevicePluginStateManager::getDevicePinsConfiguration(libconfig::Settin
             if (pokeyDevice->validatePinCapability(pinNumber, pinType)) {
 
                 if (pinType == "DIGITAL_OUTPUT") {
-                    deviceTargetIterator ret = addTargetToDeviceTargetList(pinName, pokeyDevice);
-                    if (ret.second == false) {
+
+                    bool poo = addTargetToDeviceTargetList(pinName, pokeyDevice);
+                    if (!poo) {
                         _logger(LOG_INFO, "        - [%d] Failed to add target. Duplicate %s", pinIndex, pinName.c_str());
                     }
                     else {
@@ -233,10 +258,17 @@ int PokeyDevicePluginStateManager::preflightComplete(void)
 
     for (libconfig::SettingIterator iter = devicesConfiguraiton->begin(); iter != devicesConfiguraiton->end(); iter++) {
 
-        pokeyDeviceSharedPointer pokeyDevice;
+        std::string serialNumber = "";
+        iter->lookupValue("serialNumber", serialNumber);
+
+        PokeyDevice *pokeyDevice = device(serialNumber);
 
         // check that the configuration has the required config sections
-        if (!validateConfig(iter) || !getDeviceConfiguration(iter, pokeyDevice)) {
+        if (!validateConfig(iter)) {
+            continue;
+        }
+
+        if (getDeviceConfiguration(iter, pokeyDevice) == 0) {
             continue;
         }
 

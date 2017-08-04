@@ -15,9 +15,9 @@
 #define PREFLIGHT_OK 0
 #define PREFLIGHT_FAIL 1
 
-typedef std::shared_ptr<PokeyDevice> pokeyDeviceSharedPointer; ///< shared pointer to a pokey device
-typedef std::map<std::string, pokeyDeviceSharedPointer> pokeyDeviceList; ///< a list of unique device pointers
-typedef std::pair<pokeyDeviceList::iterator, bool> deviceTargetIterator; ///< iterator for deviceTargers
+typedef std::pair<std::string, PokeyDevice *> pokeyDevicePair;
+typedef std::map<std::string, PokeyDevice *> pokeyDeviceList; ///< a list of unique device pointers
+typedef pokeyDeviceList::iterator deviceTargetIterator; ///< iterator for deviceTargers
 
 //! barest specialisation of the internal plugin management support base class
 class PokeyDevicePluginStateManager : public PluginStateManager
@@ -26,16 +26,18 @@ private:
     //! simple implementation of class instance singleton
     static PokeyDevicePluginStateManager *_StateManagerInstance;
     static PokeyDevicePluginStateManager *StateManagerInstance(void);
-    std::map<std::string, pokeyDeviceSharedPointer> _deviceTargetList;
+    pokeyDeviceList _deviceTargetList;
 
 protected:
     bool validateConfig(libconfig::SettingIterator);
-    bool getDeviceConfiguration(libconfig::SettingIterator iter, pokeyDeviceSharedPointer pokeyDevice);
-    bool getDevicePinsConfiguration(libconfig::Setting *pins, pokeyDeviceSharedPointer pokeyDevice);
+    bool getDeviceConfiguration(libconfig::SettingIterator iter, PokeyDevice *pokeyDevice);
+    bool getDevicePinsConfiguration(libconfig::Setting *pins, PokeyDevice *pokeyDevice);
 
-    deviceTargetIterator addTargetToDeviceTargetList(std::string, pokeyDeviceSharedPointer);
+    bool addTargetToDeviceTargetList(std::string, PokeyDevice *);
+    bool getTargetFromDeviceTargetList(std::string, PokeyDevice *);
 
     std::thread *_pluginThread;
+
     int _numberOfDevices;
     void enumerateDevices(void);
     pokeyDeviceList _deviceList;
@@ -46,7 +48,7 @@ public:
     virtual ~PokeyDevicePluginStateManager(void);
     int preflightComplete(void);
     virtual int deliverValue(genericTLV *value);
-    pokeyDeviceSharedPointer device(std::string);
+    PokeyDevice *device(std::string);
 };
 
 #endif

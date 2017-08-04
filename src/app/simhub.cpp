@@ -133,7 +133,7 @@ void SimHubEventController::prepare3dEventCallback(SPHANDLE eventSource, void *e
     MapEntry *mapEntry;
 
     if (_configManager->mapManager()->find(data->name, &mapEntry)) {
-        std::cout << data->name << "--->" << mapEntry->second.c_str() << " FIND TARGET HERE" << std::endl;
+        // std::cout << "prepare3dEventCallback" << data->name << "--->" << mapEntry->second.c_str() << " FIND TARGET HERE" << std::endl;
         _eventQueue.push(attribute);
     }
 }
@@ -142,8 +142,14 @@ void SimHubEventController::pokeyEventCallback(SPHANDLE eventSource, void *event
 {
     genericTLV *data = static_cast<genericTLV *>(eventData);
     assert(data != NULL);
+
     std::shared_ptr<Attribute> attribute = AttributeFromCGeneric(data);
-    _eventQueue.push(attribute);
+    MapEntry *mapEntry;
+
+    if (_configManager->mapManager()->find(data->name, &mapEntry)) {
+        std::cout << "pokeyEventCallback" << data->name << "--->" << mapEntry->second.c_str() << " FIND TARGET HERE" << std::endl;
+        _eventQueue.push(attribute);
+    }
 }
 
 void SimHubEventController::LoggerWrapper(const int category, const char *msg, ...)
@@ -158,9 +164,7 @@ void SimHubEventController::LoggerWrapper(const int category, const char *msg, .
     logger.log(category, buff);
 }
 
-simplug_vtable SimHubEventController::loadPlugin(std::string dylibName, 
-                                                 libconfig::Config *pluginConfig, 
-                                                 EnqueueEventHandler eventCallback)
+simplug_vtable SimHubEventController::loadPlugin(std::string dylibName, libconfig::Config *pluginConfig, EnqueueEventHandler eventCallback)
 {
     SPHANDLE pluginInstance = NULL;
     simplug_vtable pluginMethods;

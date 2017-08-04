@@ -4,7 +4,6 @@
 PokeyDevice::PokeyDevice(sPoKeysNetworkDeviceSummary deviceSummary, uint8_t index)
 {
     _pokey = PK_ConnectToNetworkDevice(&deviceSummary);
-
     _index = index;
     _userId = deviceSummary.UserID;
     _serialNumber = std::to_string(deviceSummary.SerialNumber);
