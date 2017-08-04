@@ -30,7 +30,7 @@ void simplug_commence_eventing(SPHANDLE plugin_instance, EnqueueEventHandler enq
     static_cast<PluginStateManager *>(plugin_instance)->commenceEventing(enqueue_callback, arg);
 }
 
-int simplug_deliver_value(SPHANDLE plugin_instance, genericTLV *value)
+int simplug_deliver_value(SPHANDLE plugin_instance, GenericTLV *value)
 {
     return static_cast<PluginStateManager *>(plugin_instance)->deliverValue(value);
 }

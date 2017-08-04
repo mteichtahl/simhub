@@ -45,7 +45,7 @@ public:
     PokeyDevicePluginStateManager(LoggingFunctionCB logger);
     virtual ~PokeyDevicePluginStateManager(void);
     int preflightComplete(void);
-    virtual int deliverValue(genericTLV *value);
+    virtual int deliverValue(GenericTLV *value);
     pokeyDeviceSharedPointer device(std::string);
 };
 

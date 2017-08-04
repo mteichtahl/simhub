@@ -15,10 +15,6 @@ SOURCES=PoKeysLibCore.c PoKeysLibCoreSockets.c hid-libusb.c PoKeysLibFastUSB.c \
 
 OBJECTS=$(SOURCES:.c=.o)
 
-install: all
-	cp libPoKeys.so /usr/lib
-	cp PoKeysLib.h /usr/include
-
 all: $(SOURCES) libPoKeys.so
 
 static: libPoKeys.a

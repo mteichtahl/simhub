@@ -42,7 +42,7 @@ public:
     virtual int configPassthrough(libconfig::Config *pluginConfiguration);
     virtual int preflightComplete(void);
     virtual void commenceEventing(EnqueueEventHandler enqueueCallback, void *arg);
-    virtual int deliverValue(genericTLV *value);
+    virtual int deliverValue(GenericTLV *value);
     virtual void ceaseEventing(void);
 };
 
