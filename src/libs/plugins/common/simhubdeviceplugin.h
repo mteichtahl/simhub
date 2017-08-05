@@ -35,7 +35,7 @@ typedef struct {
     ConfigType type;
     long length;
     VariantUnion value;
-} genericTLV;
+} GenericTLV;
 
 //! basic block of function pointers
 typedef struct {
@@ -60,7 +60,7 @@ typedef struct {
      * instruct the plugin instance to synchronously deliver a value to the value name
      * - the name is actually a name-spaced endpoint
      */
-    int (*simplug_deliver_value)(SPHANDLE plugin_instance, genericTLV *value);
+    int (*simplug_deliver_value)(SPHANDLE plugin_instance, GenericTLV *value);
 
     //! tell the manager to tear down the event loop
     void (*simplug_cease_eventing)(SPHANDLE plugin_instance);
@@ -105,7 +105,7 @@ inline int simplug_bootstrap(const char *plugin_path, simplug_vtable *plugin_vta
     if (!plugin_vtable->simplug_commence_eventing)
         return -1;
 
-    plugin_vtable->simplug_deliver_value = (int (*)(SPHANDLE, genericTLV *))dlsym(handle, "simplug_deliver_value");
+    plugin_vtable->simplug_deliver_value = (int (*)(SPHANDLE, GenericTLV *))dlsym(handle, "simplug_deliver_value");
     // NOTE: at this point plugins can optionally implement the deliver_value function
 
     plugin_vtable->simplug_cease_eventing = (void (*)(SPHANDLE))dlsym(handle, "simplug_cease_eventing");

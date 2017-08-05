@@ -134,6 +134,7 @@ solution "simhub"
         kind "Makefile"
         basedir ("lib/pokey")
 
+        configuration { "macosx" }
         buildcommands {
             "cd lib/pokey && make -j12 -f Makefile.noqmake.osx && cp libPoKeys.so ../../bin"
         }
@@ -143,6 +144,19 @@ solution "simhub"
         cleancommands {
             "cd lib/pokey && make -f Makefile.noqmake.osx clean ; make -j12 -f Makefile.noqmake.osx && cp libPoKeys.so ../../bin"
         }
+        configuration {}
+
+        configuration { "linux" }
+        buildcommands {
+            "cd lib/pokey && make -j12 -f Makefile.noqmake && cp libPoKeys.so ../../bin"
+        }
+        rebuildcommands {
+            "cd lib/pokey && make -f Makefile.noqmake clean ; make -j12 -f Makefile.noqmake && cp libPoKeys.so ../../bin"
+        }
+        cleancommands {
+            "cd lib/pokey && make -f Makefile.noqmake clean ; make -j12 -f Makefile.noqmake && cp libPoKeys.so ../../bin"
+        }
+        configuration {}
 
     project "pokey_plugin"
         kind "SharedLib"

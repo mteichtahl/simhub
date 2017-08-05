@@ -32,7 +32,7 @@ void simplug_commence_eventing(SPHANDLE plugin_instance, EnqueueEventHandler enq
     static_cast<PluginStateManager *>(plugin_instance)->commenceEventing(enqueue_callback, arg);
 }
 
-int simplug_deliver_value(SPHANDLE plugin_instance, genericTLV *value)
+int simplug_deliver_value(SPHANDLE plugin_instance, GenericTLV *value)
 {
     return static_cast<PluginStateManager *>(plugin_instance)->deliverValue(value);
 }
@@ -80,7 +80,7 @@ PokeyDevicePluginStateManager::~PokeyDevicePluginStateManager(void)
     }
 }
 
-int PokeyDevicePluginStateManager::deliverValue(genericTLV *value)
+int PokeyDevicePluginStateManager::deliverValue(GenericTLV *value)
 {
     assert(value);
     _logger(LOG_INFO, "Pokey plugin to deliver: %s", value->name);

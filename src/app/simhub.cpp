@@ -9,9 +9,9 @@
 
 std::shared_ptr<SimHubEventController> SimHubEventController::_EventControllerInstance = NULL;
 
-genericTLV *AttributeToCGeneric(std::shared_ptr<Attribute> value)
+GenericTLV *AttributeToCGeneric(std::shared_ptr<Attribute> value)
 {
-    genericTLV *retVal = (genericTLV *)malloc(sizeof(genericTLV));
+    GenericTLV *retVal = (GenericTLV *)malloc(sizeof(GenericTLV));
 
     retVal->name = (char *)calloc(value->_name.size() + 1, 1);
     strncpy(retVal->name, value->_name.c_str(), value->_name.size());
@@ -47,7 +47,7 @@ genericTLV *AttributeToCGeneric(std::shared_ptr<Attribute> value)
 }
 
 //! marshals the C generic struct instance into an Attribute C++ generic container
-std::shared_ptr<Attribute> AttributeFromCGeneric(genericTLV *generic)
+std::shared_ptr<Attribute> AttributeFromCGeneric(GenericTLV *generic)
 {
     std::shared_ptr<Attribute> retVal(new Attribute());
 
@@ -110,7 +110,7 @@ bool SimHubEventController::deliverPokeyPluginValue(std::shared_ptr<Attribute> v
 {
     assert(_pokeyMethods.simplug_deliver_value);
 
-    genericTLV *c_value = AttributeToCGeneric(value);
+    GenericTLV *c_value = AttributeToCGeneric(value);
     bool retVal = !_pokeyMethods.simplug_deliver_value(_pokeyMethods.plugin_instance, c_value);
 
     if (c_value->type == CONFIG_STRING)
@@ -126,7 +126,7 @@ bool SimHubEventController::deliverPokeyPluginValue(std::shared_ptr<Attribute> v
 
 void SimHubEventController::prepare3dEventCallback(SPHANDLE eventSource, void *eventData)
 {
-    genericTLV *data = static_cast<genericTLV *>(eventData);
+    GenericTLV *data = static_cast<GenericTLV *>(eventData);
     assert(data != NULL);
 
     std::shared_ptr<Attribute> attribute = AttributeFromCGeneric(data);
@@ -140,7 +140,7 @@ void SimHubEventController::prepare3dEventCallback(SPHANDLE eventSource, void *e
 
 void SimHubEventController::pokeyEventCallback(SPHANDLE eventSource, void *eventData)
 {
-    genericTLV *data = static_cast<genericTLV *>(eventData);
+    GenericTLV *data = static_cast<GenericTLV *>(eventData);
     assert(data != NULL);
     std::shared_ptr<Attribute> attribute = AttributeFromCGeneric(data);
     _eventQueue.push(attribute);
