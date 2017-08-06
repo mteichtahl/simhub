@@ -22,7 +22,7 @@
 
 #define SIM_CONNECT_NOT_FOUND -61
 
-typedef genericTLV simElement;
+typedef GenericTLV simElement;
 
 #define check_uv(status)                                                                                                                                                           \
     do {                                                                                                                                                                           \

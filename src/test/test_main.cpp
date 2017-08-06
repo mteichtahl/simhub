@@ -32,7 +32,7 @@ public:
 
 void EventConsumer::eventCallback(SPHANDLE eventSource, void *eventData)
 {
-    genericTLV *data = (genericTLV *)eventData;
+    GenericTLV *data = (GenericTLV *)eventData;
 
     if (data->type == CONFIG_FLOAT)
         logger.log(LOG_INFO, "[SimHubEventController] %s %2.6f", data->name, data->value.float_value);
@@ -65,16 +65,16 @@ void EventConsumer::runConsumptionTest(void)
         err = pluginMethods.simplug_init(&pluginInstance, SimHubEventController::LoggerWrapper);
 
         static const int TEST_VAL_COUNT = 3;
-        genericTLV *configValues[TEST_VAL_COUNT];
-        configValues[0] = (genericTLV *)calloc(1, sizeof(genericTLV));
+        GenericTLV *configValues[TEST_VAL_COUNT];
+        configValues[0] = (GenericTLV *)calloc(1, sizeof(GenericTLV));
         configValues[0]->type = CONFIG_INT;
         configValues[0]->value.int_value = 42;
         configValues[0]->length = sizeof(configValues[0]->value.int_value);
-        configValues[1] = (genericTLV *)calloc(1, sizeof(genericTLV));
+        configValues[1] = (GenericTLV *)calloc(1, sizeof(GenericTLV));
         configValues[1]->type = CONFIG_STRING;
         configValues[1]->value.string_value = (char *)"42";
         configValues[1]->length = strlen(configValues[1]->value.string_value);
-        configValues[2] = (genericTLV *)calloc(1, sizeof(genericTLV));
+        configValues[2] = (GenericTLV *)calloc(1, sizeof(GenericTLV));
         configValues[2]->type = CONFIG_FLOAT;
         configValues[2]->value.float_value = 42.42;
         configValues[2]->length = sizeof(configValues[2]->value.float_value);

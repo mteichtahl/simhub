@@ -35,7 +35,7 @@ int PluginStateManager::preflightComplete(void)
     return 0;
 }
 
-int PluginStateManager::deliverValue(genericTLV *value)
+int PluginStateManager::deliverValue(GenericTLV *value)
 {
     return 0;
 }
