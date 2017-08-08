@@ -41,4 +41,24 @@ bool PokeyDevice::validatePinCapability(int number, std::string type)
     bool retVal = true;
 
     return retVal;
+}}
 }
+
+uint32_t PokeyDevice::targetValue(std::string targetName, bool value)
+{
+    uint8_t pin = pinFromName(targetName) - 1;
+    uint32_t retValue = PK_DigitalIOSetSingle(_pokey, pin, (uint8_t)value);
+
+    if (retValue == PK_ERR_TRANSFER) {
+        printf("----> PK_ERR_TRANSFER pin %d --> %d %d\n\n", pin, (uint8_t)value, retValue);
+    }
+    else if (retValue == PK_ERR_GENERIC) {
+        printf("----> PK_ERR_GENERIC pin %d --> %d %d\n\n", pin, (uint8_t)value, retValue);
+    }
+    else if (retValue == PK_ERR_PARAMETER) {
+        printf("----> PK_ERR_PARAMETER pin %d --> %d %d\n\n", pin, (uint8_t)value, retValue);
+    }
+
+    return retValue;
+}
+
