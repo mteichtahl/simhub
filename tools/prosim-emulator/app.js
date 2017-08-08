@@ -27,7 +27,7 @@ var gauges = [
 
 cli.version('1.0.0')
     .usage('[options]')
-    .option('-p --port [8080]', 'TCP Port', '8080')
+    .option('-p --port [8091]', 'TCP Port', '8091')
     .parse(process.argv);
 
 console.log(color.green(`Starting emulator on port ${cli.port}`));
