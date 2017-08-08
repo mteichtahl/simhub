@@ -64,12 +64,17 @@ std::shared_ptr<Attribute> AttributeFromCGeneric(GenericTLV *generic)
         retVal->setValue<int>(generic->value.int_value);
         retVal->_type = INT_ATTRIBUTE;
         break;
+    case CONFIG_UINT:
+        retVal->setValue<int>(generic->value.uint_value);
+        retVal->_type = UINT_ATTRIBUTE;
+        break;
     case CONFIG_STRING:
         retVal->setValue<std::string>(generic->value.string_value);
         retVal->_type = STRING_ATTRIBUTE;
         break;
     default:
-        assert(false);
+        logger.log(LOG_ERROR, "Unknown attribute type %d %s ", (int)generic->type, generic->name);
+
         break;
     }
 
@@ -133,7 +138,6 @@ void SimHubEventController::prepare3dEventCallback(SPHANDLE eventSource, void *e
     MapEntry *mapEntry;
 
     if (_configManager->mapManager()->find(data->name, &mapEntry)) {
-        // std::cout << "prepare3dEventCallback" << data->name << "--->" << mapEntry->second.c_str() << " FIND TARGET HERE" << std::endl;
         _eventQueue.push(attribute);
     }
 }
@@ -147,7 +151,6 @@ void SimHubEventController::pokeyEventCallback(SPHANDLE eventSource, void *event
     MapEntry *mapEntry;
 
     if (_configManager->mapManager()->find(data->name, &mapEntry)) {
-        std::cout << "pokeyEventCallback" << data->name << "--->" << mapEntry->second.c_str() << " FIND TARGET HERE" << std::endl;
         _eventQueue.push(attribute);
     }
 }
