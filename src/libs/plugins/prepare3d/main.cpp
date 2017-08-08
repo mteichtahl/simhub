@@ -262,14 +262,24 @@ void SimSourcePluginStateManager::processElement(char *element)
             el.value.int_value = atoi(value);
             el.length = sizeof(int);
         }
+        else if (strncmp(type, "uint", sizeof(&type)) == 0) {
+            el.type = CONFIG_UINT;
+            el.value.int_value = (uint)atoi(value);
+            el.length = sizeof(int);
+        }
         else if (strncmp(type, "bool", sizeof(&type)) == 0) {
             el.type = CONFIG_BOOL;
-            el.length = sizeof(int);
+            el.length = sizeof(uint8_t);
 
-            if (strncmp(value, "OFF", sizeof(el.value)) == 0)
+            if (strncmp(value, "0", sizeof(el.value)) == 0) {
                 el.value.bool_value = 0;
-            else
+            }
+            else {
                 el.value.bool_value = 1;
+            }
+        }
+        else {
+            _logger(LOG_ERROR, "Missing prosim type mapping %s %s %s", name, value, type);
         }
         _enqueueCallback(this, (void *)&el, _callbackArg);
         _processedElementCount++;
