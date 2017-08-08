@@ -174,7 +174,14 @@ bool PokeyDevicePluginStateManager::deviceConfiguration(libconfig::SettingIterat
             iter->lookupValue("name", configName);
 
             if (configName != pokeyDevice->name().c_str()) {
-                _logger(LOG_INFO, "      - Name mismatch. %s <-> %s", configName.c_str(), pokeyDevice->name().c_str());
+
+                uint32_t retValue = pokeyDevice->name(configName);
+                if (retValue == PK_OK) {
+                    _logger(LOG_INFO, "      - Device name set (%s)", configName.c_str());
+                }
+                else {
+                    _logger(LOG_INFO, "      - Error setting device name (%s)", configName.c_str());
+                }
             }
         }
     }
@@ -186,14 +193,13 @@ bool PokeyDevicePluginStateManager::deviceConfiguration(libconfig::SettingIterat
     return retVal;
 }
 
-bool PokeyDevicePluginStateManager::getDevicePinsConfiguration(libconfig::Setting *pins, PokeyDevice *pokeyDevice)
+bool PokeyDevicePluginStateManager::devicePinsConfiguration(libconfig::Setting *pins, PokeyDevice *pokeyDevice)
 {
     /** pin = 4,
         name = "S_OH_GROUND_CALL",
         type = "DIGITAL_INPUT",
         default = 0
     **/
-    _logger(LOG_INFO, "------- %s", pokeyDevice->name().c_str());
 
     bool retVal = true;
     int pinCount = pins->getLength();
