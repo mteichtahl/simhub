@@ -126,7 +126,6 @@ bool PokeyDevicePluginStateManager::targetFromDeviceTargetList(std::string key, 
 
     if (it != _deviceTargetList.end()) {
         ret = it->second;
-        _logger(LOG_INFO, "Pokey plugin to deliver: %s ---- %s", it->first.c_str(), ret->name().c_str());
         return true;
     }
 
