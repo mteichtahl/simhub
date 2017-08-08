@@ -276,11 +276,11 @@ int PokeyDevicePluginStateManager::preflightComplete(void)
             continue;
         }
 
-        if (getDeviceConfiguration(iter, pokeyDevice) == 0) {
+        if (deviceConfiguration(iter, pokeyDevice) == 0) {
             continue;
         }
 
-        getDevicePinsConfiguration(&iter->lookup("pins"), pokeyDevice);
+        devicePinsConfiguration(&iter->lookup("pins"), pokeyDevice);
     }
 
     if (_numberOfDevices > 0) {
