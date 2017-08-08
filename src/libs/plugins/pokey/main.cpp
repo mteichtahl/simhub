@@ -233,6 +233,8 @@ bool PokeyDevicePluginStateManager::devicePinsConfiguration(libconfig::Setting *
                     }
                     else {
                         _logger(LOG_INFO, "        - [%d] Added target %s on pin %d", pinIndex, pinName.c_str(), pinNumber);
+                        pokeyDevice->outputPin(pinNumber);
+                        pokeyDevice->mapNameToPin(pinName.c_str(), pinNumber);
                         pinIndex++;
                     }
                 }
