@@ -62,3 +62,38 @@ uint32_t PokeyDevice::targetValue(std::string targetName, bool value)
     return retValue;
 }
 
+uint32_t PokeyDevice::outputPin(uint8_t pin)
+{
+    _pokey->Pins[--pin].PinFunction = PK_PinCap_digitalOutput;
+    return PK_PinConfigurationSet(_pokey);
+}
+
+uint32_t PokeyDevice::inputPin(uint8_t pin)
+{
+    _pokey->Pins[--pin].PinFunction = PK_PinCap_digitalInput;
+    return PK_PinConfigurationSet(_pokey);
+}
+
+int32_t PokeyDevice::name(std::string name)
+{
+    char *temp = (char *)std::calloc(1, 30);
+    std::memcpy(_pokey->DeviceData.DeviceName, name.c_str(), 30);
+    return PK_DeviceNameSet(_pokey);
+}
+
+int PokeyDevice::pinFromName(std::string targetName)
+{
+    std::map<std::string, int>::iterator it;
+    it = _pinMap.find(targetName);
+
+    if (it != _pinMap.end()) {
+        return it->second;
+    }
+    else
+        return -1;
+}
+
+void PokeyDevice::mapNameToPin(std::string name, int pin)
+{
+    _pinMap.emplace(name, pin);
+}
