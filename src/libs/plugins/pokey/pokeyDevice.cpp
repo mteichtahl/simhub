@@ -1,5 +1,5 @@
-#include <string.h>
 #include "pokeyDevice.h"
+#include <string.h>
 
 PokeyDevice::PokeyDevice(sPoKeysNetworkDeviceSummary deviceSummary, uint8_t index)
 {
