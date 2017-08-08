@@ -102,19 +102,14 @@ function handleConnection(conn) {
         if (connections.portString)
           connections.portString.totalBytes += getData(a, conn);
       },
-      DATA_INTERVAL_MS, {
-        'indicators': indicators,
-        //'analog': analogs, 'gauges': gauges
-      },
+      DATA_INTERVAL_MS,
+      {'indicators': indicators, 'analog': analogs, 'gauges': gauges},
       conn.totalBytes);
 
   function getData(data, conn) {
-    // var indicatorCount = _.random(0, data.indicators.length - 1);
-    var indicatorCount = data.indicators.length;
-
+    var indicatorCount = _.random(0, data.indicators.length - 1);
     if (data.analog) var analogCount = _.random(0, data.analog.length - 1);
-
-    if (data.gaugesCount) var gaugesCount = _.random(0, data.gauges.length - 1);
+    if (data.gauges) var gaugesCount = _.random(0, data.gauges.length - 1);
 
     var indicatorValue = ['0', '1'];
     var outString = '';
@@ -125,17 +120,17 @@ function handleConnection(conn) {
       outString += (`${ind} = ${value} \n`);
     }
 
-    // for (var i = 0; i < analogCount; i++) {
-    //   var ind = data.analog[_.random(0, data.analog.length - 1)];
-    //   var value = _.random(0, 255);
-    //   outString += (`${ind}=${value}\n`);
-    // }
+    for (var i = 0; i < analogCount; i++) {
+      var ind = data.analog[_.random(0, data.analog.length - 1)];
+      var value = _.random(0, 255);
+      outString += (`${ind} = ${value}\n`);
+    }
 
-    // for (var i = 0; i < gaugesCount; i++) {
-    //   var ind = data.gauges[_.random(0, data.gauges.length - 1)];
-    //   var value = _.random(500, true);
-    //   outString += (`${ind}=${value}\n`);
-    // }
+    for (var i = 0; i < gaugesCount; i++) {
+      var ind = data.gauges[_.random(0, data.gauges.length - 1)];
+      var value = _.random(500, true);
+      outString += (`${ind} = ${value}\n`);
+    }
     console.log(outString);
     if (outString.length) {
       conn.write(outString + '\n');
