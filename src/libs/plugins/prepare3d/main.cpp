@@ -212,10 +212,10 @@ void SimSourcePluginStateManager::processData(char *data, int len)
             size_t len = strlen(p);
 
             if (len > 2) {
-                char *buffer = (char *)malloc(1024);
-                memset(buffer, 0, 1024);
+                char *buffer = (char *)malloc(BUFFER_LEN);
+                memset(buffer, 0, BUFFER_LEN);
                 strncpy(buffer, p, len);
-                buffer[len] = '\0';
+                buffer[len - 1] = '\0';
                 array[elementCount++] = buffer;
             }
 
