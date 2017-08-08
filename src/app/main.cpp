@@ -73,22 +73,6 @@ int main(int argc, char *argv[])
     awsHelper.polly()->say("system ready %d %s", 1, "test");
 #endif
 
-// Source el("element", "desc");
-
-// Attribute attr;
-// attr._name = "at1name";
-// attr._description = "lkfjdslfjkds";
-// attr._type = FLOAT_ATTRIBUTE;
-// attr.setValue<float>(1.223);
-
-// el.addAttribute(attr);
-
-// Attribute at = el.getAttribute("at1name");
-
-// printf("----> %0.5f\n", at.getValue<float>());
-// printf("----> %s\n", at.getValueToString<float>().c_str());
-// printf("----> %s\n", at.timestampString().c_str());
-
 #if defined(_AWS_SDK)
     if (awsHelper.polly()->isJoinable())
         awsHelper.polly()->thread()->join();
