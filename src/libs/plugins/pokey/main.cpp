@@ -155,7 +155,7 @@ bool PokeyDevicePluginStateManager::validateConfig(libconfig::SettingIterator it
     return retValue;
 }
 
-bool PokeyDevicePluginStateManager::getDeviceConfiguration(libconfig::SettingIterator iter, PokeyDevice *pokeyDevice)
+bool PokeyDevicePluginStateManager::deviceConfiguration(libconfig::SettingIterator iter, PokeyDevice *pokeyDevice)
 {
     bool retVal = true;
     std::string configSerialNumber = "";
