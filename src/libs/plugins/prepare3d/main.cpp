@@ -301,6 +301,7 @@ char *SimSourcePluginStateManager::getElementDataType(char identifier)
         return (char *)"bool";
         break;
     default:
+        _logger(LOG_ERROR, "Missing prosim element data type %s", identifier);
         return NULL;
     }
 
