@@ -2,8 +2,10 @@
 #include <iostream>
 #include <memory>
 #include <vector>
+#include <sstream>
 
 #include "common/simhubdeviceplugin.h"
+#include "elements/attributes/attribute.h"
 #include "main.h"
 
 // -- public C FFI
@@ -88,8 +90,6 @@ SimSourcePluginStateManager::~SimSourcePluginStateManager(void)
             ceaseEventing();
             _pluginThread->join();
         }
-
-        delete _pluginThread;
     }
 
     if (_rawBuffer != NULL)
@@ -208,8 +208,6 @@ void SimSourcePluginStateManager::processData(char *data, int len)
 
 void SimSourcePluginStateManager::processElement(char *element)
 {
-    _socketClient.sendData(element);
-
     char *name = strtok(element, "=");
     char *value = strtok(NULL, "=");
 
@@ -220,7 +218,7 @@ void SimSourcePluginStateManager::processElement(char *element)
 
     if (type != NULL) {
         // SimSourcePluginStateManager::StateManagerInstance()->_logger(LOG_INFO, "%s %s %s", name, value, type);
-        simElement el;
+        GenericTLV el;
 
         el.name = name;
 
@@ -249,6 +247,10 @@ void SimSourcePluginStateManager::processElement(char *element)
                 el.value.bool_value = 1;
         }
         _enqueueCallback(this, (void *)&el, _callbackArg);
+
+        // echo test
+        deliverValue(&el);
+
         _processedElementCount++;
     }
 }
@@ -284,6 +286,41 @@ char *SimSourcePluginStateManager::getElementDataType(char identifier)
     return NULL;
 }
 
+std::string SimSourcePluginStateManager::prosimValueString(std::shared_ptr<Attribute> attribute)
+{
+    std::string retVal("");
+
+    // TODO: look at first char of target and use this to 
+    // validate the type of attribute and to convert the 
+    // attribute value to a prosim value string
+
+    switch (attribute->name().c_str()[0]) {
+        case INDICATOR_IDENTIFIER:
+            retVal = attribute->getValue<bool>() ? "ON" : "OFF";
+            break;
+
+        default:
+            retVal = attribute->getValueToString();
+            break;
+    }
+
+    return retVal;
+}
+
+int SimSourcePluginStateManager::deliverValue(GenericTLV *value)
+{
+    // TODO: stringify value to NAME=VALUE format and use _socketClient to send to prosim
+    std::ostringstream oss;
+
+    std::shared_ptr<Attribute> attribute = AttributeFromCGeneric(value);
+
+    oss << attribute->name() << "=" << prosimValueString(attribute);
+
+    _socketClient.sendData(oss.str());
+
+    return 0;
+}
+
 void SimSourcePluginStateManager::instanceCloseHandler(uv_handle_t *handle)
 {
     if (!_eventLoop->active_handles) {
@@ -300,20 +337,8 @@ void SimSourcePluginStateManager::commenceEventing(EnqueueEventHandler enqueueCa
 {
     _enqueueCallback = enqueueCallback;
     _callbackArg = arg;
-
-    // this is wrong in a number of ways - it needs to be cancel-able being its chief sin
-    // TODO: unbreak
-    _pluginThread = new std::thread([=] { check_uv(uv_run(_eventLoop, UV_RUN_DEFAULT)); });
+    _pluginThread.reset(new std::thread([=] { check_uv(uv_run(_eventLoop, UV_RUN_DEFAULT)); }));
 }
-
-/**
-    C++ client example using sockets
-*/
-#include <iostream>    //cout
-#include <stdio.h> //printf
-#include <string.h>    //strlen
-#include <string>  //string
-
 
 // -- simple socket send/receive wrapper
 

@@ -119,7 +119,8 @@ solution "simhub"
                 'pthread'}
 		files { "src/libs/plugins/prepare3d/**.h",
                 "src/libs/plugins/common/**.cpp",
-			    "src/libs/plugins/prepare3d/**.cpp" }
+			    "src/libs/plugins/prepare3d/**.cpp",
+                "src/common/elements/attributes/attribute.cpp" }
         includedirs { "src/libs/googletest/include", 
                       "src/libs/googletest", 
                       "src/common",
@@ -166,7 +167,8 @@ solution "simhub"
         libdirs { "lib/pokey" }
         links {
             "PoKeys",
-            "usb-1.0"
+            "usb-1.0",
+            "uv"
         }
         files { "src/libs/plugins/pokey/**.h",
                 "src/libs/plugins/common/**.cpp",

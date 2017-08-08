@@ -25,8 +25,6 @@
 
 #define SIM_CONNECT_NOT_FOUND -61
 
-typedef GenericTLV simElement;
-
 #define check_uv(status)                                                                                                                                                           \
     do {                                                                                                                                                                           \
         int code = (status);                                                                                                                                                       \
@@ -87,7 +85,7 @@ private:
     void processData(char *data, int len);
     void processElement(char *element);
     char *getElementDataType(char identifier);
-    std::thread *_pluginThread;
+    std::string prosimValueString(std::shared_ptr<Attribute> attribute);
 
 public:
     SimSourcePluginStateManager(LoggingFunctionCB logger);
@@ -96,6 +94,7 @@ public:
     int preflightComplete(void);
     void commenceEventing(EnqueueEventHandler enqueueCallback, void *arg);
     void ceaseEventing(void);
+    int deliverValue(GenericTLV *value);
 };
 
 #endif

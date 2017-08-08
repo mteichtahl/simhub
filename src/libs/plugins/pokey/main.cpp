@@ -3,6 +3,7 @@
 #include <map>
 #include <memory>
 #include <vector>
+#include <uv.h>
 
 #include "common/simhubdeviceplugin.h"
 #include "main.h"
@@ -53,12 +54,14 @@ PokeyDevicePluginStateManager *PokeyDevicePluginStateManager::_StateManagerInsta
 
 // -- private C++ pokey plugin implementation
 
+#define DEVICE_READ_INTERVAL 100
+#define DEVICE_START_DELAY 100
+
 PokeyDevicePluginStateManager::PokeyDevicePluginStateManager(LoggingFunctionCB logger)
     : PluginStateManager(logger)
 {
     _numberOfDevices = 0; ///< 0 devices discovered
-    _devices = (sPoKeysNetworkDeviceSummary *)calloc(sizeof(sPoKeysNetworkDeviceSummary),
-        16); ///< 0 initialise the network device summary
+    _devices = (sPoKeysNetworkDeviceSummary *)calloc(sizeof(sPoKeysNetworkDeviceSummary), 16); ///< 0 initialise the network device summary
 }
 
 //! static getter for singleton instance of our class
@@ -69,15 +72,25 @@ PokeyDevicePluginStateManager *PokeyDevicePluginStateManager::StateManagerInstan
 
 PokeyDevicePluginStateManager::~PokeyDevicePluginStateManager(void)
 {
-    // TODO: enable once shtudown implemented
     if (_pluginThread != NULL) {
         if (_pluginThread->joinable()) {
             ceaseEventing();
             _pluginThread->join();
         }
-        _deviceList.clear();
-        delete _pluginThread;
+        _deviceMap.clear();
     }
+
+    if (_uvPollingThread != NULL) {
+        if (_uvPollingThread->joinable()) {
+            _uvPollingThread->join();
+        }
+    }
+}
+
+void PokeyDevicePluginStateManager::ceaseEventing(void)
+{
+    assert(_uvPollingLoop);
+    uv_stop(_uvPollingLoop);
 }
 
 int PokeyDevicePluginStateManager::deliverValue(GenericTLV *value)
@@ -106,7 +119,10 @@ void PokeyDevicePluginStateManager::enumerateDevices(void)
             device->firmwareMajorMajorVersion(), device->firmwareMajorVersion(), device->firmwareMinorVersion(), device->ipAddress()[0], device->ipAddress()[1],
             device->ipAddress()[2], device->ipAddress()[3]);
 
-        _deviceList.emplace(device->serialNumber(), device);
+        _deviceMap.emplace(device->serialNumber(), device);
+
+        // TODO: enumerate the pin configuration and store in _pins for device
+        //       - perhaps put this logic in member fn in PokeyDevice
     }
 }
 
@@ -131,8 +147,8 @@ bool PokeyDevicePluginStateManager::targetFromDeviceTargetList(std::string key, 
 
 PokeyDevice *PokeyDevicePluginStateManager::device(std::string serialNumber)
 {
-    if (_deviceList.count(serialNumber)) {
-        return _deviceList.find(serialNumber)->second;
+    if (_deviceMap.count(serialNumber)) {
+        return _deviceMap.find(serialNumber)->second;
     }
     else {
         return NULL;
@@ -236,6 +252,7 @@ bool PokeyDevicePluginStateManager::getDevicePinsConfiguration(libconfig::Settin
     else {
         retVal = false;
     }
+
     return retVal;
 }
 
@@ -280,5 +297,62 @@ int PokeyDevicePluginStateManager::preflightComplete(void)
         _logger(LOG_INFO, "   - No Pokey devices discovered");
     }
 
+    startDeviceLoop();
+
     return retVal;
+}
+
+
+void PokeyDevicePluginStateManager::DigitalIOTimerCallback(uv_timer_t *timer, int status)
+{
+    PokeyDevicePluginStateManager *pluginInstance = static_cast<PokeyDevicePluginStateManager*>(timer->data);
+    printf("poll devices\n");
+
+    // -- poll all devices for new data
+
+    for (std::pair<std::string, PokeyDevice *> devMapping: pluginInstance->_deviceMap) {
+        PokeyDevice *device = devMapping.second;
+        sPoKeysDevice *pokey = device->pokey();
+
+        // read in all the digital IO from the pokey
+        int ret = PK_DigitalIOGet(pokey);
+
+        if (ret == PK_OK) {
+            // iterate over the pins 
+            for (int i = 0; i < device->pokey()->info.iPinCount; i++) {
+                int devicePin = device->pins()[i].pin - 1;
+                if (device->pins()[i].type != DIGITAL_INPUT) {
+                    continue;
+                }
+
+                if (device->pins()[i].value != device->pokey()->Pins[devicePin].DigitalValueGet) {
+                    device->pins()[i].previousValue = device->pins()[i].value;
+                    device->pins()[i].value = device->pokey()->Pins[devicePin].DigitalValueGet;
+                    // TODO: enqueue any changes we observe
+                }
+            }
+        }
+    }
+}
+
+
+int PokeyDevicePluginStateManager::startDeviceLoop(void)
+{
+    _uvPollingTimer.data = this;
+    _uvPollingLoop = uv_loop_new();
+
+    uv_timer_init(_uvPollingLoop, &_uvPollingTimer);
+
+    int ret = uv_timer_start(&_uvPollingTimer, 
+                             (uv_timer_cb)&PokeyDevicePluginStateManager::DigitalIOTimerCallback, 
+                             DEVICE_START_DELAY, 
+                             DEVICE_READ_INTERVAL);
+
+    if (ret == 0) {
+        _uvPollingThread.reset(new std::thread([=] {
+            uv_run(_uvPollingLoop, UV_RUN_DEFAULT);
+        }));
+    }
+
+    return 1;
 }
