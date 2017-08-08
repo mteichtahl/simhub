@@ -116,13 +116,13 @@ function handleConnection(conn) {
 
     if (data.gaugesCount) var gaugesCount = _.random(0, data.gauges.length - 1);
 
-    var indicatorValue = ['ON', 'OFF'];
+    var indicatorValue = ['0', '1'];
     var outString = '';
 
     for (var i = 0; i < indicatorCount; i++) {
       var ind = data.indicators[_.random(0, data.indicators.length - 1)];
       var value = indicatorValue[_.random(0, 1)];
-      outString += (`${ind}=${value}\n`);
+      outString += (`${ind} = ${value} \n`);
     }
 
     // for (var i = 0; i < analogCount; i++) {
