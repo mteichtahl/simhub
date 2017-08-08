@@ -9,6 +9,9 @@
 #include <string.h>
 #include <thread>
 #include <uv.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <netdb.h>
 
 #define BUFFER_LEN 4096
 #define MAX_ELEMENTS_PER_UPDATE 512
@@ -33,15 +36,34 @@ typedef GenericTLV simElement;
         }                                                                                                                                                                          \
     } while (0)
 
+/**
+ * simple tcp socket wrapper class
+ */
+class TCPClient
+{
+private:
+    int _sock;
+    std::string _address;
+    int _port;
+    struct sockaddr_in _server;
+     
+public:
+    TCPClient(void);
+    bool connect(std::string, int);
+    bool sendData(std::string data);
+    std::string receive(int);
+};
+
 //! barest specialisation of the internal plugin management support base class
 class SimSourcePluginStateManager : public PluginStateManager
 {
 private:
     uv_loop_t *_eventLoop; ///< main libuv event loop
     uv_buf_t _readBuffer; ///< tcp read buffer
-    uv_tcp_t _tcpClient; ///< tcp_client
+    uv_tcp_t _tcpClient; ///< TCPClient
     uv_connect_t _connectReq;
     char *_rawBuffer; ///< raw buffer for the tcp loop
+    TCPClient _socketClient;
 
     // statistics
     long _processedElementCount;

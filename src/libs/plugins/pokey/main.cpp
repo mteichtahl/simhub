@@ -97,7 +97,7 @@ int PokeyDevicePluginStateManager::deliverValue(GenericTLV *value)
 void PokeyDevicePluginStateManager::enumerateDevices(void)
 {
     _numberOfDevices = PK_EnumerateNetworkDevices(_devices, 800);
-    assert(_numberOfDevices > 0);
+    // assert(_numberOfDevices > 0);
 
     for (int i = 0; i < _numberOfDevices; i++) {
         PokeyDevice *device = new PokeyDevice(_devices[i], i);
