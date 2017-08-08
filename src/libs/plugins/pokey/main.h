@@ -48,7 +48,7 @@ public:
     virtual ~PokeyDevicePluginStateManager(void);
     int preflightComplete(void);
     virtual int deliverValue(GenericTLV *value);
-    pokeyDeviceSharedPointer device(std::string);
+    PokeyDevice *device(std::string);
 };
 
 #endif
