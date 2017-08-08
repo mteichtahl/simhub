@@ -4,10 +4,18 @@
 #include "common/simhubdeviceplugin.h"
 #include <assert.h>
 #include <iostream>
+#include <map>
+#include <stdlib.h>
 #include <thread>
 #include <unistd.h>
 
 #include "PoKeysLib.h"
+
+#define DEBUG 1
+
+#ifdef DEBUG
+#define eprintf(...) printf(__VA_ARGS__)
+#endif
 
 class PokeyDevice
 {
@@ -22,13 +30,21 @@ protected:
     uint8_t _ipAddress[4];
     uint8_t _hardwareType;
     uint8_t _dhcp;
+    std::map<std::string, int> _pinMap;
     sPoKeysDevice *_pokey;
+
+    int pinFromName(std::string targetName);
 
 public:
     PokeyDevice(sPoKeysNetworkDeviceSummary, uint8_t);
     virtual ~PokeyDevice(void);
 
     bool validatePinCapability(int, std::string);
+    void mapNameToPin(std::string name, int pin);
+    uint32_t targetValue(std::string targetName, bool value);
+    uint32_t inputPin(uint8_t pin);
+    uint32_t outputPin(uint8_t pin);
+    int32_t name(std::string name);
 
     std::string serialNumber() { return _serialNumber; };
     uint8_t userId() { return _userId; };
