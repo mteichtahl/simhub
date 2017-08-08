@@ -77,18 +77,21 @@ PokeyDevicePluginStateManager::~PokeyDevicePluginStateManager(void)
         }
         _deviceList.clear();
         delete _pluginThread;
+        delete _devices;
     }
 }
 
-int PokeyDevicePluginStateManager::deliverValue(GenericTLV *value)
+int PokeyDevicePluginStateManager::deliverValue(GenericTLV *data)
 {
-    assert(value);
+    assert(data);
     PokeyDevice *device = NULL;
 
-    bool ret = targetFromDeviceTargetList(value->name, device);
+    bool ret = targetFromDeviceTargetList(data->name, device);
 
     if (ret) {
-        _logger(LOG_INFO, "found %s %s %s", value->name, device->name().c_str(), device->serialNumber().c_str());
+        if (data->type == ConfigType::CONFIG_BOOL) {
+            device->targetValue(data->name, (int)data->value);
+        }
     }
 
     return 0;
@@ -97,6 +100,7 @@ int PokeyDevicePluginStateManager::deliverValue(GenericTLV *value)
 void PokeyDevicePluginStateManager::enumerateDevices(void)
 {
     _numberOfDevices = PK_EnumerateNetworkDevices(_devices, 800);
+
     assert(_numberOfDevices > 0);
 
     for (int i = 0; i < _numberOfDevices; i++) {
