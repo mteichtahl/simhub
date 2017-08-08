@@ -231,8 +231,10 @@ void SimSourcePluginStateManager::processData(char *data, int len)
 
 void SimSourcePluginStateManager::processElement(char *element)
 {
+
     char *name = strtok(element, "=");
-    char *value = strtok(NULL, "=");
+    char *value = strtok(NULL, " =");
+    name[strlen(name) - 1] = '\0';
 
     if (value == NULL)
         return;
@@ -240,7 +242,7 @@ void SimSourcePluginStateManager::processElement(char *element)
     char *type = getElementDataType(name[0]);
 
     if (type != NULL) {
-        // SimSourcePluginStateManager::StateManagerInstance()->_logger(LOG_INFO, "%s %s %s", name, value, type);
+
         simElement el;
 
         el.name = name;
