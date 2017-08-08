@@ -41,7 +41,6 @@ bool PokeyDevice::validatePinCapability(int number, std::string type)
     bool retVal = true;
 
     return retVal;
-}}
 }
 
 uint32_t PokeyDevice::targetValue(std::string targetName, bool value)
