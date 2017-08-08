@@ -17,11 +17,18 @@
 #include "plugins/common/simhubdeviceplugin.h"
 #include "simhub.h"
 
+/**
+    Configure the main CLI interdace
+
+    @param cmdline::parser pointer - command line parameters passed in by user
+
+*/
 void configureCli(cmdline::parser *cli)
 {
     cli->add<std::string>("config", 'c', "config file", false, "config/config.cfg");
     cli->add<std::string>("logConfig", 'l', "log config file", false, "config/zlog.conf");
 
+///! If the AWS SDK is being used then allow Polly as a CLI option
 #if defined(_AWS_SDK)
     cli->add<bool>("polly", 'p', "Use Amazon Polly", false, true);
 #endif
@@ -41,21 +48,23 @@ int main(int argc, char *argv[])
     ConfigManager config(cli.get<std::string>("config"));
     std::shared_ptr<SimHubEventController> simhubController = SimHubEventController::EventControllerInstance();
 
+///! If the AWS SDK is being used then read in the polly cli and load up polly
 #if defined(_AWS_SDK)
     awsHelper.init();
     if (cli.get<bool>("polly")) {
         awsHelper.initPolly();
     }
 #endif
-
+    ///! initialise the configuration
     if (!config.init(simhubController)) {
         logger.log(LOG_ERROR, "Could not initialise configuration");
         exit(1);
     }
 
-    simhubController->loadPokeyPlugin();
-    simhubController->loadPrepare3dPlugin();
+    simhubController->loadPokeyPlugin(); ///< load the pokey plugin
+    simhubController->loadPrepare3dPlugin(); ///< load the prepare3d plugin
 
+    ///! kick off the simhub envent loop
     simhubController->runEventLoop([=](std::shared_ptr<Attribute> value) {
         static size_t counter = 0;
 
