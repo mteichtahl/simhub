@@ -99,6 +99,33 @@ SimSourcePluginStateManager::~SimSourcePluginStateManager(void)
 int SimSourcePluginStateManager::preflightComplete(void)
 {
     int retVal = PREFLIGHT_OK;
+    int port = 8091;
+
+    libconfig::Setting *devicesConfiguraiton = NULL;
+
+    std::string type = "";
+    std::string ipAddress = "";
+
+    try {
+        devicesConfiguraiton = &_config->lookup("configuration");
+    }
+    catch (const libconfig::SettingNotFoundException &nfex) {
+        _logger(LOG_ERROR, "Config file parse error at %s. Skipping....", nfex.getPath());
+    }
+
+    for (libconfig::SettingIterator iter = devicesConfiguraiton->begin(); iter != devicesConfiguraiton->end(); iter++) {
+
+        if (iter->exists("ipAddress")) {
+            iter->lookupValue("ipAddress", ipAddress);
+        }
+        else {
+            ipAddress = "127.0.0.1";
+        }
+
+        if (iter->exists("port")) {
+            iter->lookupValue("port", port);
+        }
+    }
 
     struct sockaddr_in req_addr;
 
@@ -107,7 +134,8 @@ int SimSourcePluginStateManager::preflightComplete(void)
 
     check_uv(uv_tcp_init(_eventLoop, &_tcpClient));
     uv_tcp_keepalive(&_tcpClient, 1, 60);
-    uv_ip4_addr("127.0.0.1", 8080, &req_addr);
+
+    uv_ip4_addr(ipAddress.c_str(), port, &req_addr);
 
     int connectErr = uv_tcp_connect(&_connectReq, &_tcpClient, (struct sockaddr *)&req_addr, &SimSourcePluginStateManager::OnConnect);
 
