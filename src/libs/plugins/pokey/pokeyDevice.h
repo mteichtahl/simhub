@@ -9,6 +9,19 @@
 
 #include "PoKeysLib.h"
 
+typedef struct {
+    const char *name;
+    int pin;
+    int type;
+    int defaultValue;
+    int valid;
+    int value;
+    int previousValue;
+    int dutyCycle;
+} device_port_t;
+
+#define MAX_PINS 55
+
 class PokeyDevice
 {
 private:
@@ -22,6 +35,7 @@ protected:
     uint8_t _ipAddress[4];
     uint8_t _hardwareType;
     uint8_t _dhcp;
+    device_port_t _pins[MAX_PINS];
     sPoKeysDevice *_pokey;
 
 public:
@@ -30,21 +44,22 @@ public:
 
     bool validatePinCapability(int, std::string);
 
-    inline std::string serialNumber() { return _serialNumber; };
-    inline uint8_t userId() { return _userId; };
-    inline uint8_t firmwareMajorMajorVersion() { return _firwareVersionMajorMajor; };
-    inline uint8_t firmwareMajorVersion() { return _firwareVersionMajor; };
-    inline uint8_t firmwareMinorVersion() { return _firwareVersionMinor; };
-    inline uint8_t hardwareType() { return _hardwareType; }
+    std::string serialNumber() { return _serialNumber; };
+    uint8_t userId() { return _userId; };
+    uint8_t firmwareMajorMajorVersion() { return _firwareVersionMajorMajor; };
+    uint8_t firmwareMajorVersion() { return _firwareVersionMajor; };
+    uint8_t firmwareMinorVersion() { return _firwareVersionMinor; };
+    uint8_t hardwareType() { return _hardwareType; }
     std::string hardwareTypeString();
-    inline uint8_t dhcp() { return _dhcp; }
+    uint8_t dhcp() { return _dhcp; }
     uint8_t index() { return _index; }
     uint8_t *ipAddress() { return _ipAddress; }
-    inline sPoKeysDevice *pokey() { return _pokey; }
-    inline sPoKeysDevice_Info info() { return _pokey->info; }
-    inline sPoKeysDevice_Data deviceData() { return _pokey->DeviceData; }
-    inline uint8_t loadPinConfiguration() { return PK_PinConfigurationGet(_pokey); }
-    inline std::string name()
+    device_port_t *pins(void) { return _pins; };
+    sPoKeysDevice *pokey() { return _pokey; }
+    sPoKeysDevice_Info info() { return _pokey->info; }
+    sPoKeysDevice_Data deviceData() { return _pokey->DeviceData; }
+    uint8_t loadPinConfiguration() { return PK_PinConfigurationGet(_pokey); }
+    std::string name()
     {
         std::string tmp((char *)deviceData().DeviceName);
         return tmp;

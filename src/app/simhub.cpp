@@ -9,75 +9,6 @@
 
 std::shared_ptr<SimHubEventController> SimHubEventController::_EventControllerInstance = NULL;
 
-GenericTLV *AttributeToCGeneric(std::shared_ptr<Attribute> value)
-{
-    GenericTLV *retVal = (GenericTLV *)malloc(sizeof(GenericTLV));
-
-    retVal->name = (char *)calloc(value->_name.size() + 1, 1);
-    strncpy(retVal->name, value->_name.c_str(), value->_name.size());
-
-    switch (value->_type) {
-    case BOOL_ATTRIBUTE:
-        retVal->type = CONFIG_BOOL;
-        retVal->value.bool_value = value->getValue<bool>();
-        break;
-
-    case FLOAT_ATTRIBUTE:
-        retVal->type = CONFIG_FLOAT;
-        retVal->value.float_value = value->getValue<float>();
-        break;
-
-    case INT_ATTRIBUTE:
-        retVal->type = CONFIG_INT;
-        retVal->value.int_value = value->getValue<int>();
-        break;
-
-    case STRING_ATTRIBUTE:
-        retVal->type = CONFIG_STRING;
-        retVal->value.string_value = (char *)calloc(value->getValue<std::string>().size() + 1, 1);
-        strncpy(retVal->value.string_value, value->getValue<std::string>().c_str(), value->getValue<std::string>().size());
-        break;
-
-    default:
-        assert(false);
-        break;
-    }
-
-    return retVal;
-}
-
-//! marshals the C generic struct instance into an Attribute C++ generic container
-std::shared_ptr<Attribute> AttributeFromCGeneric(GenericTLV *generic)
-{
-    std::shared_ptr<Attribute> retVal(new Attribute());
-
-    switch (generic->type) {
-    case CONFIG_BOOL:
-        retVal->setValue<bool>(generic->value.bool_value);
-        retVal->_type = BOOL_ATTRIBUTE;
-        break;
-    case CONFIG_FLOAT:
-        retVal->setValue<float>(generic->value.float_value);
-        retVal->_type = FLOAT_ATTRIBUTE;
-        break;
-    case CONFIG_INT:
-        retVal->setValue<int>(generic->value.int_value);
-        retVal->_type = INT_ATTRIBUTE;
-        break;
-    case CONFIG_STRING:
-        retVal->setValue<std::string>(generic->value.string_value);
-        retVal->_type = STRING_ATTRIBUTE;
-        break;
-    default:
-        assert(false);
-        break;
-    }
-
-    retVal->_name = generic->name;
-
-    return retVal;
-}
-
 //! static singleton accessor
 std::shared_ptr<SimHubEventController> SimHubEventController::EventControllerInstance(void)
 {
@@ -133,7 +64,7 @@ void SimHubEventController::prepare3dEventCallback(SPHANDLE eventSource, void *e
     MapEntry *mapEntry;
 
     if (_configManager->mapManager()->find(data->name, &mapEntry)) {
-        std::cout << data->name << "--->" << mapEntry->second.c_str() << " FIND TARGET HERE" << std::endl;
+        // std::cout << "prepare3dEventCallback" << data->name << "--->" << mapEntry->second.c_str() << " FIND TARGET HERE" << std::endl;
         _eventQueue.push(attribute);
     }
 }
@@ -142,8 +73,14 @@ void SimHubEventController::pokeyEventCallback(SPHANDLE eventSource, void *event
 {
     GenericTLV *data = static_cast<GenericTLV *>(eventData);
     assert(data != NULL);
+
     std::shared_ptr<Attribute> attribute = AttributeFromCGeneric(data);
-    _eventQueue.push(attribute);
+    MapEntry *mapEntry;
+
+    if (_configManager->mapManager()->find(data->name, &mapEntry)) {
+        std::cout << "pokeyEventCallback" << data->name << "--->" << mapEntry->second.c_str() << " FIND TARGET HERE" << std::endl;
+        _eventQueue.push(attribute);
+    }
 }
 
 void SimHubEventController::LoggerWrapper(const int category, const char *msg, ...)
@@ -158,9 +95,7 @@ void SimHubEventController::LoggerWrapper(const int category, const char *msg, .
     logger.log(category, buff);
 }
 
-simplug_vtable SimHubEventController::loadPlugin(std::string dylibName, 
-                                                 libconfig::Config *pluginConfig, 
-                                                 EnqueueEventHandler eventCallback)
+simplug_vtable SimHubEventController::loadPlugin(std::string dylibName, libconfig::Config *pluginConfig, EnqueueEventHandler eventCallback)
 {
     SPHANDLE pluginInstance = NULL;
     simplug_vtable pluginMethods;
