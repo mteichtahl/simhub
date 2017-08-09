@@ -227,8 +227,7 @@ bool PokeyDevicePluginStateManager::devicePinsConfiguration(libconfig::Setting *
 
                 if (pinType == "DIGITAL_OUTPUT") {
 
-                    bool poo = addTargetToDeviceTargetList(pinName, pokeyDevice);
-                    if (!poo) {
+                    if (!addTargetToDeviceTargetList(pinName, pokeyDevice)) {
                         _logger(LOG_INFO, "        - [%d] Failed to add target. Duplicate %s", pinIndex, pinName.c_str());
                     }
                     else {
@@ -240,6 +239,7 @@ bool PokeyDevicePluginStateManager::devicePinsConfiguration(libconfig::Setting *
                 }
             }
             else {
+                _logger(LOG_ERROR, "        - [%d] Invalid pin type %s on pin %d", pinIndex, pinType.c_str(), pinNumber);
                 continue;
             }
         }
