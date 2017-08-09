@@ -60,6 +60,8 @@ public:
     sPoKeysDevice_Info info() { return _pokey->info; }
     sPoKeysDevice_Data deviceData() { return _pokey->DeviceData; }
     uint8_t loadPinConfiguration() { return PK_PinConfigurationGet(_pokey); }
+    bool isPinDigitalOutput(uint8_t pin);
+    bool isPinDigitalInput(uint8_t pin);
     std::string name()
     {
         std::string tmp((char *)deviceData().DeviceName);

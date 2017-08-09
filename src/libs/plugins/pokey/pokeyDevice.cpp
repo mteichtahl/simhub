@@ -35,11 +35,17 @@ std::string PokeyDevice::hardwareTypeString()
     return "Unknown";
 }
 
-bool PokeyDevice::validatePinCapability(int number, std::string type)
+bool PokeyDevice::validatePinCapability(int pin, std::string type)
 {
-    // assert(_pokey);
-    bool retVal = true;
+    assert(_pokey);
+    bool retVal = false;
 
+    if (type == "DIGITAL_OUTPUT") {
+        retVal = isPinDigitalOutput(pin - 1);
+    }
+    else if (type == "DIGITAL_INPUT") {
+        retVal = isPinDigitalInput(pin - 1);
+    }
     return retVal;
 }
 
@@ -94,5 +100,16 @@ int PokeyDevice::pinFromName(std::string targetName)
 
 void PokeyDevice::mapNameToPin(std::string name, int pin)
 {
+    // TODO: what if the pin name already exists as a key
     _pinMap.emplace(name, pin);
+}
+
+bool PokeyDevice::isPinDigitalOutput(uint8_t pin)
+{
+    return (bool)PK_CheckPinCapability(_pokey, pin, PK_AllPinCap_digitalOutput);
+}
+
+bool PokeyDevice::isPinDigitalInput(uint8_t pin)
+{
+    return (bool)PK_CheckPinCapability(_pokey, pin, PK_AllPinCap_digitalInput);
 }
