@@ -4,7 +4,7 @@
 #include <memory>
 #include <vector>
 
-#include "common/simhubdeviceplugin.h"
+#include "plugins/common/simhubdeviceplugin.h"
 #include "main.h"
 
 // -- public C FFI
@@ -75,52 +75,78 @@ PokeyDevicePluginStateManager::~PokeyDevicePluginStateManager(void)
             ceaseEventing();
             _pluginThread->join();
         }
-        _deviceList.clear();
+        _deviceMap.clear();
         delete _pluginThread;
+        delete _devices;
     }
 }
 
-int PokeyDevicePluginStateManager::deliverValue(GenericTLV *value)
+int PokeyDevicePluginStateManager::deliverValue(GenericTLV *data)
 {
-    assert(value);
-    _logger(LOG_INFO, "Pokey plugin to deliver: %s", value->name);
+    assert(data);
+    std::shared_ptr<PokeyDevice> device;
+
+    bool ret = targetFromDeviceTargetList(data->name, device);
+
+    if (ret) {
+        if (data->type == ConfigType::CONFIG_BOOL) {
+            device->targetValue(data->name, (int)data->value);
+        }
+    }
+
     return 0;
 }
 
 void PokeyDevicePluginStateManager::enumerateDevices(void)
 {
     _numberOfDevices = PK_EnumerateNetworkDevices(_devices, 800);
+
     assert(_numberOfDevices > 0);
 
     for (int i = 0; i < _numberOfDevices; i++) {
-        pokeyDeviceSharedPointer device = std::make_shared<PokeyDevice>(_devices[i], i);
+        std::shared_ptr<PokeyDevice> device = std::make_shared<PokeyDevice>(_devices[i], i);
 
         _logger(LOG_INFO, "    - #%s %s %s (v%d.%d.%d) - %u.%u.%u.%u ", device->serialNumber().c_str(), device->hardwareTypeString().c_str(), device->deviceData().DeviceName,
             device->firmwareMajorMajorVersion(), device->firmwareMajorVersion(), device->firmwareMinorVersion(), device->ipAddress()[0], device->ipAddress()[1],
             device->ipAddress()[2], device->ipAddress()[3]);
 
-        _deviceList.emplace(device->serialNumber(), device);
+        _deviceMap.emplace(device->serialNumber(), device);
     }
 }
 
-deviceTargetIterator PokeyDevicePluginStateManager::addTargetToDeviceTargetList(std::string target, pokeyDeviceSharedPointer device)
+bool PokeyDevicePluginStateManager::addTargetToDeviceTargetList(std::string target, std::shared_ptr<PokeyDevice> device)
 {
-    return _deviceTargetList.emplace(target, device);
+    _deviceMap.emplace(target, device);
+    return true;
 }
 
-pokeyDeviceSharedPointer PokeyDevicePluginStateManager::device(std::string serialNumber)
+bool PokeyDevicePluginStateManager::targetFromDeviceTargetList(std::string key, std::shared_ptr<PokeyDevice> &ret)
 {
-    if (_deviceList.count(serialNumber)) {
-        return _deviceList.find(serialNumber)->second;
+    std::map<std::string, std::shared_ptr<PokeyDevice>>::iterator it = _deviceMap.find(key);
+
+    if (it != _deviceMap.end()) {
+        ret.reset((*it).second.get());
+        return true;
     }
-    else {
-        return NULL;
+
+    return false;
+}
+
+std::shared_ptr<PokeyDevice> PokeyDevicePluginStateManager::device(std::string serialNumber)
+{
+    std::shared_ptr<PokeyDevice> retVal;
+
+    if (_deviceMap.count(serialNumber)) {
+        retVal = _deviceMap.find(serialNumber)->second;
     }
+    
+    return retVal;
 }
 
 bool PokeyDevicePluginStateManager::validateConfig(libconfig::SettingIterator iter)
 {
     bool retValue = true;
+
     try {
         iter->lookup("pins");
     }
@@ -128,10 +154,11 @@ bool PokeyDevicePluginStateManager::validateConfig(libconfig::SettingIterator it
         _logger(LOG_ERROR, "Config file parse error at %s. Skipping....", nfex.getPath());
         retValue = false;
     }
+
     return retValue;
 }
 
-bool PokeyDevicePluginStateManager::getDeviceConfiguration(libconfig::SettingIterator iter, pokeyDeviceSharedPointer pokeyDevice)
+bool PokeyDevicePluginStateManager::deviceConfiguration(libconfig::SettingIterator iter, std::shared_ptr<PokeyDevice> &pokeyDevice)
 {
     bool retVal = true;
     std::string configSerialNumber = "";
@@ -139,7 +166,7 @@ bool PokeyDevicePluginStateManager::getDeviceConfiguration(libconfig::SettingIte
 
     try {
         iter->lookupValue("serialNumber", configSerialNumber);
-        pokeyDevice = device(configSerialNumber);
+        pokeyDevice.reset(device(configSerialNumber).get());
 
         if (pokeyDevice == NULL) {
             _logger(LOG_ERROR, "    - #%s. No physical device. Skipping....", configSerialNumber.c_str());
@@ -150,8 +177,13 @@ bool PokeyDevicePluginStateManager::getDeviceConfiguration(libconfig::SettingIte
             iter->lookupValue("name", configName);
 
             if (configName != pokeyDevice->name().c_str()) {
-                _logger(LOG_INFO, "      - Name mismatch. %s <-> %s", configName.c_str(), pokeyDevice->name().c_str());
-                retVal = true;
+                uint32_t retValue = pokeyDevice->name(configName);
+                if (retValue == PK_OK) {
+                    _logger(LOG_INFO, "      - Device name set (%s)", configName.c_str());
+                }
+                else {
+                    _logger(LOG_INFO, "      - Error setting device name (%s)", configName.c_str());
+                }
             }
         }
     }
@@ -163,7 +195,7 @@ bool PokeyDevicePluginStateManager::getDeviceConfiguration(libconfig::SettingIte
     return retVal;
 }
 
-bool PokeyDevicePluginStateManager::getDevicePinsConfiguration(libconfig::Setting *pins, pokeyDeviceSharedPointer pokeyDevice)
+bool PokeyDevicePluginStateManager::devicePinsConfiguration(libconfig::Setting *pins, std::shared_ptr<PokeyDevice> pokeyDevice)
 {
     /** pin = 4,
         name = "S_OH_GROUND_CALL",
@@ -196,17 +228,25 @@ bool PokeyDevicePluginStateManager::getDevicePinsConfiguration(libconfig::Settin
             if (pokeyDevice->validatePinCapability(pinNumber, pinType)) {
 
                 if (pinType == "DIGITAL_OUTPUT") {
-                    deviceTargetIterator ret = addTargetToDeviceTargetList(pinName, pokeyDevice);
-                    if (ret.second == false) {
-                        _logger(LOG_INFO, "        - [%d] Failed to add target. Duplicate %s", pinIndex, pinName.c_str());
-                    }
-                    else {
+                    int defaultValue = 0;
+
+                    if (addTargetToDeviceTargetList(pinName, pokeyDevice)) {
+
+                        if (iter->exists("default"))
+                            iter->lookupValue("default", defaultValue);
+
+                        pokeyDevice->addPin(pinName, pinNumber, pinType, defaultValue);
                         _logger(LOG_INFO, "        - [%d] Added target %s on pin %d", pinIndex, pinName.c_str(), pinNumber);
-                        pinIndex++;
                     }
                 }
+                else if (pinType == "DIGITAL_INPUT") {
+                    pokeyDevice->addPin(pinName, pinNumber, pinType);
+                    _logger(LOG_INFO, "        - [%d] Added source %s on pin %d", pinIndex, pinName.c_str(), pinNumber);
+                }
+                pinIndex++;
             }
             else {
+                _logger(LOG_ERROR, "        - [%d] Invalid pin type %s on pin %d", pinIndex, pinType.c_str(), pinNumber);
                 continue;
             }
         }
@@ -233,18 +273,27 @@ int PokeyDevicePluginStateManager::preflightComplete(void)
 
     for (libconfig::SettingIterator iter = devicesConfiguraiton->begin(); iter != devicesConfiguraiton->end(); iter++) {
 
-        pokeyDeviceSharedPointer pokeyDevice;
+        std::string serialNumber = "";
+        iter->lookupValue("serialNumber", serialNumber);
+
+        std::shared_ptr<PokeyDevice> pokeyDevice = device(serialNumber);
 
         // check that the configuration has the required config sections
-        if (!validateConfig(iter) || !getDeviceConfiguration(iter, pokeyDevice)) {
+        if (!validateConfig(iter)) {
             continue;
         }
 
-        getDevicePinsConfiguration(&iter->lookup("pins"), pokeyDevice);
+        if (deviceConfiguration(iter, pokeyDevice) == 0) {
+            continue;
+        }
+
+        devicePinsConfiguration(&iter->lookup("pins"), pokeyDevice);
+        pokeyDevice->startPolling();
     }
 
     if (_numberOfDevices > 0) {
         _logger(LOG_INFO, "  - Discovered %d pokey devices", _numberOfDevices);
+
         retVal = PREFLIGHT_OK;
     }
     else {

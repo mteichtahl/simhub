@@ -99,6 +99,33 @@ SimSourcePluginStateManager::~SimSourcePluginStateManager(void)
 int SimSourcePluginStateManager::preflightComplete(void)
 {
     int retVal = PREFLIGHT_OK;
+    int port = 8091;
+
+    libconfig::Setting *devicesConfiguraiton = NULL;
+
+    std::string type = "";
+    std::string ipAddress = "";
+
+    try {
+        devicesConfiguraiton = &_config->lookup("configuration");
+    }
+    catch (const libconfig::SettingNotFoundException &nfex) {
+        _logger(LOG_ERROR, "Config file parse error at %s. Skipping....", nfex.getPath());
+    }
+
+    for (libconfig::SettingIterator iter = devicesConfiguraiton->begin(); iter != devicesConfiguraiton->end(); iter++) {
+
+        if (iter->exists("ipAddress")) {
+            iter->lookupValue("ipAddress", ipAddress);
+        }
+        else {
+            ipAddress = "127.0.0.1";
+        }
+
+        if (iter->exists("port")) {
+            iter->lookupValue("port", port);
+        }
+    }
 
     struct sockaddr_in req_addr;
 
@@ -107,7 +134,8 @@ int SimSourcePluginStateManager::preflightComplete(void)
 
     check_uv(uv_tcp_init(_eventLoop, &_tcpClient));
     uv_tcp_keepalive(&_tcpClient, 1, 60);
-    uv_ip4_addr("127.0.0.1", 8080, &req_addr);
+
+    uv_ip4_addr(ipAddress.c_str(), port, &req_addr);
 
     int connectErr = uv_tcp_connect(&_connectReq, &_tcpClient, (struct sockaddr *)&req_addr, &SimSourcePluginStateManager::OnConnect);
 
@@ -184,10 +212,10 @@ void SimSourcePluginStateManager::processData(char *data, int len)
             size_t len = strlen(p);
 
             if (len > 2) {
-                char *buffer = (char *)malloc(1024);
-                memset(buffer, 0, 1024);
+                char *buffer = (char *)malloc(BUFFER_LEN);
+                memset(buffer, 0, BUFFER_LEN);
                 strncpy(buffer, p, len);
-                buffer[len] = '\0';
+                buffer[len - 1] = '\0';
                 array[elementCount++] = buffer;
             }
 
@@ -203,8 +231,10 @@ void SimSourcePluginStateManager::processData(char *data, int len)
 
 void SimSourcePluginStateManager::processElement(char *element)
 {
+
     char *name = strtok(element, "=");
-    char *value = strtok(NULL, "=");
+    char *value = strtok(NULL, " =");
+    name[strlen(name) - 1] = '\0';
 
     if (value == NULL)
         return;
@@ -212,7 +242,7 @@ void SimSourcePluginStateManager::processElement(char *element)
     char *type = getElementDataType(name[0]);
 
     if (type != NULL) {
-        // SimSourcePluginStateManager::StateManagerInstance()->_logger(LOG_INFO, "%s %s %s", name, value, type);
+
         simElement el;
 
         el.name = name;
@@ -232,14 +262,24 @@ void SimSourcePluginStateManager::processElement(char *element)
             el.value.int_value = atoi(value);
             el.length = sizeof(int);
         }
+        else if (strncmp(type, "uint", sizeof(&type)) == 0) {
+            el.type = CONFIG_UINT;
+            el.value.int_value = (uint)atoi(value);
+            el.length = sizeof(int);
+        }
         else if (strncmp(type, "bool", sizeof(&type)) == 0) {
             el.type = CONFIG_BOOL;
-            el.length = sizeof(int);
+            el.length = sizeof(uint8_t);
 
-            if (strncmp(value, "OFF", sizeof(el.value)) == 0)
+            if (strncmp(value, "0", sizeof(el.value)) == 0) {
                 el.value.bool_value = 0;
-            else
+            }
+            else {
                 el.value.bool_value = 1;
+            }
+        }
+        else {
+            _logger(LOG_ERROR, "Missing prosim type mapping %s %s %s", name, value, type);
         }
         _enqueueCallback(this, (void *)&el, _callbackArg);
         _processedElementCount++;
@@ -271,6 +311,7 @@ char *SimSourcePluginStateManager::getElementDataType(char identifier)
         return (char *)"bool";
         break;
     default:
+        _logger(LOG_ERROR, "Missing prosim element data type %s", identifier);
         return NULL;
     }
 
