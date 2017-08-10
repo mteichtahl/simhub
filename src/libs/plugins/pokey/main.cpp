@@ -4,7 +4,7 @@
 #include <memory>
 #include <vector>
 
-#include "common/simhubdeviceplugin.h"
+#include "plugins/common/simhubdeviceplugin.h"
 #include "main.h"
 
 // -- public C FFI
@@ -84,7 +84,7 @@ PokeyDevicePluginStateManager::~PokeyDevicePluginStateManager(void)
 int PokeyDevicePluginStateManager::deliverValue(GenericTLV *data)
 {
     assert(data);
-    PokeyDevice *device = NULL;
+    std::shared_ptr<PokeyDevice> device;
 
     bool ret = targetFromDeviceTargetList(data->name, device);
 
@@ -104,7 +104,7 @@ void PokeyDevicePluginStateManager::enumerateDevices(void)
     assert(_numberOfDevices > 0);
 
     for (int i = 0; i < _numberOfDevices; i++) {
-        PokeyDevice *device = new PokeyDevice(_devices[i], i);
+        std::shared_ptr<PokeyDevice> device = std::make_shared<PokeyDevice>(_devices[i], i);
 
         _logger(LOG_INFO, "    - #%s %s %s (v%d.%d.%d) - %u.%u.%u.%u ", device->serialNumber().c_str(), device->hardwareTypeString().c_str(), device->deviceData().DeviceName,
             device->firmwareMajorMajorVersion(), device->firmwareMajorVersion(), device->firmwareMinorVersion(), device->ipAddress()[0], device->ipAddress()[1],
@@ -114,37 +114,39 @@ void PokeyDevicePluginStateManager::enumerateDevices(void)
     }
 }
 
-bool PokeyDevicePluginStateManager::addTargetToDeviceTargetList(std::string target, PokeyDevice *device)
+bool PokeyDevicePluginStateManager::addTargetToDeviceTargetList(std::string target, std::shared_ptr<PokeyDevice> device)
 {
     _deviceMap.emplace(target, device);
     return true;
 }
 
-bool PokeyDevicePluginStateManager::targetFromDeviceTargetList(std::string key, PokeyDevice *&ret)
+bool PokeyDevicePluginStateManager::targetFromDeviceTargetList(std::string key, std::shared_ptr<PokeyDevice> &ret)
 {
-    std::map<std::string, PokeyDevice *>::iterator it = _deviceMap.find(key);
+    std::map<std::string, std::shared_ptr<PokeyDevice>>::iterator it = _deviceMap.find(key);
 
     if (it != _deviceMap.end()) {
-        ret = it->second;
+        ret.reset((*it).second.get());
         return true;
     }
 
     return false;
 }
 
-PokeyDevice *PokeyDevicePluginStateManager::device(std::string serialNumber)
+std::shared_ptr<PokeyDevice> PokeyDevicePluginStateManager::device(std::string serialNumber)
 {
+    std::shared_ptr<PokeyDevice> retVal;
+
     if (_deviceMap.count(serialNumber)) {
-        return _deviceMap.find(serialNumber)->second;
+        retVal = _deviceMap.find(serialNumber)->second;
     }
-    else {
-        return NULL;
-    }
+    
+    return retVal;
 }
 
 bool PokeyDevicePluginStateManager::validateConfig(libconfig::SettingIterator iter)
 {
     bool retValue = true;
+
     try {
         iter->lookup("pins");
     }
@@ -152,10 +154,11 @@ bool PokeyDevicePluginStateManager::validateConfig(libconfig::SettingIterator it
         _logger(LOG_ERROR, "Config file parse error at %s. Skipping....", nfex.getPath());
         retValue = false;
     }
+
     return retValue;
 }
 
-bool PokeyDevicePluginStateManager::deviceConfiguration(libconfig::SettingIterator iter, PokeyDevice *pokeyDevice)
+bool PokeyDevicePluginStateManager::deviceConfiguration(libconfig::SettingIterator iter, std::shared_ptr<PokeyDevice> &pokeyDevice)
 {
     bool retVal = true;
     std::string configSerialNumber = "";
@@ -163,7 +166,7 @@ bool PokeyDevicePluginStateManager::deviceConfiguration(libconfig::SettingIterat
 
     try {
         iter->lookupValue("serialNumber", configSerialNumber);
-        pokeyDevice = device(configSerialNumber);
+        pokeyDevice.reset(device(configSerialNumber).get());
 
         if (pokeyDevice == NULL) {
             _logger(LOG_ERROR, "    - #%s. No physical device. Skipping....", configSerialNumber.c_str());
@@ -174,7 +177,6 @@ bool PokeyDevicePluginStateManager::deviceConfiguration(libconfig::SettingIterat
             iter->lookupValue("name", configName);
 
             if (configName != pokeyDevice->name().c_str()) {
-
                 uint32_t retValue = pokeyDevice->name(configName);
                 if (retValue == PK_OK) {
                     _logger(LOG_INFO, "      - Device name set (%s)", configName.c_str());
@@ -193,7 +195,7 @@ bool PokeyDevicePluginStateManager::deviceConfiguration(libconfig::SettingIterat
     return retVal;
 }
 
-bool PokeyDevicePluginStateManager::devicePinsConfiguration(libconfig::Setting *pins, PokeyDevice *pokeyDevice)
+bool PokeyDevicePluginStateManager::devicePinsConfiguration(libconfig::Setting *pins, std::shared_ptr<PokeyDevice> pokeyDevice)
 {
     /** pin = 4,
         name = "S_OH_GROUND_CALL",
@@ -274,7 +276,7 @@ int PokeyDevicePluginStateManager::preflightComplete(void)
         std::string serialNumber = "";
         iter->lookupValue("serialNumber", serialNumber);
 
-        PokeyDevice *pokeyDevice = device(serialNumber);
+        std::shared_ptr<PokeyDevice> pokeyDevice = device(serialNumber);
 
         // check that the configuration has the required config sections
         if (!validateConfig(iter)) {
