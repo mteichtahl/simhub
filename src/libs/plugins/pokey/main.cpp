@@ -158,7 +158,7 @@ bool PokeyDevicePluginStateManager::validateConfig(libconfig::SettingIterator it
     return retValue;
 }
 
-bool PokeyDevicePluginStateManager::deviceConfiguration(libconfig::SettingIterator iter, std::shared_ptr<PokeyDevice> &pokeyDevice)
+bool PokeyDevicePluginStateManager::deviceConfiguration(libconfig::SettingIterator iter, std::shared_ptr<PokeyDevice> pokeyDevice)
 {
     bool retVal = true;
     std::string configSerialNumber = "";
@@ -166,14 +166,12 @@ bool PokeyDevicePluginStateManager::deviceConfiguration(libconfig::SettingIterat
 
     try {
         iter->lookupValue("serialNumber", configSerialNumber);
-        pokeyDevice.reset(device(configSerialNumber).get());
 
         if (pokeyDevice == NULL) {
             _logger(LOG_ERROR, "    - #%s. No physical device. Skipping....", configSerialNumber.c_str());
             retVal = false;
         }
         else {
-
             iter->lookupValue("name", configName);
 
             if (configName != pokeyDevice->name().c_str()) {
