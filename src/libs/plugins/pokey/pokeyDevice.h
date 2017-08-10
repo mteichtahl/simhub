@@ -13,9 +13,8 @@
 
 #define DEBUG 1
 
-#ifdef DEBUG
-#define eprintf(...) printf(__VA_ARGS__)
-#endif
+#define DEVICE_READ_INTERVAL 100
+#define DEVICE_START_DELAY 100
 
 class PokeyDevice
 {
@@ -69,6 +68,9 @@ public:
     uint8_t loadPinConfiguration() { return PK_PinConfigurationGet(_pokey); }
     bool isPinDigitalOutput(uint8_t pin);
     bool isPinDigitalInput(uint8_t pin);
+
+    void startPolling();
+    void stopPolling();
     std::string name()
     {
         std::string tmp((char *)deviceData().DeviceName);

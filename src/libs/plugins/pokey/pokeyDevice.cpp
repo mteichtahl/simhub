@@ -19,7 +19,7 @@ PokeyDevice::PokeyDevice(sPoKeysNetworkDeviceSummary deviceSummary, uint8_t inde
     _pollLoop = uv_loop_new();
     uv_timer_init(_pollLoop, &_pollTimer);
 
-    int ret = uv_timer_start(&_pollTimer, (uv_timer_cb)&PokeyDevice::DigitalIOTimerCallback, 1000, 1000);
+    int ret = uv_timer_start(&_pollTimer, (uv_timer_cb)&PokeyDevice::DigitalIOTimerCallback, DEVICE_START_DELAY, DEVICE_READ_INTERVAL);
 
     if (ret == 0) {
         _pollThread.reset(new std::thread([=] { uv_run(_pollLoop, UV_RUN_DEFAULT); }));
@@ -28,7 +28,19 @@ PokeyDevice::PokeyDevice(sPoKeysNetworkDeviceSummary deviceSummary, uint8_t inde
 
 void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
 {
-    printf(".\n");
+    PokeyDevice *pokey = static_cast<PokeyDevice *>(timer->data);
+    printf("%s \n", pokey->name().c_str());
+}
+
+void PokeyDevice::startPolling()
+{
+    uv_run(uv_default_loop(), UV_RUN_DEFAULT);
+}
+
+void PokeyDevice::stopPolling()
+{
+    assert(_pollLoop);
+    uv_stop(_pollLoop);
 }
 
 /**
