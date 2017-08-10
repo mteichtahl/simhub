@@ -28,8 +28,39 @@ PokeyDevice::PokeyDevice(sPoKeysNetworkDeviceSummary deviceSummary, uint8_t inde
 
 void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
 {
-    PokeyDevice *pokey = static_cast<PokeyDevice *>(timer->data);
-    printf("%s \n", pokey->name().c_str());
+    PokeyDevice *self = static_cast<PokeyDevice *>(timer->data);
+
+    int ret = PK_DigitalIOGet(self->_pokey);
+
+    if (ret == PK_OK) {
+        for (int i = 0; i < self->_pokey->info.iPinCount; i++) {
+
+            if (self->_pins[i].type == "DIGITAL_INPUT") {
+                if (self->_pins[i].value != self->_pokey->Pins[i].DigitalValueGet) {
+                    // data has changed so send it ofr for processing
+                    self->_pins[i].previousValue = self->_pins[i].value;
+                    self->_pins[i].value = self->_pokey->Pins[i].DigitalValueGet;
+                    printf("State Change %s %d --> %d\n", self->_pins[i].pinName.c_str(), self->_pins[i].previousValue, self->_pins[i].value);
+                }
+            }
+        }
+    }
+}
+
+void PokeyDevice::addPin(std::string pinName, int pinNumber, std::string pinType, int defaultValue)
+{
+    if (pinType == "DIGITAL_OUTPUT")
+        outputPin(pinNumber);
+    if (pinType == "DIGITAL_INPUT")
+        inputPin(pinNumber);
+
+    mapNameToPin(pinName.c_str(), pinNumber);
+
+    _pins[pinNumber - 1].pinName = pinName;
+    _pins[pinNumber - 1].type = pinType.c_str();
+    _pins[pinNumber - 1].pinNumber = pinNumber;
+    _pins[pinNumber - 1].defaultValue = defaultValue;
+    _pins[pinNumber - 1].value = defaultValue;
 }
 
 void PokeyDevice::startPolling()
@@ -51,11 +82,6 @@ void PokeyDevice::stopPolling()
 PokeyDevice::~PokeyDevice()
 {
     PK_DisconnectDevice(_pokey);
-}
-
-void PokeyDevice::pollCallback(uv_timer_t *timer, int status)
-{
-    printf("%d", status);
 }
 
 std::string PokeyDevice::hardwareTypeString()
