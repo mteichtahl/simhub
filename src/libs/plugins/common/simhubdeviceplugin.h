@@ -21,13 +21,15 @@ typedef void (*EnqueueEventHandler)(SPHANDLE eventSource, void *event, void *arg
 
 typedef void (*LoggingFunctionCB)(const int category, const char *msg, ...);
 
-typedef enum { CONFIG_INT = 0, CONFIG_STRING, CONFIG_FLOAT, CONFIG_BOOL } ConfigType;
+typedef enum { CONFIG_INT = 0, CONFIG_STRING, CONFIG_FLOAT, CONFIG_BOOL, CONFIG_UINT } ConfigType;
 
 typedef union {
     float float_value;
     long int_value;
+    unsigned int uint_value;
     char *string_value;
     int bool_value;
+    operator bool() const { return bool_value; }
 } VariantUnion;
 
 typedef struct {

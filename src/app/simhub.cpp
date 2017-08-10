@@ -64,12 +64,17 @@ std::shared_ptr<Attribute> AttributeFromCGeneric(GenericTLV *generic)
         retVal->setValue<int>(generic->value.int_value);
         retVal->_type = INT_ATTRIBUTE;
         break;
+    case CONFIG_UINT:
+        retVal->setValue<int>(generic->value.uint_value);
+        retVal->_type = UINT_ATTRIBUTE;
+        break;
     case CONFIG_STRING:
         retVal->setValue<std::string>(generic->value.string_value);
         retVal->_type = STRING_ATTRIBUTE;
         break;
     default:
-        assert(false);
+        logger.log(LOG_ERROR, "Unknown attribute type %d %s ", (int)generic->type, generic->name);
+
         break;
     }
 
@@ -133,7 +138,6 @@ void SimHubEventController::prepare3dEventCallback(SPHANDLE eventSource, void *e
     MapEntry *mapEntry;
 
     if (_configManager->mapManager()->find(data->name, &mapEntry)) {
-        std::cout << data->name << "--->" << mapEntry->second.c_str() << " FIND TARGET HERE" << std::endl;
         _eventQueue.push(attribute);
     }
 }
@@ -142,8 +146,13 @@ void SimHubEventController::pokeyEventCallback(SPHANDLE eventSource, void *event
 {
     GenericTLV *data = static_cast<GenericTLV *>(eventData);
     assert(data != NULL);
+
     std::shared_ptr<Attribute> attribute = AttributeFromCGeneric(data);
-    _eventQueue.push(attribute);
+    MapEntry *mapEntry;
+
+    if (_configManager->mapManager()->find(data->name, &mapEntry)) {
+        _eventQueue.push(attribute);
+    }
 }
 
 void SimHubEventController::LoggerWrapper(const int category, const char *msg, ...)
@@ -158,9 +167,7 @@ void SimHubEventController::LoggerWrapper(const int category, const char *msg, .
     logger.log(category, buff);
 }
 
-simplug_vtable SimHubEventController::loadPlugin(std::string dylibName, 
-                                                 libconfig::Config *pluginConfig, 
-                                                 EnqueueEventHandler eventCallback)
+simplug_vtable SimHubEventController::loadPlugin(std::string dylibName, libconfig::Config *pluginConfig, EnqueueEventHandler eventCallback)
 {
     SPHANDLE pluginInstance = NULL;
     simplug_vtable pluginMethods;

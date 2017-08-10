@@ -7,8 +7,9 @@ var DATA_INTERVAL_MS = 500;
 
 var indicators = [
   // values are only 0 or 1
-  'I_OH_SPEED_TRIM', 'I_OH_STDBY_POWER_OFF', 'I_OH_SOURCE_OFF1',
-  'I_OH_SOURCE_OFF2', 'I_MC_FUEL', 'I_MC_HYDRAULICS', 'I_MC_DOORS'
+  'I_OH_SPEED_TRIM', 'I_OH_GROUND_POWER_AVAILABLE', 'I_OH_STDBY_POWER_OFF',
+  'I_OH_SOURCE_OFF1', 'I_OH_SOURCE_OFF2', 'I_MC_FUEL', 'I_MC_HYDRAULICS',
+  'I_MC_DOORS'
 ];
 
 var analogs = [
@@ -26,7 +27,7 @@ var gauges = [
 
 cli.version('1.0.0')
     .usage('[options]')
-    .option('-p --port [8080]', 'TCP Port', '8080')
+    .option('-p --port [8091]', 'TCP Port', '8091')
     .parse(process.argv);
 
 console.log(color.green(`Starting emulator on port ${cli.port}`));
@@ -107,31 +108,34 @@ function handleConnection(conn) {
 
   function getData(data, conn) {
     var indicatorCount = _.random(0, data.indicators.length - 1);
-    var analogCount = _.random(0, data.analog.length - 1);
-    var gaugesCount = _.random(0, data.gauges.length - 1);
+    if (data.analog) var analogCount = _.random(0, data.analog.length - 1);
+    if (data.gauges) var gaugesCount = _.random(0, data.gauges.length - 1);
 
-    var indicatorValue = ['ON', 'OFF'];
+    var indicatorValue = ['0', '1'];
     var outString = '';
 
     for (var i = 0; i < indicatorCount; i++) {
       var ind = data.indicators[_.random(0, data.indicators.length - 1)];
       var value = indicatorValue[_.random(0, 1)];
-      outString += (`${ind}=${value}\n`);
+      outString += (`${ind} = ${value} \n`);
     }
 
     for (var i = 0; i < analogCount; i++) {
       var ind = data.analog[_.random(0, data.analog.length - 1)];
       var value = _.random(0, 255);
-      outString += (`${ind}=${value}\n`);
+      outString += (`${ind} = ${value}\n`);
     }
 
     for (var i = 0; i < gaugesCount; i++) {
       var ind = data.gauges[_.random(0, data.gauges.length - 1)];
       var value = _.random(500, true);
-      outString += (`${ind}=${value}\n`);
+      outString += (`${ind} = ${value}\n`);
     }
-
-    conn.write(outString + '\n');
+    console.log(outString);
+    if (outString.length) {
+      conn.write(outString + '\n');
+      ;
+    }
     return getBytes(outString);
   }
 }

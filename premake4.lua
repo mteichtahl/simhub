@@ -166,7 +166,8 @@ solution "simhub"
         libdirs { "lib/pokey" }
         links {
             "PoKeys",
-            "usb-1.0"
+            "usb-1.0",
+            "uv"
         }
         files { "src/libs/plugins/pokey/**.h",
                 "src/libs/plugins/common/**.cpp",
