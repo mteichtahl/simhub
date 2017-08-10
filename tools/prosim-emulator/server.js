@@ -96,6 +96,7 @@ function handleConnection(conn) {
   }
 
   connections.portString = {'totalBytes': 0, startTime: _.now(), endTime: 0};
+  
   intervalTimer = setInterval(
 
       (a) => {

@@ -34,6 +34,7 @@ protected:
 
     //! config for use in preflightComplete
     libconfig::Config *_config;
+    std::shared_ptr<std::thread> _pluginThread;
 
 public:
     PluginStateManager(LoggingFunctionCB logger);

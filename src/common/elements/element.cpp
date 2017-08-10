@@ -34,18 +34,18 @@ int Element::attributeCount()
 
 int Element::addAttribute(const Attribute attribute)
 {
-    if (attribute._name.empty()) {
+    if (attribute.name().empty()) {
         logger.log(LOG_ERROR, "attribute name cannot be empty");
         return -1;
     }
 
-    const auto ret = _attributes.emplace(attribute._name, attribute);
+    const auto ret = _attributes.emplace(attribute.name(), attribute);
 
     if (ret.second) {
         return 0;
     }
     else {
-        logger.log(LOG_ERROR, "Failed to create attribute %s - Already exists", attribute._name.c_str());
+        logger.log(LOG_ERROR, "Failed to create attribute %s - Already exists", attribute.name().c_str());
         return -1;
     }
 }

@@ -117,9 +117,10 @@ solution "simhub"
         links { 'uv',
                 'config++',
                 'pthread'}
-		files { "src/libs/plugins/prepare3d/**.h",
+        files { "src/libs/plugins/prepare3d/**.h",
                 "src/libs/plugins/common/**.cpp",
-			    "src/libs/plugins/prepare3d/**.cpp" }
+                "src/libs/plugins/prepare3d/**.cpp",
+                "src/common/elements/attributes/attribute.cpp" }
         includedirs { "src/libs/googletest/include", 
                       "src/libs/googletest", 
                       "src/common",
@@ -127,7 +128,7 @@ solution "simhub"
                       "src/libs/variant/include", 
                       "src/libs",
                       "src/libs/variant/include/mpark",
-					  "src/libs/queue" }
+                      "src/libs/queue" }
         buildoptions { "--std=c++14" }
 
     project "pokey_dev_support"
