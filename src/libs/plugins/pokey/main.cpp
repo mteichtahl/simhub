@@ -226,17 +226,22 @@ bool PokeyDevicePluginStateManager::devicePinsConfiguration(libconfig::Setting *
             if (pokeyDevice->validatePinCapability(pinNumber, pinType)) {
 
                 if (pinType == "DIGITAL_OUTPUT") {
+                    int defaultValue = 0;
 
-                    if (!addTargetToDeviceTargetList(pinName, pokeyDevice)) {
-                        _logger(LOG_INFO, "        - [%d] Failed to add target. Duplicate %s", pinIndex, pinName.c_str());
-                    }
-                    else {
+                    if (addTargetToDeviceTargetList(pinName, pokeyDevice)) {
+
+                        if (iter->exists("default"))
+                            iter->lookupValue("default", defaultValue);
+
+                        pokeyDevice->addPin(pinName, pinNumber, pinType, defaultValue);
                         _logger(LOG_INFO, "        - [%d] Added target %s on pin %d", pinIndex, pinName.c_str(), pinNumber);
-                        pokeyDevice->outputPin(pinNumber);
-                        pokeyDevice->mapNameToPin(pinName.c_str(), pinNumber);
-                        pinIndex++;
                     }
                 }
+                else if (pinType == "DIGITAL_INPUT") {
+                    pokeyDevice->addPin(pinName, pinNumber, pinType);
+                    _logger(LOG_INFO, "        - [%d] Added source %s on pin %d", pinIndex, pinName.c_str(), pinNumber);
+                }
+                pinIndex++;
             }
             else {
                 _logger(LOG_ERROR, "        - [%d] Invalid pin type %s on pin %d", pinIndex, pinType.c_str(), pinNumber);
@@ -281,10 +286,12 @@ int PokeyDevicePluginStateManager::preflightComplete(void)
         }
 
         devicePinsConfiguration(&iter->lookup("pins"), pokeyDevice);
+        pokeyDevice->startPolling();
     }
 
     if (_numberOfDevices > 0) {
         _logger(LOG_INFO, "  - Discovered %d pokey devices", _numberOfDevices);
+
         retVal = PREFLIGHT_OK;
     }
     else {
