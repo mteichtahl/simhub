@@ -75,7 +75,7 @@ PokeyDevicePluginStateManager::~PokeyDevicePluginStateManager(void)
             ceaseEventing();
             _pluginThread->join();
         }
-        _deviceList.clear();
+        _deviceMap.clear();
         delete _pluginThread;
         delete _devices;
     }
@@ -110,21 +110,21 @@ void PokeyDevicePluginStateManager::enumerateDevices(void)
             device->firmwareMajorMajorVersion(), device->firmwareMajorVersion(), device->firmwareMinorVersion(), device->ipAddress()[0], device->ipAddress()[1],
             device->ipAddress()[2], device->ipAddress()[3]);
 
-        _deviceList.emplace(device->serialNumber(), device);
+        _deviceMap.emplace(device->serialNumber(), device);
     }
 }
 
 bool PokeyDevicePluginStateManager::addTargetToDeviceTargetList(std::string target, PokeyDevice *device)
 {
-    _deviceTargetList.emplace(target, device);
+    _deviceMap.emplace(target, device);
     return true;
 }
 
 bool PokeyDevicePluginStateManager::targetFromDeviceTargetList(std::string key, PokeyDevice *&ret)
 {
-    std::map<std::string, PokeyDevice *>::iterator it = _deviceTargetList.find(key);
+    std::map<std::string, PokeyDevice *>::iterator it = _deviceMap.find(key);
 
-    if (it != _deviceTargetList.end()) {
+    if (it != _deviceMap.end()) {
         ret = it->second;
         return true;
     }
@@ -134,8 +134,8 @@ bool PokeyDevicePluginStateManager::targetFromDeviceTargetList(std::string key, 
 
 PokeyDevice *PokeyDevicePluginStateManager::device(std::string serialNumber)
 {
-    if (_deviceList.count(serialNumber)) {
-        return _deviceList.find(serialNumber)->second;
+    if (_deviceMap.count(serialNumber)) {
+        return _deviceMap.find(serialNumber)->second;
     }
     else {
         return NULL;
