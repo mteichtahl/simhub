@@ -1,6 +1,7 @@
 #ifndef __POKEYDEVICE_H
 #define __POKEYDEVICE_H
 
+#include "PoKeysLib.h"
 #include "common/simhubdeviceplugin.h"
 #include <assert.h>
 #include <iostream>
@@ -8,8 +9,7 @@
 #include <stdlib.h>
 #include <thread>
 #include <unistd.h>
-
-#include "PoKeysLib.h"
+#include <uv.h>
 
 #define DEBUG 1
 
@@ -20,6 +20,8 @@
 class PokeyDevice
 {
 private:
+    static void DigitalIOTimerCallback(uv_timer_t *timer, int status);
+
 protected:
     uint8_t _index;
     std::string _serialNumber;
@@ -33,7 +35,12 @@ protected:
     std::map<std::string, int> _pinMap;
     sPoKeysDevice *_pokey;
 
+    std::shared_ptr<std::thread> _pollThread;
+    uv_loop_t *_pollLoop;
+    uv_timer_t _pollTimer;
+
     int pinFromName(std::string targetName);
+    void pollCallback(uv_timer_t *timer, int status);
 
 public:
     PokeyDevice(sPoKeysNetworkDeviceSummary, uint8_t);

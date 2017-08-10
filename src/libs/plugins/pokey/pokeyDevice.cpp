@@ -15,6 +15,20 @@ PokeyDevice::PokeyDevice(sPoKeysNetworkDeviceSummary deviceSummary, uint8_t inde
     _dhcp = deviceSummary.DHCP;
 
     loadPinConfiguration();
+    _pollTimer.data = this;
+    _pollLoop = uv_loop_new();
+    uv_timer_init(_pollLoop, &_pollTimer);
+
+    int ret = uv_timer_start(&_pollTimer, (uv_timer_cb)&PokeyDevice::DigitalIOTimerCallback, 1000, 1000);
+
+    if (ret == 0) {
+        _pollThread.reset(new std::thread([=] { uv_run(_pollLoop, UV_RUN_DEFAULT); }));
+    }
+}
+
+void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
+{
+    printf(".\n");
 }
 
 /**
@@ -25,6 +39,11 @@ PokeyDevice::PokeyDevice(sPoKeysNetworkDeviceSummary deviceSummary, uint8_t inde
 PokeyDevice::~PokeyDevice()
 {
     PK_DisconnectDevice(_pokey);
+}
+
+void PokeyDevice::pollCallback(uv_timer_t *timer, int status)
+{
+    printf("%d", status);
 }
 
 std::string PokeyDevice::hardwareTypeString()
