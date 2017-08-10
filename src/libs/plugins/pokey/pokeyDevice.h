@@ -1,6 +1,7 @@
 #ifndef __POKEYDEVICE_H
 #define __POKEYDEVICE_H
 
+#include "PoKeysLib.h"
 #include "common/simhubdeviceplugin.h"
 #include <assert.h>
 #include <iostream>
@@ -8,18 +9,27 @@
 #include <stdlib.h>
 #include <thread>
 #include <unistd.h>
+#include <uv.h>
 
-#include "PoKeysLib.h"
+#define DEVICE_READ_INTERVAL 100
+#define DEVICE_START_DELAY 100
 
-#define DEBUG 1
+typedef struct {
+    std::string pinName;
+    int pinNumber;
+    std::string type;
+    uint8_t defaultValue;
+    uint8_t value;
+    uint8_t previousValue;
+} device_port_t;
 
-#ifdef DEBUG
-#define eprintf(...) printf(__VA_ARGS__)
-#endif
+#define MAX_PINS 55
 
 class PokeyDevice
 {
 private:
+    static void DigitalIOTimerCallback(uv_timer_t *timer, int status);
+
 protected:
     uint8_t _index;
     std::string _serialNumber;
@@ -32,8 +42,14 @@ protected:
     uint8_t _dhcp;
     std::map<std::string, int> _pinMap;
     sPoKeysDevice *_pokey;
+    device_port_t _pins[MAX_PINS];
+
+    std::shared_ptr<std::thread> _pollThread;
+    uv_loop_t *_pollLoop;
+    uv_timer_t _pollTimer;
 
     int pinFromName(std::string targetName);
+    void pollCallback(uv_timer_t *timer, int status);
 
 public:
     PokeyDevice(sPoKeysNetworkDeviceSummary, uint8_t);
@@ -58,10 +74,16 @@ public:
     uint8_t *ipAddress() { return _ipAddress; }
     sPoKeysDevice *pokey() { return _pokey; }
     sPoKeysDevice_Info info() { return _pokey->info; }
+    uint8_t numberOfPins() { return info().iPinCount; }
     sPoKeysDevice_Data deviceData() { return _pokey->DeviceData; }
+    device_port_t *pins() { return _pins; }
     uint8_t loadPinConfiguration() { return PK_PinConfigurationGet(_pokey); }
     bool isPinDigitalOutput(uint8_t pin);
     bool isPinDigitalInput(uint8_t pin);
+    void addPin(std::string name, int pinNumber, std::string pinType, int defaultValue = 0);
+
+    void startPolling();
+    void stopPolling();
     std::string name()
     {
         std::string tmp((char *)deviceData().DeviceName);

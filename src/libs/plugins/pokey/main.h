@@ -16,8 +16,8 @@
 #define PREFLIGHT_FAIL 1
 
 typedef std::pair<std::string, PokeyDevice *> pokeyDevicePair;
-typedef std::map<std::string, PokeyDevice *> pokeyDeviceList; ///< a list of unique device pointers
-typedef pokeyDeviceList::iterator deviceTargetIterator; ///< iterator for deviceTargers
+typedef std::map<std::string, PokeyDevice *> pokeyDeviceMap; ///< a list of unique device pointers
+typedef pokeyDeviceMap::iterator deviceTargetIterator; ///< iterator for deviceTargers
 
 //! barest specialisation of the internal plugin management support base class
 class PokeyDevicePluginStateManager : public PluginStateManager
@@ -26,7 +26,7 @@ private:
     //! simple implementation of class instance singleton
     static PokeyDevicePluginStateManager *_StateManagerInstance;
     static PokeyDevicePluginStateManager *StateManagerInstance(void);
-    pokeyDeviceList _deviceTargetList;
+    pokeyDeviceMap _deviceTargetList;
 
 protected:
     bool validateConfig(libconfig::SettingIterator);
@@ -40,7 +40,7 @@ protected:
 
     int _numberOfDevices;
     void enumerateDevices(void);
-    pokeyDeviceList _deviceList;
+    pokeyDeviceMap _deviceMap;
     sPoKeysNetworkDeviceSummary *_devices;
 
 public:
