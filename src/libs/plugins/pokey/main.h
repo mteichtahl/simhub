@@ -30,7 +30,7 @@ private:
 
 protected:
     bool validateConfig(libconfig::SettingIterator);
-    bool deviceConfiguration(libconfig::SettingIterator iter, std::shared_ptr<PokeyDevice> &pokeyDevice);
+    bool deviceConfiguration(libconfig::SettingIterator iter, std::shared_ptr<PokeyDevice> pokeyDevice);
     bool devicePinsConfiguration(libconfig::Setting *pins, std::shared_ptr<PokeyDevice> pokeyDevice);
     bool addTargetToDeviceTargetList(std::string, std::shared_ptr<PokeyDevice> device);
     bool targetFromDeviceTargetList(std::string, std::shared_ptr<PokeyDevice> &ret);
