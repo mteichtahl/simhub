@@ -72,11 +72,11 @@ public:
     uint8_t dhcp() { return _dhcp; }
     uint8_t index() { return _index; }
     uint8_t *ipAddress() { return _ipAddress; }
+    device_port_t *pins(void) { return _pins; };
     sPoKeysDevice *pokey() { return _pokey; }
     sPoKeysDevice_Info info() { return _pokey->info; }
     uint8_t numberOfPins() { return info().iPinCount; }
     sPoKeysDevice_Data deviceData() { return _pokey->DeviceData; }
-    device_port_t *pins() { return _pins; }
     uint8_t loadPinConfiguration() { return PK_PinConfigurationGet(_pokey); }
     bool isPinDigitalOutput(uint8_t pin);
     bool isPinDigitalInput(uint8_t pin);
