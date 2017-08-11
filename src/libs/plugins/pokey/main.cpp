@@ -4,8 +4,8 @@
 #include <memory>
 #include <vector>
 
-#include "plugins/common/simhubdeviceplugin.h"
 #include "main.h"
+#include "plugins/common/simhubdeviceplugin.h"
 
 // -- public C FFI
 
@@ -84,11 +84,10 @@ PokeyDevicePluginStateManager::~PokeyDevicePluginStateManager(void)
 int PokeyDevicePluginStateManager::deliverValue(GenericTLV *data)
 {
     assert(data);
-    std::shared_ptr<PokeyDevice> device;
 
-    bool ret = targetFromDeviceTargetList(data->name, device);
+    std::shared_ptr<PokeyDevice> device = targetFromDeviceTargetList(data->name);
 
-    if (ret) {
+    if (device) {
         if (data->type == ConfigType::CONFIG_BOOL) {
             device->targetValue(data->name, (int)data->value);
         }
@@ -120,16 +119,15 @@ bool PokeyDevicePluginStateManager::addTargetToDeviceTargetList(std::string targ
     return true;
 }
 
-bool PokeyDevicePluginStateManager::targetFromDeviceTargetList(std::string key, std::shared_ptr<PokeyDevice> &ret)
+std::shared_ptr<PokeyDevice> PokeyDevicePluginStateManager::targetFromDeviceTargetList(std::string key)
 {
     std::map<std::string, std::shared_ptr<PokeyDevice>>::iterator it = _deviceMap.find(key);
 
     if (it != _deviceMap.end()) {
-        ret.reset((*it).second.get());
-        return true;
+        return (*it).second;
     }
 
-    return false;
+    return NULL;
 }
 
 std::shared_ptr<PokeyDevice> PokeyDevicePluginStateManager::device(std::string serialNumber)
@@ -139,7 +137,7 @@ std::shared_ptr<PokeyDevice> PokeyDevicePluginStateManager::device(std::string s
     if (_deviceMap.count(serialNumber)) {
         retVal = _deviceMap.find(serialNumber)->second;
     }
-    
+
     return retVal;
 }
 
