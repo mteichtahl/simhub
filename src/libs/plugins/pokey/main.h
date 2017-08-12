@@ -36,7 +36,6 @@ protected:
     bool targetFromDeviceTargetList(std::string, std::shared_ptr<PokeyDevice> &ret);
     void enumerateDevices(void);
 
-    std::thread *_pluginThread;
     int _numberOfDevices;
     PokeyDeviceMap _deviceMap;
     sPoKeysNetworkDeviceSummary *_devices;

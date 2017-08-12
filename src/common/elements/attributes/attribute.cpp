@@ -1,4 +1,6 @@
 #include <iostream>
+#include <string.h>
+
 #include "attribute.h"
 
 //! marshals C++ Attribute instance to C generic struct
