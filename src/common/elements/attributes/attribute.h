@@ -6,6 +6,7 @@
 #include <sstream>
 #include <string>
 #include <variant.hpp>
+#include "plugins/common/simhubdeviceplugin.h"
 
 typedef enum { INT_ATTRIBUTE = 0, FLOAT_ATTRIBUTE, STRING_ATTRIBUTE, BOOL_ATTRIBUTE, UINT_ATTRIBUTE } eAttribute_t;
 
@@ -15,20 +16,32 @@ protected:
     mpark::variant<int64_t, int, float, double, bool, std::string> _value;
     mpark::variant<int64_t, int, float, double, bool, std::string> _defaultValue;
 
-public:
     std::string _name;
     std::string _description;
     std::chrono::milliseconds _timestamp;
     eAttribute_t _type;
 
+public:
     Attribute(void);
     virtual ~Attribute(void);
+    
+    std::string name(void) const { return _name; };
+    void setName(std::string name) { _name = name; };
+
+    std::string description(void) { return _description; };
+    void setDescription(std::string description) { _description = description; };
+
+    eAttribute_t type(void) { return _type; };
+    void setType(eAttribute_t type) { _type = type; };
+
+    std::chrono::milliseconds timestamp() { return _timestamp; };
 
     template <typename T> void setValue(T value)
     {
         _value = value;
         _timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
     };
+
     template <typename T> T getValue(void) { return mpark::get<T>(_value); };
 
     std::string getValueToString(void)
@@ -59,7 +72,10 @@ public:
     }
 
     std::string timestampString();
-    std::chrono::milliseconds timestamp();
 };
+
+GenericTLV *AttributeToCGeneric(std::shared_ptr<Attribute> value);
+//! marshals the C generic struct instance into an Attribute C++ generic container
+std::shared_ptr<Attribute> AttributeFromCGeneric(GenericTLV *generic);
 
 #endif

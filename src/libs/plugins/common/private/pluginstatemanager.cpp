@@ -4,8 +4,9 @@
 #include "pluginstatemanager.h"
 
 PluginStateManager::PluginStateManager(LoggingFunctionCB logger)
-    : _enqueueCallback(NULL)
-    , _logger(logger)
+  : _enqueueCallback(NULL),
+    _logger(logger),
+    _pluginThread(NULL)
 {
 }
 

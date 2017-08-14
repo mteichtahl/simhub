@@ -3,6 +3,7 @@
 #include <map>
 #include <memory>
 #include <vector>
+#include <uv.h>
 
 #include "main.h"
 #include "plugins/common/simhubdeviceplugin.h"
@@ -54,11 +55,10 @@ PokeyDevicePluginStateManager *PokeyDevicePluginStateManager::_StateManagerInsta
 // -- private C++ pokey plugin implementation
 
 PokeyDevicePluginStateManager::PokeyDevicePluginStateManager(LoggingFunctionCB logger)
-    : PluginStateManager(logger)
+  : PluginStateManager(logger)
 {
     _numberOfDevices = 0; ///< 0 devices discovered
-    _devices = (sPoKeysNetworkDeviceSummary *)calloc(sizeof(sPoKeysNetworkDeviceSummary),
-        16); ///< 0 initialise the network device summary
+    _devices = (sPoKeysNetworkDeviceSummary *)calloc(sizeof(sPoKeysNetworkDeviceSummary), 16); ///< 0 initialise the network device summary
 }
 
 //! static getter for singleton instance of our class
@@ -69,16 +69,14 @@ PokeyDevicePluginStateManager *PokeyDevicePluginStateManager::StateManagerInstan
 
 PokeyDevicePluginStateManager::~PokeyDevicePluginStateManager(void)
 {
-    // TODO: enable once shtudown implemented
-    if (_pluginThread != NULL) {
+    if (_pluginThread) {
         if (_pluginThread->joinable()) {
             ceaseEventing();
             _pluginThread->join();
         }
-        _deviceMap.clear();
-        delete _pluginThread;
-        delete _devices;
     }
+
+    free(_devices);
 }
 
 int PokeyDevicePluginStateManager::deliverValue(GenericTLV *data)
@@ -99,7 +97,6 @@ int PokeyDevicePluginStateManager::deliverValue(GenericTLV *data)
 void PokeyDevicePluginStateManager::enumerateDevices(void)
 {
     _numberOfDevices = PK_EnumerateNetworkDevices(_devices, 800);
-
     assert(_numberOfDevices > 0);
 
     for (int i = 0; i < _numberOfDevices; i++) {
@@ -250,6 +247,7 @@ bool PokeyDevicePluginStateManager::devicePinsConfiguration(libconfig::Setting *
     else {
         retVal = false;
     }
+
     return retVal;
 }
 
@@ -298,3 +296,4 @@ int PokeyDevicePluginStateManager::preflightComplete(void)
 
     return retVal;
 }
+
