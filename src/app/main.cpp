@@ -5,6 +5,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <signal.h>
 
 #if defined(_AWS_SDK)
 #include "aws/aws.h"
@@ -37,8 +38,20 @@ void configureCli(cmdline::parser *cli)
     cli->footer("\n");
 }
 
+static bool FinishEventLoop = false;
+
+void sigint_handler(int sigid)
+{
+    // tell app event loop to end on control+c
+    FinishEventLoop = true;
+}
+
 int main(int argc, char *argv[])
 {
+    struct sigaction act;
+    act.sa_handler = sigint_handler;
+    sigaction(SIGINT, &act, NULL);
+    
     cmdline::parser cli;
     configureCli(&cli);
     cli.parse_check(argc, argv);
@@ -75,6 +88,9 @@ int main(int argc, char *argv[])
         if (counter++ == 10000)
             deliveryResult = false;
 
+	if (FinishEventLoop)
+	     deliveryResult = false;
+	
         return deliveryResult;
     });
 

@@ -1,5 +1,6 @@
-#include "pokeyDevice.h"
 #include <string.h>
+
+#include "pokeyDevice.h"
 
 PokeyDevice::PokeyDevice(sPoKeysNetworkDeviceSummary deviceSummary, uint8_t index)
 {
@@ -138,8 +139,7 @@ uint32_t PokeyDevice::inputPin(uint8_t pin)
 
 int32_t PokeyDevice::name(std::string name)
 {
-    char *temp = (char *)std::calloc(1, 30);
-    std::memcpy(_pokey->DeviceData.DeviceName, name.c_str(), 30);
+    strncpy((char *)_pokey->DeviceData.DeviceName, name.c_str(), 30);
     return PK_DeviceNameSet(_pokey);
 }
 

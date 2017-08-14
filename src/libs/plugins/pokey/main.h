@@ -36,7 +36,6 @@ protected:
     std::shared_ptr<PokeyDevice> targetFromDeviceTargetList(std::string);
     void enumerateDevices(void);
 
-    std::thread *_pluginThread;
     int _numberOfDevices;
     PokeyDeviceMap _deviceMap;
     sPoKeysNetworkDeviceSummary *_devices;

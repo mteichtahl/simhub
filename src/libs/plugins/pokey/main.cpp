@@ -55,7 +55,7 @@ PokeyDevicePluginStateManager *PokeyDevicePluginStateManager::_StateManagerInsta
 // -- private C++ pokey plugin implementation
 
 PokeyDevicePluginStateManager::PokeyDevicePluginStateManager(LoggingFunctionCB logger)
-    : PluginStateManager(logger)
+  : PluginStateManager(logger)
 {
     _numberOfDevices = 0; ///< 0 devices discovered
     _devices = (sPoKeysNetworkDeviceSummary *)calloc(sizeof(sPoKeysNetworkDeviceSummary), 16); ///< 0 initialise the network device summary
@@ -69,14 +69,14 @@ PokeyDevicePluginStateManager *PokeyDevicePluginStateManager::StateManagerInstan
 
 PokeyDevicePluginStateManager::~PokeyDevicePluginStateManager(void)
 {
-    if (_pluginThread != NULL) {
+    if (_pluginThread) {
         if (_pluginThread->joinable()) {
             ceaseEventing();
             _pluginThread->join();
         }
-        _deviceMap.clear();
-        delete _devices;
     }
+
+    free(_devices);
 }
 
 int PokeyDevicePluginStateManager::deliverValue(GenericTLV *data)
