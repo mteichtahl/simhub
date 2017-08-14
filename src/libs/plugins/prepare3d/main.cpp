@@ -144,7 +144,7 @@ int SimSourcePluginStateManager::preflightComplete(void)
     }
 
     // connect to simulated prosim listener
-    if (retVal != PREFLIGHT_FAIL && !_sendSocketClient.connect("127.0.0.1", 9000)) {
+    if (retVal != PREFLIGHT_FAIL && !_sendSocketClient.connect(ipAddress, port)) {
         retVal = PREFLIGHT_FAIL;
     }
 
@@ -337,7 +337,7 @@ std::string SimSourcePluginStateManager::prosimValueString(std::shared_ptr<Attri
 
     switch (attribute->name().c_str()[0]) {
     case INDICATOR_IDENTIFIER:
-        retVal = attribute->getValue<bool>() ? "ON" : "OFF";
+        retVal = attribute->getValue<bool>() ? "Auto" : "Bat";
         break;
 
     default:

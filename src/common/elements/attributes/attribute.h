@@ -2,11 +2,11 @@
 #define __ATTRIBUTE_H
 
 #include "../../../libs/tz/tz.h" // https://github.com/HowardHinnant/date
+#include "plugins/common/simhubdeviceplugin.h"
 #include <chrono>
 #include <sstream>
 #include <string>
 #include <variant.hpp>
-#include "plugins/common/simhubdeviceplugin.h"
 
 typedef enum { INT_ATTRIBUTE = 0, FLOAT_ATTRIBUTE, STRING_ATTRIBUTE, BOOL_ATTRIBUTE, UINT_ATTRIBUTE } eAttribute_t;
 
@@ -20,13 +20,15 @@ protected:
     std::string _description;
     std::chrono::milliseconds _timestamp;
     eAttribute_t _type;
+    SPHANDLE _ownerPlugin;
 
 public:
-    Attribute(void);
-    virtual ~Attribute(void);
-    
+    Attribute(SPHANDLE ownerPlugin);
+
     std::string name(void) const { return _name; };
     void setName(std::string name) { _name = name; };
+
+    SPHANDLE ownerPlugin(void) { return _ownerPlugin; };
 
     std::string description(void) { return _description; };
     void setDescription(std::string description) { _description = description; };
