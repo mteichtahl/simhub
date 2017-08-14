@@ -5,7 +5,6 @@
 #include <string>
 #include <thread>
 #include <vector>
-#include <signal.h>
 
 #if defined(_AWS_SDK)
 #include "aws/aws.h"
@@ -51,7 +50,7 @@ int main(int argc, char *argv[])
     struct sigaction act;
     act.sa_handler = sigint_handler;
     sigaction(SIGINT, &act, NULL);
-    
+
     cmdline::parser cli;
     configureCli(&cli);
     cli.parse_check(argc, argv);
@@ -79,18 +78,11 @@ int main(int argc, char *argv[])
 
     ///! kick off the simhub envent loop
     simhubController->runEventLoop([=](std::shared_ptr<Attribute> value) {
-        static size_t counter = 0;
-
         bool deliveryResult = simhubController->deliverPokeyPluginValue(value);
 
-        // demonstrate loop control
-
-        if (counter++ == 10000)
+        if (FinishEventLoop)
             deliveryResult = false;
 
-	if (FinishEventLoop)
-	     deliveryResult = false;
-	
         return deliveryResult;
     });
 

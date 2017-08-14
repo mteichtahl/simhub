@@ -82,6 +82,14 @@ void PokeyDevice::stopPolling()
  */
 PokeyDevice::~PokeyDevice()
 {
+    stopPolling();
+
+    if (_pollThread) {
+        if (_pollThread->joinable()) {
+            _pollThread->join();
+        }
+    }
+
     PK_DisconnectDevice(_pokey);
 }
 

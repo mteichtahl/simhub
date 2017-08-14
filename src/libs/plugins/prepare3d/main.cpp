@@ -1,8 +1,8 @@
 #include <assert.h>
 #include <iostream>
 #include <memory>
-#include <vector>
 #include <sstream>
+#include <vector>
 
 #include "common/simhubdeviceplugin.h"
 #include "elements/attributes/attribute.h"
@@ -285,10 +285,11 @@ void SimSourcePluginStateManager::processElement(char *element)
         else {
             _logger(LOG_ERROR, "Missing prosim type mapping %s %s %s", name, value, type);
         }
+
         _enqueueCallback(this, (void *)&el, _callbackArg);
 
         // TODO: remove this echo test
-        deliverValue(&el);
+        // deliverValue(&el);
 
         _processedElementCount++;
     }
@@ -319,8 +320,8 @@ char *SimSourcePluginStateManager::getElementDataType(char identifier)
         return (char *)"bool";
         break;
     default:
-        _logger(LOG_ERROR, "Missing prosim element data type %s", identifier);
-        return NULL;
+        _logger(LOG_ERROR, "Missing prosim element data type %c", identifier);
+        break;
     }
 
     return NULL;
@@ -330,18 +331,18 @@ std::string SimSourcePluginStateManager::prosimValueString(std::shared_ptr<Attri
 {
     std::string retVal("");
 
-    // TODO: look at first char of target and use this to 
-    // validate the type of attribute and to convert the 
+    // TODO: look at first char of target and use this to
+    // validate the type of attribute and to convert the
     // attribute value to a prosim value string
 
     switch (attribute->name().c_str()[0]) {
-        case INDICATOR_IDENTIFIER:
-            retVal = attribute->getValue<bool>() ? "ON" : "OFF";
-            break;
+    case INDICATOR_IDENTIFIER:
+        retVal = attribute->getValue<bool>() ? "ON" : "OFF";
+        break;
 
-        default:
-            retVal = attribute->getValueToString();
-            break;
+    default:
+        retVal = attribute->getValueToString();
+        break;
     }
 
     return retVal;
@@ -386,7 +387,7 @@ TCPClient::TCPClient(void)
     _port = 0;
     _address = "";
 }
- 
+
 /**
     Connect to a host on a certain port number
 */
@@ -397,27 +398,27 @@ bool TCPClient::connect(std::string address, int port)
 
     // create socket if it is not already created
     if (_sock == -1) {
-        _sock = socket(AF_INET , SOCK_STREAM , 0);
+        _sock = socket(AF_INET, SOCK_STREAM, 0);
         if (_sock == -1)
             perror("Could not create socket");
         std::cout << "socket created" << std::endl;
     }
-     
+
     // setup address structure
     if (inet_addr(_address.c_str()) == -1) {
         struct hostent *he;
         struct in_addr **addr_list;
-         
+
         // resolve the hostname, its not an ip address
         if ((he = gethostbyname(_address.c_str())) == NULL) {
             herror("gethostbyname");
             std::cout << "Failed to resolve hostname" << std::endl;
             return false;
         }
-         
+
         // cast the h_addr_list to in_addr , since h_addr_list also has the ip address in long format only
         addr_list = (struct in_addr **)he->h_addr_list;
-        for(int i = 0; addr_list[i] != NULL; i++) {
+        for (int i = 0; addr_list[i] != NULL; i++) {
             _server.sin_addr = *addr_list[i];
             std::cout << address << " resolved to " << inet_ntoa(*addr_list[i]) << std::endl;
             break;
@@ -426,48 +427,48 @@ bool TCPClient::connect(std::string address, int port)
     else {
         _server.sin_addr.s_addr = inet_addr(address.c_str());
     }
-     
+
     _server.sin_family = AF_INET;
     _server.sin_port = htons(port);
-     
+
     // connect to remote server
-    if (::connect(_sock , (struct sockaddr *)&_server , sizeof(_server)) < 0) {
+    if (::connect(_sock, (struct sockaddr *)&_server, sizeof(_server)) < 0) {
         perror("connect failed. Error");
         return 1;
     }
-     
+
     std::cout << "Connected" << std::endl;
     return true;
 }
- 
+
 /**
     Send data to the connected host
 */
 bool TCPClient::sendData(std::string data)
 {
-    //Send some data
-    if( send(_sock, data.c_str(), strlen(data.c_str()), 0) < 0) {
+    // Send some data
+    if (send(_sock, data.c_str(), strlen(data.c_str()), 0) < 0) {
         perror("Send failed : ");
         return false;
     }
 
     std::cout << "Data send" << std::endl;
-     
+
     return true;
 }
- 
+
 /**
     Receive data from the connected host
 */
-std::string TCPClient::receive(int size=512)
+std::string TCPClient::receive(int size = 512)
 {
     char buffer[size];
     std::string reply;
-     
-    //Receive a reply from the server
-    if (recv(_sock , buffer , sizeof(buffer) , 0) < 0)
+
+    // Receive a reply from the server
+    if (recv(_sock, buffer, sizeof(buffer), 0) < 0)
         puts("recv failed");
-     
+
     reply = buffer;
     return reply;
 }
