@@ -42,7 +42,10 @@ protected:
     uint8_t _dhcp;
     std::map<std::string, int> _pinMap;
     sPoKeysDevice *_pokey;
+    void *_callbackArg;
+    SPHANDLE _pluginInstance;
     device_port_t _pins[MAX_PINS];
+    EnqueueEventHandler _enqueueCallback;
 
     std::shared_ptr<std::thread> _pollThread;
     uv_loop_t *_pollLoop;
@@ -61,6 +64,8 @@ public:
     uint32_t inputPin(uint8_t pin);
     uint32_t outputPin(uint8_t pin);
     int32_t name(std::string name);
+
+    void setCallbackInfo(EnqueueEventHandler enqueueCallback, void *callbackArg, SPHANDLE pluginInstance);
 
     std::string serialNumber() { return _serialNumber; };
     uint8_t userId() { return _userId; };

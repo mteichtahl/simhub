@@ -44,6 +44,7 @@ public:
     PokeyDevicePluginStateManager(LoggingFunctionCB logger);
     virtual ~PokeyDevicePluginStateManager(void);
     int preflightComplete(void);
+    void commenceEventing(EnqueueEventHandler enqueueCallback, void *arg);
     virtual int deliverValue(GenericTLV *value);
     std::shared_ptr<PokeyDevice> device(std::string);
 };

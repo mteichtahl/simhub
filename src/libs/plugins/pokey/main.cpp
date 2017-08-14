@@ -2,8 +2,8 @@
 #include <iostream>
 #include <map>
 #include <memory>
-#include <vector>
 #include <uv.h>
+#include <vector>
 
 #include "main.h"
 #include "plugins/common/simhubdeviceplugin.h"
@@ -55,7 +55,7 @@ PokeyDevicePluginStateManager *PokeyDevicePluginStateManager::_StateManagerInsta
 // -- private C++ pokey plugin implementation
 
 PokeyDevicePluginStateManager::PokeyDevicePluginStateManager(LoggingFunctionCB logger)
-  : PluginStateManager(logger)
+    : PluginStateManager(logger)
 {
     _numberOfDevices = 0; ///< 0 devices discovered
     _devices = (sPoKeysNetworkDeviceSummary *)calloc(sizeof(sPoKeysNetworkDeviceSummary), 16); ///< 0 initialise the network device summary
@@ -92,6 +92,16 @@ int PokeyDevicePluginStateManager::deliverValue(GenericTLV *data)
     }
 
     return 0;
+}
+
+void PokeyDevicePluginStateManager::commenceEventing(EnqueueEventHandler enqueueCallback, void *arg)
+{
+    _enqueueCallback = enqueueCallback;
+    _callbackArg = arg;
+
+    for (auto devPair : _deviceMap) {
+        devPair.second->setCallbackInfo(_enqueueCallback, _callbackArg, this);
+    }
 }
 
 void PokeyDevicePluginStateManager::enumerateDevices(void)
@@ -296,4 +306,3 @@ int PokeyDevicePluginStateManager::preflightComplete(void)
 
     return retVal;
 }
-
