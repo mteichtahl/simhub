@@ -3,15 +3,15 @@
 
 #include "common/private/pluginstatemanager.h"
 
+#include <arpa/inet.h>
 #include <errno.h>
+#include <netdb.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/socket.h>
 #include <thread>
 #include <uv.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <netdb.h>
 
 #define BUFFER_LEN 4096
 #define MAX_ELEMENTS_PER_UPDATE 1024
@@ -22,6 +22,7 @@
 #define ANALOG_IDENTIFIER 'A'
 #define ROTARY_IDENTIFIER 'R'
 #define BOOLEAN_IDENTIFIER 'B'
+#define SWITCH_IDENTIFIER 'S'
 
 #define SIM_CONNECT_NOT_FOUND -61
 
@@ -44,7 +45,7 @@ private:
     std::string _address;
     int _port;
     struct sockaddr_in _server;
-     
+
 public:
     TCPClient(void);
     bool connect(std::string, int);

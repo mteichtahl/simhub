@@ -1,9 +1,12 @@
 #include <string.h>
 
+#include "elements/attributes/attribute.h"
 #include "pokeyDevice.h"
 
 PokeyDevice::PokeyDevice(sPoKeysNetworkDeviceSummary deviceSummary, uint8_t index)
 {
+    _callbackArg = NULL;
+    _enqueueCallback = NULL;
     _pokey = PK_ConnectToNetworkDevice(&deviceSummary);
     _index = index;
     _userId = deviceSummary.UserID;
@@ -27,6 +30,13 @@ PokeyDevice::PokeyDevice(sPoKeysNetworkDeviceSummary deviceSummary, uint8_t inde
     }
 }
 
+void PokeyDevice::setCallbackInfo(EnqueueEventHandler enqueueCallback, void *callbackArg, SPHANDLE pluginInstance)
+{
+    _enqueueCallback = enqueueCallback;
+    _callbackArg = callbackArg;
+    _pluginInstance = pluginInstance;
+}
+
 void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
 {
     PokeyDevice *self = static_cast<PokeyDevice *>(timer->data);
@@ -34,6 +44,8 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
     int ret = PK_DigitalIOGet(self->_pokey);
 
     if (ret == PK_OK) {
+        GenericTLV el;
+
         for (int i = 0; i < self->_pokey->info.iPinCount; i++) {
 
             if (self->_pins[i].type == "DIGITAL_INPUT") {
@@ -42,6 +54,12 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
                     self->_pins[i].previousValue = self->_pins[i].value;
                     self->_pins[i].value = self->_pokey->Pins[i].DigitalValueGet;
                     printf("State Change %s %d --> %d\n", self->_pins[i].pinName.c_str(), self->_pins[i].previousValue, self->_pins[i].value);
+                    el.ownerPlugin = self->_pluginInstance;
+                    el.type = CONFIG_BOOL;
+                    el.value.bool_value = self->_pins[i].value;
+                    el.length = sizeof(uint8_t);
+                    el.name = (char *)self->_pins[i].pinName.c_str();
+                    self->_enqueueCallback(self, (void *)&el, self->_callbackArg);
                 }
             }
         }

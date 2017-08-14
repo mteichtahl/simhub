@@ -94,6 +94,16 @@ int PokeyDevicePluginStateManager::deliverValue(GenericTLV *data)
     return 0;
 }
 
+void PokeyDevicePluginStateManager::commenceEventing(EnqueueEventHandler enqueueCallback, void *arg)
+{
+    _enqueueCallback = enqueueCallback;
+    _callbackArg = arg;
+
+    for (auto devPair : _deviceMap) {
+        devPair.second->setCallbackInfo(_enqueueCallback, _callbackArg, this);
+    }
+}
+
 void PokeyDevicePluginStateManager::enumerateDevices(void)
 {
     _numberOfDevices = PK_EnumerateNetworkDevices(_devices, 800);

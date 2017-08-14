@@ -9,6 +9,8 @@ GenericTLV *AttributeToCGeneric(std::shared_ptr<Attribute> value)
     GenericTLV *retVal = (GenericTLV *)malloc(sizeof(GenericTLV));
 
     retVal->name = (char *)calloc(value->name().size() + 1, 1);
+    retVal->ownerPlugin = value->ownerPlugin();
+
     strncpy(retVal->name, value->name().c_str(), value->name().size());
 
     switch (value->type()) {
@@ -23,6 +25,11 @@ GenericTLV *AttributeToCGeneric(std::shared_ptr<Attribute> value)
         break;
 
     case INT_ATTRIBUTE:
+        retVal->type = CONFIG_INT;
+        retVal->value.int_value = value->getValue<int>();
+        break;
+
+    case UINT_ATTRIBUTE:
         retVal->type = CONFIG_INT;
         retVal->value.int_value = value->getValue<int>();
         break;
@@ -44,7 +51,8 @@ GenericTLV *AttributeToCGeneric(std::shared_ptr<Attribute> value)
 //! marshals the C generic struct instance into an Attribute C++ generic container
 std::shared_ptr<Attribute> AttributeFromCGeneric(GenericTLV *generic)
 {
-    std::shared_ptr<Attribute> retVal(new Attribute());
+    assert(generic->ownerPlugin);
+    std::shared_ptr<Attribute> retVal(new Attribute(generic->ownerPlugin));
 
     switch (generic->type) {
     case CONFIG_BOOL:
@@ -56,6 +64,10 @@ std::shared_ptr<Attribute> AttributeFromCGeneric(GenericTLV *generic)
         retVal->setType(FLOAT_ATTRIBUTE);
         break;
     case CONFIG_INT:
+        retVal->setValue<int>(generic->value.int_value);
+        retVal->setType(INT_ATTRIBUTE);
+        break;
+    case CONFIG_UINT:
         retVal->setValue<int>(generic->value.int_value);
         retVal->setType(INT_ATTRIBUTE);
         break;

@@ -127,6 +127,8 @@ int SimSourcePluginStateManager::preflightComplete(void)
         }
     }
 
+    _logger(LOG_ERROR, "Connecting to simulator on %s:%d.", ipAddress.c_str(), port);
+
     struct sockaddr_in req_addr;
 
     _eventLoop = uv_default_loop();
@@ -159,7 +161,7 @@ void SimSourcePluginStateManager::OnConnect(uv_connect_t *req, int status)
         SimSourcePluginStateManager::StateManagerInstance()->_logger(LOG_ERROR, "   - Failed to connect to simulator");
     }
     else {
-        SimSourcePluginStateManager::StateManagerInstance()->_logger(LOG_INFO, " - Connected to simulator %d", status);
+        SimSourcePluginStateManager::StateManagerInstance()->_logger(LOG_INFO, " - Connected to simulator %i", status);
         SimSourcePluginStateManager::StateManagerInstance()->instanceConnectionHandler(req, status);
     }
 }
@@ -250,6 +252,7 @@ void SimSourcePluginStateManager::processElement(char *element)
         GenericTLV el;
 
         el.name = name;
+        el.ownerPlugin = this;
 
         if (strncmp(type, "float", sizeof(&type)) == 0) {
             el.type = CONFIG_FLOAT;
@@ -324,7 +327,7 @@ char *SimSourcePluginStateManager::getElementDataType(char identifier)
         break;
     }
 
-    return NULL;
+    return (char *)"char";
 }
 
 std::string SimSourcePluginStateManager::prosimValueString(std::shared_ptr<Attribute> attribute)
@@ -336,7 +339,7 @@ std::string SimSourcePluginStateManager::prosimValueString(std::shared_ptr<Attri
     // attribute value to a prosim value string
 
     switch (attribute->name().c_str()[0]) {
-    case INDICATOR_IDENTIFIER:
+    case SWITCH_IDENTIFIER:
         retVal = attribute->getValue<bool>() ? "Auto" : "Bat";
         break;
 
@@ -354,7 +357,10 @@ int SimSourcePluginStateManager::deliverValue(GenericTLV *value)
     std::ostringstream oss;
     std::shared_ptr<Attribute> attribute = AttributeFromCGeneric(value);
 
-    oss << attribute->name() << "=" << prosimValueString(attribute);
+    oss << attribute->name() << "=" << prosimValueString(attribute) << "\n";
+
+    std::cout << "about to send: " << oss.str() << std::endl;
+
     _sendSocketClient.sendData(oss.str());
 
     return 0;
@@ -447,7 +453,7 @@ bool TCPClient::connect(std::string address, int port)
 bool TCPClient::sendData(std::string data)
 {
     // Send some data
-    if (send(_sock, data.c_str(), strlen(data.c_str()), 0) < 0) {
+    if (send(_sock, data.c_str(), data.size(), 0) < 0) {
         perror("Send failed : ");
         return false;
     }

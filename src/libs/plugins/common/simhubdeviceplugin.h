@@ -37,6 +37,7 @@ typedef struct {
     ConfigType type;
     long length;
     VariantUnion value;
+    SPHANDLE ownerPlugin;
 } GenericTLV;
 
 //! basic block of function pointers

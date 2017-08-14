@@ -42,7 +42,18 @@ bool SimHubEventController::deliverPokeyPluginValue(std::shared_ptr<Attribute> v
     assert(_pokeyMethods.simplug_deliver_value);
 
     GenericTLV *c_value = AttributeToCGeneric(value);
-    bool retVal = !_pokeyMethods.simplug_deliver_value(_pokeyMethods.plugin_instance, c_value);
+
+    bool retVal = false;
+
+    // determine value destination from the source - very simple at the moment
+    // (just deliver to whatever instance is not the source) - may want more
+    // sophisticated logic here
+    // - TODO: splice in kinesis here?
+
+    if (value->ownerPlugin() == _pokeyMethods.plugin_instance)
+        retVal = !_prepare3dMethods.simplug_deliver_value(_prepare3dMethods.plugin_instance, c_value);
+    else if (value->ownerPlugin() == _prepare3dMethods.plugin_instance)
+        retVal = !_pokeyMethods.simplug_deliver_value(_pokeyMethods.plugin_instance, c_value);
 
     if (c_value->type == CONFIG_STRING)
         free(c_value->value.string_value);
