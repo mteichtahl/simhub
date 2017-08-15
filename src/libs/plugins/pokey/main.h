@@ -46,6 +46,7 @@ public:
     int preflightComplete(void);
     void commenceEventing(EnqueueEventHandler enqueueCallback, void *arg);
     virtual int deliverValue(GenericTLV *value);
+    virtual void ceaseEventing(void);
     std::shared_ptr<PokeyDevice> device(std::string);
 };
 
