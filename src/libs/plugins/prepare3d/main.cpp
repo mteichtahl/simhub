@@ -157,6 +157,11 @@ int SimSourcePluginStateManager::preflightComplete(void)
     return retVal;
 }
 
+void SimSourcePluginStateManager::transformBoolToString(std::string source, std::string target)
+{
+    printf("-------> %s -> %s\n", source.c_str(), target.c_str());
+}
+
 void SimSourcePluginStateManager::loadTransforms(libconfig::Setting *transforms)
 {
     _logger(LOG_INFO, "Loading %i transforms ", transforms->getLength());
@@ -171,7 +176,11 @@ void SimSourcePluginStateManager::loadTransforms(libconfig::Setting *transforms)
         transform.lookupValue("On", poo);
         transform.lookupValue("Off", wee);
 
-        printf("----> on = %s off = %s\n", poo.c_str(), wee.c_str());
+        if (transform.exists("On") && transform.exists("Off")) {
+            std::function<void(std::string, std::string)> boundFunctor
+                = std::bind(&SimSourcePluginStateManager::transformBoolToString, this, std::placeholders::_1, std::placeholders::_2);
+            boundFunctor(poo, wee);
+        }
     }
 }
 
