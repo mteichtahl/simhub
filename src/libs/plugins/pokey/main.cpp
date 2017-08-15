@@ -107,7 +107,6 @@ void PokeyDevicePluginStateManager::commenceEventing(EnqueueEventHandler enqueue
 void PokeyDevicePluginStateManager::enumerateDevices(void)
 {
     _numberOfDevices = PK_EnumerateNetworkDevices(_devices, 800);
-    assert(_numberOfDevices > 0);
 
     for (int i = 0; i < _numberOfDevices; i++) {
         std::shared_ptr<PokeyDevice> device = std::make_shared<PokeyDevice>(_devices[i], i);

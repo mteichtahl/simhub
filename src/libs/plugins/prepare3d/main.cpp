@@ -125,6 +125,10 @@ int SimSourcePluginStateManager::preflightComplete(void)
         if (iter->exists("port")) {
             iter->lookupValue("port", port);
         }
+
+        if (iter->exists("transforms")) {
+            loadTransforms(&iter->lookup("transforms"));
+        }
     }
 
     _logger(LOG_ERROR, "Connecting to simulator on %s:%d.", ipAddress.c_str(), port);
@@ -151,6 +155,24 @@ int SimSourcePluginStateManager::preflightComplete(void)
     }
 
     return retVal;
+}
+
+void SimSourcePluginStateManager::loadTransforms(libconfig::Setting *transforms)
+{
+    _logger(LOG_INFO, "Loading %i transforms ", transforms->getLength());
+
+    for (libconfig::Setting const &transform : *transforms) {
+        std::string transformName = transform.getName();
+
+        _logger(LOG_INFO, " - transform %s", transformName.c_str());
+
+        std::string poo;
+        std::string wee;
+        transform.lookupValue("On", poo);
+        transform.lookupValue("Off", wee);
+
+        printf("----> on = %s off = %s\n", poo.c_str(), wee.c_str());
+    }
 }
 
 void SimSourcePluginStateManager::OnConnect(uv_connect_t *req, int status)

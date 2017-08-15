@@ -5,6 +5,7 @@
 
 #include <arpa/inet.h>
 #include <errno.h>
+#include <map>
 #include <netdb.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -53,6 +54,8 @@ public:
     std::string receive(int);
 };
 
+typedef std::map<std::string, int> TransformMap;
+
 //! barest specialisation of the internal plugin management support base class
 class SimSourcePluginStateManager : public PluginStateManager
 {
@@ -87,6 +90,10 @@ private:
     void processElement(char *element);
     char *getElementDataType(char identifier);
     std::string prosimValueString(std::shared_ptr<Attribute> attribute);
+
+protected:
+    TransformMap _transformMap;
+    void loadTransforms(libconfig::Setting *transforms);
 
 public:
     SimSourcePluginStateManager(LoggingFunctionCB logger);
