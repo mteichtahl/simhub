@@ -177,9 +177,7 @@ void SimSourcePluginStateManager::loadTransforms(libconfig::Setting *transforms)
         transform.lookupValue("Off", wee);
 
         if (transform.exists("On") && transform.exists("Off")) {
-            std::function<void(std::string, std::string)> boundFunctor
-                = std::bind(&SimSourcePluginStateManager::transformBoolToString, this, std::placeholders::_1, std::placeholders::_2);
-            boundFunctor(poo, wee);
+            _transformMap.emplace(transformName, std::bind(&SimSourcePluginStateManager::transformBoolToString, this, std::placeholders::_1, std::placeholders::_2));
         }
     }
 }

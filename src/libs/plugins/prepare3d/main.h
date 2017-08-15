@@ -55,8 +55,9 @@ public:
 };
 
 // every function pointer will be stored as this type
-typedef void (*voidFunctionType)(void);
-typedef std::map<std::string, voidFunctionType> TransformMap;
+// typedef void (*voidFunctionType)(void);
+typedef std::function<void(std::string, std::string)> TransformFunction;
+typedef std::map<std::string, TransformFunction> TransformMap;
 
 //! barest specialisation of the internal plugin management support base class
 class SimSourcePluginStateManager : public PluginStateManager
