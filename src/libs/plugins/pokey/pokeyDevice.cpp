@@ -91,6 +91,9 @@ void PokeyDevice::stopPolling()
 {
     assert(_pollLoop);
     uv_stop(_pollLoop);
+
+    assert(_pollThread->joinable());
+    _pollThread->join();
 }
 
 /**

@@ -79,6 +79,15 @@ PokeyDevicePluginStateManager::~PokeyDevicePluginStateManager(void)
     free(_devices);
 }
 
+void PokeyDevicePluginStateManager::ceaseEventing(void)
+{
+    PluginStateManager::ceaseEventing();
+
+    for (auto devPair: _deviceMap) {
+        devPair.second->stopPolling();
+    }
+}
+
 int PokeyDevicePluginStateManager::deliverValue(GenericTLV *data)
 {
     assert(data);
