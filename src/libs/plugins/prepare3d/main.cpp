@@ -157,9 +157,17 @@ int SimSourcePluginStateManager::preflightComplete(void)
     return retVal;
 }
 
-void SimSourcePluginStateManager::transformBoolToString(std::string source, std::string target)
+std::string SimSourcePluginStateManager::transformBoolToString(std::string orginalValue, std::string transformResultOff, std::string transformResultOn)
 {
-    printf("-------> %s -> %s\n", source.c_str(), target.c_str());
+    // printf("----> orig %s On %s Off %s", orginalValue.c_str(), transformResultOn.c_str(), transformResultOff.c_str());
+
+    if (orginalValue == "0") {
+        return transformResultOff;
+    }
+    else {
+        return transformResultOn;
+    }
+    return "";
 }
 
 void SimSourcePluginStateManager::loadTransforms(libconfig::Setting *transforms)
@@ -171,15 +179,31 @@ void SimSourcePluginStateManager::loadTransforms(libconfig::Setting *transforms)
 
         _logger(LOG_INFO, " - transform %s", transformName.c_str());
 
-        std::string poo;
-        std::string wee;
-        transform.lookupValue("On", poo);
-        transform.lookupValue("Off", wee);
-
         if (transform.exists("On") && transform.exists("Off")) {
-            _transformMap.emplace(transformName, std::bind(&SimSourcePluginStateManager::transformBoolToString, this, std::placeholders::_1, std::placeholders::_2));
+            std::string transformResultOn;
+            std::string transformResultOff;
+            transform.lookupValue("On", transformResultOn);
+            transform.lookupValue("Off", transformResultOff);
+            _transformMap.emplace(
+                transformName, std::bind(&SimSourcePluginStateManager::transformBoolToString, this, std::placeholders::_1, transformResultOff, transformResultOn));
         }
     }
+}
+
+/**
+ *   @brief  Default  find a transform by element name
+ *
+ *   @return TransformFunction or NULL if not found
+ */
+TransformFunction SimSourcePluginStateManager::transform(std::string transformName)
+{
+    TransformMap::iterator it = _transformMap.find(transformName);
+
+    if (it != _transformMap.end()) {
+        return (*it).second;
+    }
+
+    return NULL;
 }
 
 void SimSourcePluginStateManager::OnConnect(uv_connect_t *req, int status)
@@ -351,6 +375,9 @@ char *SimSourcePluginStateManager::getElementDataType(char identifier)
     case BOOLEAN_IDENTIFIER:
         return (char *)"bool";
         break;
+    case SWITCH_IDENTIFIER:
+        return (char *)"bool";
+        break;
     default:
         _logger(LOG_ERROR, "Missing prosim element data type %c", identifier);
         break;
@@ -369,7 +396,7 @@ std::string SimSourcePluginStateManager::prosimValueString(std::shared_ptr<Attri
 
     switch (attribute->name().c_str()[0]) {
     case SWITCH_IDENTIFIER:
-        retVal = attribute->getValue<bool>() ? "Auto" : "Bat";
+        retVal = attribute->getValue<bool>() ? 0 : 1;
         break;
 
     default:
@@ -382,11 +409,18 @@ std::string SimSourcePluginStateManager::prosimValueString(std::shared_ptr<Attri
 
 int SimSourcePluginStateManager::deliverValue(GenericTLV *value)
 {
-    // TODO: stringify value to NAME=VALUE format and use _socketClient to send to prosim
     std::ostringstream oss;
     std::shared_ptr<Attribute> attribute = AttributeFromCGeneric(value);
 
-    oss << attribute->name() << "=" << prosimValueString(attribute) << "\n";
+    TransformFunction transformFunction = transform(attribute->name());
+
+    if (transformFunction) {
+        std::string val = transformFunction(attribute->getValueToString(), "NULL", "NULL");
+        oss << attribute->name() << "=" << val << "\n";
+    }
+    else {
+        oss << attribute->name() << "=" << prosimValueString(attribute) << "\n";
+    }
 
     std::cout << "about to send: " << oss.str() << std::endl;
 

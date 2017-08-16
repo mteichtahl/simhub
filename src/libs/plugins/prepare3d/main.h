@@ -56,7 +56,7 @@ public:
 
 // every function pointer will be stored as this type
 // typedef void (*voidFunctionType)(void);
-typedef std::function<void(std::string, std::string)> TransformFunction;
+typedef std::function<std::string(std::string, std::string, std::string)> TransformFunction;
 typedef std::map<std::string, TransformFunction> TransformMap;
 
 //! barest specialisation of the internal plugin management support base class
@@ -97,7 +97,9 @@ private:
 protected:
     TransformMap _transformMap;
     void loadTransforms(libconfig::Setting *transforms);
-    virtual void transformBoolToString(std::string source, std::string target);
+    TransformFunction transform(std::string transformName);
+    // transformations
+    virtual std::string transformBoolToString(std::string orginalValue, std::string transformResultOff, std::string transformResultOn);
 
 public:
     SimSourcePluginStateManager(LoggingFunctionCB logger);
