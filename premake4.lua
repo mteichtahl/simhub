@@ -34,7 +34,8 @@ solution "simhub"
         symbols "On"
         links { "aws-cpp-sdk-core",
                 "aws-cpp-sdk-polly",
-                "aws-cpp-sdk-text-to-speech" }
+                "aws-cpp-sdk-text-to-speech",
+                "aws-cpp-sdk-kinesis" }
 
     configuration "Release"
         defines { "NDEBUG" }
