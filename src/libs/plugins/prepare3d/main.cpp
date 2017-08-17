@@ -159,8 +159,6 @@ int SimSourcePluginStateManager::preflightComplete(void)
 
 std::string SimSourcePluginStateManager::transformBoolToString(std::string orginalValue, std::string transformResultOff, std::string transformResultOn)
 {
-    // printf("----> orig %s On %s Off %s", orginalValue.c_str(), transformResultOn.c_str(), transformResultOff.c_str());
-
     if (orginalValue == "0") {
         return transformResultOff;
     }
@@ -344,7 +342,7 @@ void SimSourcePluginStateManager::processElement(char *element)
 
         _enqueueCallback(this, (void *)&el, _callbackArg);
 
-        // TODO: remove this echo test
+        // TODO remove this echo test - or make it a configuartion switch
         // deliverValue(&el);
 
         _processedElementCount++;
