@@ -31,6 +31,7 @@ void configureCli(cmdline::parser *cli)
 ///! If the AWS SDK is being used then allow Polly as a CLI option
 #if defined(_AWS_SDK)
     cli->add<bool>("polly", 'p', "Use Amazon Polly", false, true);
+    cli->add<bool>("kinesis", 'k', "Use Amazon Kinesis", false, true);
 #endif
 
     cli->set_program_name("simhub");
@@ -66,6 +67,9 @@ int main(int argc, char *argv[])
     if (cli.get<bool>("polly")) {
         awsHelper.initPolly();
     }
+    if (cli.get<bool>("kinesis")) {
+        awsHelper.initKinesis();
+    }
 #endif
     ///! initialise the configuration
     if (!config.init(simhubController)) {
@@ -73,12 +77,30 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
+#if defined(_AWS_SDK)
+    awsHelper.polly()->say("Loading plug in sub system");
+#endif
+
     simhubController->loadPokeyPlugin(); ///< load the pokey plugin
     simhubController->loadPrepare3dPlugin(); ///< load the prepare3d plugin
+
+#if defined(_AWS_SDK)
+    awsHelper.polly()->say("Simulator is ready.");
+#endif
 
     ///! kick off the simhub envent loop
     simhubController->runEventLoop([=](std::shared_ptr<Attribute> value) {
         bool deliveryResult = simhubController->deliverPokeyPluginValue(value);
+
+        Aws::Utils::ByteBuffer *data = (Aws::Utils::ByteBuffer *)calloc(1, 10);
+
+        std::string test = "this is a";
+
+        memcpy((unsigned char *)data, test.c_str(), sizeof(test.length()));
+
+        awsHelper.kinesis()->putRecord(*data);
+
+        free(data);
 
         if (FinishEventLoop)
             deliveryResult = false;
@@ -87,12 +109,11 @@ int main(int argc, char *argv[])
     });
 
 #if defined(_AWS_SDK)
-    awsHelper.polly()->say("system ready %d %s", 1, "test");
-#endif
-
-#if defined(_AWS_SDK)
     if (awsHelper.polly()->isJoinable())
         awsHelper.polly()->thread()->join();
+
+    if (awsHelper.kinesis()->isJoinable())
+        awsHelper.kinesis()->thread()->join();
 #endif
 
     return 0;
