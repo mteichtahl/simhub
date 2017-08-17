@@ -5,6 +5,7 @@
 
 #include <arpa/inet.h>
 #include <errno.h>
+#include <map>
 #include <netdb.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -53,6 +54,11 @@ public:
     std::string receive(int);
 };
 
+// every function pointer will be stored as this type
+// typedef void (*voidFunctionType)(void);
+typedef std::function<std::string(std::string, std::string, std::string)> TransformFunction;
+typedef std::map<std::string, TransformFunction> TransformMap;
+
 //! barest specialisation of the internal plugin management support base class
 class SimSourcePluginStateManager : public PluginStateManager
 {
@@ -87,6 +93,13 @@ private:
     void processElement(char *element);
     char *getElementDataType(char identifier);
     std::string prosimValueString(std::shared_ptr<Attribute> attribute);
+
+protected:
+    TransformMap _transformMap;
+    void loadTransforms(libconfig::Setting *transforms);
+    TransformFunction transform(std::string transformName);
+    // transformations
+    virtual std::string transformBoolToString(std::string orginalValue, std::string transformResultOff, std::string transformResultOn);
 
 public:
     SimSourcePluginStateManager(LoggingFunctionCB logger);
