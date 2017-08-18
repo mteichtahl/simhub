@@ -2,6 +2,7 @@
 #define __AWS_H
 
 #include "../../libs/queue/concurrent_queue.h"
+#include "kinesis/kinesis.h"
 #include "polly/polly.h"
 #include <aws/core/Aws.h>
 #include <aws/core/Version.h>
@@ -13,11 +14,6 @@
 #include <stdio.h>
 #include <string.h>
 
-static const char *POLLY_ALLOCATION_TAG = "PollySample::Main";
-
-/**
- *  @brief Class allowing for logging to various targets based on zlog.
- */
 class AWS
 {
 
@@ -28,13 +24,16 @@ public:
     ~AWS(void);
     void init();
     void initPolly(void);
+    void initKinesis(void);
     Polly *polly();
+    Kinesis *kinesis();
 
 protected:
     Aws::SDKOptions _options;
     std::string _SDKVersion;
 
     Polly *_polly;
+    Kinesis *_kinesis;
 };
 
 extern AWS awsHelper; ///< allow externals to access logger

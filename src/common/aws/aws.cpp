@@ -16,6 +16,7 @@ AWS::~AWS()
 {
     Aws::ShutdownAPI(_options);
     delete _polly;
+    delete _kinesis;
     logger.log(LOG_INFO, "AWS SDK shutdown");
 }
 
@@ -24,9 +25,19 @@ Polly *AWS::polly()
     return _polly;
 }
 
+Kinesis *AWS::kinesis()
+{
+    return _kinesis;
+}
+
 void AWS::initPolly()
 {
     _polly = new Polly;
+}
+
+void AWS::initKinesis()
+{
+    _kinesis = new Kinesis("simhubTestStream", "simhub", "ap-southeast-2");
 }
 
 void AWS::init()
