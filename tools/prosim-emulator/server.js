@@ -63,9 +63,6 @@ function handleConnection(conn) {
   var intervalTimer;
 
   connections[portString] = {startTime: _.now()};
-
-
-
   console.log(color.yellow(`Client connected - ${address}:${port}`));
 
   conn.once('close', onConnClose);
@@ -77,9 +74,9 @@ function handleConnection(conn) {
 
   function onConnClose() {
     clearInterval(intervalTimer);
-    connections.portString.endTime = _.now();
+    connections[portString].endTime = _.now();
     duration =
-        (connections.portString.endTime - connections.portString.startTime) /
+        (connections[portString].endTime - connections[portString].startTime) /
         1000;
 
     console.log(color.yellow(`Client disconnect - ${address}:${port}`));
