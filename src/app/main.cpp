@@ -41,6 +41,7 @@ void configureCli(cmdline::parser *cli)
 void sigint_handler(int sigid)
 {
     // tell app event loop to end on control+c
+    std::cout << "shutting down..." << std::endl;
     SimHubEventController::EventControllerInstance()->ceaseEventLoop();
 }
 
@@ -91,7 +92,6 @@ int main(int argc, char *argv[])
         bool deliveryResult = simhubController->deliverValue(value);
 
 #if defined(_AWS_SDK)
-
         std::string name = value->name();
         std::string val = value->getValueToString();
         std::string ts = value->getTimestampAsString();

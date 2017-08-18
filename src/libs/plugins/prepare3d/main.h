@@ -100,6 +100,7 @@ protected:
     TransformFunction transform(std::string transformName);
     // transformations
     virtual std::string transformBoolToString(std::string orginalValue, std::string transformResultOff, std::string transformResultOn);
+    virtual void stopUVLoop(void);
 
 public:
     SimSourcePluginStateManager(LoggingFunctionCB logger);
