@@ -110,8 +110,8 @@ int main(int argc, char *argv[])
         awsHelper.kinesis()->putRecord(data);
 #endif
 
-        if (FinishEventLoop)
-            deliveryResult = false;
+        // if (FinishEventLoop)
+        //     deliveryResult = false;
 
         return deliveryResult;
     });
