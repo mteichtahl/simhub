@@ -37,6 +37,7 @@ void AWS::initPolly()
 
 void AWS::initKinesis()
 {
+    // TODO: Make this part of a config file
     _kinesis = new Kinesis("simhubTestStream", "simhub", "ap-southeast-2");
 }
 

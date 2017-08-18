@@ -53,7 +53,6 @@ bool SimHubEventController::deliverValue(std::shared_ptr<Attribute> value)
     // determine value destination from the source - very simple at the moment
     // (just deliver to whatever instance is not the source) - may want more
     // sophisticated logic here
-    // - TODO: splice in kinesis here?
 
     if (value->ownerPlugin() == _pokeyMethods.plugin_instance)
         retVal = !_prepare3dMethods.simplug_deliver_value(_prepare3dMethods.plugin_instance, c_value);
