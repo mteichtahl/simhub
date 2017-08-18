@@ -1,0 +1,103 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Parameters": {
+    "EnvironmentName": {
+      "Description": "The string that will be prefixed to each instance name",
+      "Type": "String",
+      "MinLength": "3",
+      "MaxLength": "10",
+      "Default": "simhub",
+      "AllowedPattern": "[a-z0-9]*",
+      "ConstraintDescription": "Environment names must be 3-6 characters and contain only a-z and 0-9."
+    },
+    "ProcessKinesisFunctionKey": {
+      "Type": "String",
+      "Default": "processKinesis.zip",
+      "Description": "Lambda function used to process kinesis stream data"
+    },
+    "lambdabucket": {
+      "Type": "String",
+      "Default": "teichtah-lambda-functions",
+      "Description": "Lambda function bucket"
+    }
+  },
+  "Resources": {
+    "ProcessKinesisFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Tags": [{
+          "Key": "Environment",
+          "Value": {
+            "Ref": "EnvironmentName"
+          }
+        }, {
+          "Key": "Name",
+          "Value": {
+            "Ref": "EnvironmentName"
+          }
+        }],
+        "Handler": "handler.index",
+        "Role": "arn:aws:iam::346073464284:role/lambda_basic_execution",
+        "Code": {
+          "S3Bucket": {
+            "Ref": "lambdabucket"
+          },
+          "S3Key": {
+            "Ref": "ProcessKinesisFunctionKey"
+          }
+        },
+        "Environment": {},
+        "Runtime": "nodejs6.10",
+        "Timeout": "120",
+        "MemorySize": "1024",
+        "TracingConfig": {
+          "Mode": "Active"
+        }
+      }
+    },
+    "EventSourceMapping": {
+      "Type": "AWS::Lambda::EventSourceMapping",
+      "Properties": {
+        "EventSourceArn": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "simhubKinesis-KinesisStream-ARN"
+          }
+        },
+        "FunctionName": {
+          "Fn::GetAtt": ["ProcessKinesisFunction", "Arn"]
+        },
+        "StartingPosition": "TRIM_HORIZON"
+      }
+    },
+    "LambdaPermission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:invokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": ["ProcessKinesisFunction", "Arn"]
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": ["", ["arn:aws:execute-api:", {
+            "Ref": "AWS::Region"
+          }, ":", {
+            "Ref": "AWS::AccountId"
+          }, ":*/*"]]
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "ProcessKinesisFunctionARN": {
+      "Value": {
+        "Fn::GetAtt": ["ProcessKinesisFunction", "Arn"]
+      },
+      "Description": "Lambda function used by API gateway to get a certification ARN",
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}-ProcessKinesisFunctionARN"
+        }
+      }
+    }
+  }
+}

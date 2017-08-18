@@ -1,0 +1,2 @@
+STACK_NAME=simhubLambda
+S3_BUCKET=s3://teichtah-lambda-functions
