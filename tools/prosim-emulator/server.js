@@ -22,7 +22,9 @@ var gauges = [
   // floats
   'G_OH_TEMPERATURE', 'G_OH_FUEL_TEMP', 'G_PED_RUDDER_TRIM', 'G_THROTTLE_LEFT',
   'G_THROTTLE_RIGHT'
-]
+];
+
+var switches = ['S_OH_STANDBY_POWER', 'S_OH_CROSSFEED'];
 
 cli.version('1.0.0')
     .usage('[options]')
@@ -63,8 +65,6 @@ function handleConnection(conn) {
 
   connections[portString] = {startTime: _.now()};
 
-
-
   console.log(color.yellow(`Client connected - ${address}:${port}`));
 
   conn.once('close', onConnClose);
@@ -95,28 +95,42 @@ function handleConnection(conn) {
   }
 
   connections.portString = {'totalBytes': 0, startTime: _.now(), endTime: 0};
-  
+
   intervalTimer = setInterval(
 
       (a) => {
         if (connections.portString)
           connections.portString.totalBytes += getData(a, conn);
       },
-      DATA_INTERVAL_MS,
-      {'indicators': indicators, 'analog': analogs, 'gauges': gauges},
+      DATA_INTERVAL_MS, {
+        'indicators': indicators,
+        'analog': analogs,
+        'gauges': gauges,
+        'switches': switches
+      },
       conn.totalBytes);
+
 
   function getData(data, conn) {
     var indicatorCount = _.random(0, data.indicators.length - 1);
     if (data.analog) var analogCount = _.random(0, data.analog.length - 1);
     if (data.gauges) var gaugesCount = _.random(0, data.gauges.length - 1);
+    if (data.switches) var switchCount = _.random(0, data.switches.length - 1);
+
 
     var indicatorValue = ['0', '1'];
+    var switchValue = ['0', '1'];
     var outString = '';
 
     for (var i = 0; i < indicatorCount; i++) {
       var ind = data.indicators[_.random(0, data.indicators.length - 1)];
       var value = indicatorValue[_.random(0, 1)];
+      outString += (`${ind} = ${value} \n`);
+    }
+
+    for (var i = 0; i < switchCount; i++) {
+      var ind = data.switches[_.random(0, data.switches.length - 1)];
+      var value = switchValue[_.random(0, 1)];
       outString += (`${ind} = ${value} \n`);
     }
 
@@ -131,10 +145,9 @@ function handleConnection(conn) {
       var value = _.random(500, true);
       outString += (`${ind} = ${value}\n`);
     }
-    console.log(outString);
     if (outString.length) {
       conn.write(outString + '\n');
-      ;
+      console.log(outString);
     }
     return getBytes(outString);
   }
