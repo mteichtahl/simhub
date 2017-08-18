@@ -243,7 +243,9 @@ void SimSourcePluginStateManager::instanceReadHandler(uv_stream_t *server, ssize
     else if (nread < 0) {
         if (nread == UV_EOF) {
             SimSourcePluginStateManager::StateManagerInstance()->_logger(LOG_INFO, " - Stopping prepare3d ingest loop");
-            ceaseEventing();
+            stopUVLoop();
+            // deliver NULL value to indicate failure to app
+            _enqueueCallback(this, (void *)NULL, _callbackArg);
         }
         else {
             SimSourcePluginStateManager::StateManagerInstance()->_logger(LOG_INFO, " - %s", uv_strerror(nread));
@@ -438,7 +440,7 @@ void SimSourcePluginStateManager::stopUVLoop(void)
 
 void SimSourcePluginStateManager::ceaseEventing(void)
 {
-    if (_pluginThread != NULL) {
+    if (_pluginThread) {
         stopUVLoop();
 
         if (_pluginThread->joinable()) {
@@ -451,7 +453,10 @@ void SimSourcePluginStateManager::commenceEventing(EnqueueEventHandler enqueueCa
 {
     _enqueueCallback = enqueueCallback;
     _callbackArg = arg;
-    _pluginThread = std::make_shared<std::thread>([=] { check_uv(uv_run(_eventLoop, UV_RUN_DEFAULT)); });
+    _pluginThread = std::make_shared<std::thread>([=]
+    {
+	      check_uv(uv_run(_eventLoop, UV_RUN_DEFAULT));
+    });
 }
 
 // -- simple socket send/receive wrapper

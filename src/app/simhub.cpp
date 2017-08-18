@@ -73,27 +73,39 @@ bool SimHubEventController::deliverPokeyPluginValue(std::shared_ptr<Attribute> v
 
 void SimHubEventController::prepare3dEventCallback(SPHANDLE eventSource, void *eventData)
 {
-    GenericTLV *data = static_cast<GenericTLV *>(eventData);
-    assert(data != NULL);
+    // event source will pass through NULL in event of error
+    if (eventData) {
+        GenericTLV *data = static_cast<GenericTLV *>(eventData);
+        assert(data != NULL);
 
-    std::shared_ptr<Attribute> attribute = AttributeFromCGeneric(data);
-    MapEntry *mapEntry;
+        std::shared_ptr<Attribute> attribute = AttributeFromCGeneric(data);
+        MapEntry *mapEntry;
 
-    if (_configManager->mapManager()->find(data->name, &mapEntry)) {
-        _eventQueue.push(attribute);
+        if (_configManager->mapManager()->find(data->name, &mapEntry)) {
+            _eventQueue.push(attribute);
+        }
+    }
+    else {
+        ceaseEventLoop();
     }
 }
 
 void SimHubEventController::pokeyEventCallback(SPHANDLE eventSource, void *eventData)
 {
-    GenericTLV *data = static_cast<GenericTLV *>(eventData);
-    assert(data != NULL);
+    // event source will pass through NULL in event of error
+    if (eventData) {
+        GenericTLV *data = static_cast<GenericTLV *>(eventData);
+        assert(data != NULL);
 
-    std::shared_ptr<Attribute> attribute = AttributeFromCGeneric(data);
-    MapEntry *mapEntry;
+        std::shared_ptr<Attribute> attribute = AttributeFromCGeneric(data);
+        MapEntry *mapEntry;
 
-    if (_configManager->mapManager()->find(data->name, &mapEntry)) {
-        _eventQueue.push(attribute);
+        if (_configManager->mapManager()->find(data->name, &mapEntry)) {
+            _eventQueue.push(attribute);
+        }
+    }
+    else {
+        ceaseEventLoop();
     }
 }
 
