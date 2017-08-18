@@ -38,12 +38,10 @@ void configureCli(cmdline::parser *cli)
     cli->footer("\n");
 }
 
-static bool FinishEventLoop = false;
-
 void sigint_handler(int sigid)
 {
     // tell app event loop to end on control+c
-    FinishEventLoop = true;
+    SimHubEventController::EventControllerInstance()->ceaseEventLoop();
 }
 
 int main(int argc, char *argv[])

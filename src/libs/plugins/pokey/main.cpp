@@ -83,7 +83,7 @@ void PokeyDevicePluginStateManager::ceaseEventing(void)
 {
     PluginStateManager::ceaseEventing();
 
-    for (auto devPair: _deviceMap) {
+    for (auto devPair : _deviceMap) {
         devPair.second->stopPolling();
     }
 }
@@ -118,13 +118,20 @@ void PokeyDevicePluginStateManager::enumerateDevices(void)
     _numberOfDevices = PK_EnumerateNetworkDevices(_devices, 800);
 
     for (int i = 0; i < _numberOfDevices; i++) {
-        std::shared_ptr<PokeyDevice> device = std::make_shared<PokeyDevice>(_devices[i], i);
+        try {
+            std::shared_ptr<PokeyDevice> device = std::make_shared<PokeyDevice>(_devices[i], i);
 
-        _logger(LOG_INFO, "    - #%s %s %s (v%d.%d.%d) - %u.%u.%u.%u ", device->serialNumber().c_str(), device->hardwareTypeString().c_str(), device->deviceData().DeviceName,
-            device->firmwareMajorMajorVersion(), device->firmwareMajorVersion(), device->firmwareMinorVersion(), device->ipAddress()[0], device->ipAddress()[1],
-            device->ipAddress()[2], device->ipAddress()[3]);
+            if (device->pokey()) {
+                _logger(LOG_INFO, "    - #%s %s %s (v%d.%d.%d) - %u.%u.%u.%u ", device->serialNumber().c_str(), device->hardwareTypeString().c_str(),
+                    device->deviceData().DeviceName, device->firmwareMajorMajorVersion(), device->firmwareMajorVersion(), device->firmwareMinorVersion(), device->ipAddress()[0],
+                    device->ipAddress()[1], device->ipAddress()[2], device->ipAddress()[3]);
+            }
 
-        _deviceMap.emplace(device->serialNumber(), device);
+            _deviceMap.emplace(device->serialNumber(), device);
+        }
+        catch (const std::exception &except) {
+            _logger(LOG_ERROR, "couldn't connect to referenced pokey device");
+        }
     }
 }
 
