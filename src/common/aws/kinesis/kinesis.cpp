@@ -17,7 +17,7 @@ Kinesis::Kinesis(Aws::String streamName, Aws::String partition, Aws::String regi
 
     logger.log(LOG_INFO, " - Starting AWS Kinesis Service...");
 
-    _thread = new std::make_shared<std::thread>([=] {
+    _thread = std::make_shared<std::thread>([=] {
         while (true) {
             Aws::Utils::ByteBuffer data = _queue.pop(); ///< grab an item off the queue
             Aws::Kinesis::Model::PutRecordRequest *request = new Aws::Kinesis::Model::PutRecordRequest();
