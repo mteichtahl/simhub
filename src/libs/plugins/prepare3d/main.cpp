@@ -136,6 +136,9 @@ int SimSourcePluginStateManager::preflightComplete(void)
 
     uv_ip4_addr(ipAddress.c_str(), port, &req_addr);
 
+    // so the callback can see member values
+    _connectReq.data = this;
+
     int connectErr = uv_tcp_connect(&_connectReq, &_tcpClient, (struct sockaddr *)&req_addr, &SimSourcePluginStateManager::OnConnect);
 
     if (connectErr < 0) {
@@ -201,8 +204,12 @@ void SimSourcePluginStateManager::OnConnect(uv_connect_t *req, int status)
 {
     assert(SimSourcePluginStateManager::StateManagerInstance());
 
+    SimSourcePluginStateManager *self = static_cast<SimSourcePluginStateManager*>(req->data);
+
     if (status == SIM_CONNECT_NOT_FOUND) {
         SimSourcePluginStateManager::StateManagerInstance()->_logger(LOG_ERROR, "   - Failed to connect to simulator");
+        // deliver NULL value to indicate failure to app
+        self->_enqueueCallback(self, (void *)NULL, self->_callbackArg);
     }
     else {
         SimSourcePluginStateManager::StateManagerInstance()->_logger(LOG_INFO, " - Connected to simulator %i", status);
