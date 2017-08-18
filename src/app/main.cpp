@@ -91,14 +91,15 @@ int main(int argc, char *argv[])
         bool deliveryResult = simhubController->deliverValue(value);
 
 #if defined(_AWS_SDK)
-        std::string test = "this is a";
+
         std::string name = value->name();
         std::string val = value->getValueToString();
+        std::string ts = value->getTimestampAsString();
 
         // {s:"a",t:"b",v:"123", ts:121}
         std::stringstream ss;
 
-        ss << "{s:\"" << name << "\", v:\"" << val << "\"}";
+        ss << "{s:\"" << name << "\", v:\"" << val << "\", ts: " << ts << "\"}";
         std::string dataString = ss.str();
 
         Aws::Utils::ByteBuffer data(dataString.length());

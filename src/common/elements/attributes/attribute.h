@@ -37,6 +37,7 @@ public:
     void setType(eAttribute_t type) { _type = type; };
 
     std::chrono::milliseconds timestamp() { return _timestamp; };
+    std::string getTimestampAsString() { return std::to_string(_timestamp.count()); };
 
     template <typename T> void setValue(T value)
     {
