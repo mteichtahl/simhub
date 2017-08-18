@@ -6,8 +6,8 @@
 #include <thread>
 
 #include "elements/attributes/attribute.h"
-#include "libs/plugins/common/queue/concurrent_queue.h"
 #include "plugins/common/simhubdeviceplugin.h"
+#include "queue/concurrent_queue.h"
 
 class ConfigManager; // forward reference
 

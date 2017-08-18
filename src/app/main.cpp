@@ -41,6 +41,7 @@ void configureCli(cmdline::parser *cli)
 void sigint_handler(int sigid)
 {
     // tell app event loop to end on control+c
+    std::cout << "shutting down..." << std::endl;
     SimHubEventController::EventControllerInstance()->ceaseEventLoop();
 }
 
@@ -90,6 +91,7 @@ int main(int argc, char *argv[])
     simhubController->runEventLoop([=](std::shared_ptr<Attribute> value) {
         bool deliveryResult = simhubController->deliverPokeyPluginValue(value);
 
+#if defined(_AWS_SDK)
         Aws::Utils::ByteBuffer *data = (Aws::Utils::ByteBuffer *)calloc(1, 10);
 
         std::string test = "this is a";
@@ -99,9 +101,7 @@ int main(int argc, char *argv[])
         awsHelper.kinesis()->putRecord(*data);
 
         free(data);
-
-        if (FinishEventLoop)
-            deliveryResult = false;
+#endif
 
         return deliveryResult;
     });

@@ -2,8 +2,8 @@
 #include <gtest/gtest.h>
 #include <thread>
 
-#include "plugins/common/queue/concurrent_queue.h"
 #include "plugins/common/simhubdeviceplugin.h"
+#include "queue/concurrent_queue.h"
 #include "simhub.h"
 
 /**

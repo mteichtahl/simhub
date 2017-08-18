@@ -84,14 +84,7 @@ SimSourcePluginStateManager::SimSourcePluginStateManager(LoggingFunctionCB logge
 
 SimSourcePluginStateManager::~SimSourcePluginStateManager(void)
 {
-    // TODO: enable once shtudown implemented
-    if (_pluginThread != NULL) {
-        if (_pluginThread->joinable()) {
-            ceaseEventing();
-            _pluginThread->join();
-        }
-    }
-
+    ceaseEventing();
     if (_rawBuffer != NULL)
         free(_rawBuffer);
 }
@@ -430,20 +423,35 @@ int SimSourcePluginStateManager::deliverValue(GenericTLV *value)
 void SimSourcePluginStateManager::instanceCloseHandler(uv_handle_t *handle)
 {
     if (!_eventLoop->active_handles) {
+        stopUVLoop();
+    }
+}
+
+void SimSourcePluginStateManager::stopUVLoop(void)
+{
+    if (_eventLoop) {
         uv_stop(_eventLoop);
+        uv_loop_close(_eventLoop);
+        _eventLoop = NULL;
     }
 }
 
 void SimSourcePluginStateManager::ceaseEventing(void)
 {
-    uv_stop(_eventLoop);
+    if (_pluginThread != NULL) {
+        stopUVLoop();
+
+        if (_pluginThread->joinable()) {
+            _pluginThread->join();
+        }
+    }
 }
 
 void SimSourcePluginStateManager::commenceEventing(EnqueueEventHandler enqueueCallback, void *arg)
 {
     _enqueueCallback = enqueueCallback;
     _callbackArg = arg;
-    _pluginThread.reset(new std::thread([=] { check_uv(uv_run(_eventLoop, UV_RUN_DEFAULT)); }));
+    _pluginThread = std::make_shared<std::thread>([=] { check_uv(uv_run(_eventLoop, UV_RUN_DEFAULT)); });
 }
 
 // -- simple socket send/receive wrapper
