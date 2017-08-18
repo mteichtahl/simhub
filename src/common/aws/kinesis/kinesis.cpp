@@ -17,7 +17,7 @@ Kinesis::Kinesis(Aws::String streamName, Aws::String partition, Aws::String regi
 
     logger.log(LOG_INFO, " - Starting AWS Kinesis Service...");
 
-    _thread = new std::thread([=] {
+    _thread = new std::make_shared<std::thread>([=] {
         while (true) {
             Aws::Utils::ByteBuffer data = _queue.pop(); ///< grab an item off the queue
             Aws::Kinesis::Model::PutRecordRequest *request = new Aws::Kinesis::Model::PutRecordRequest();
@@ -28,7 +28,7 @@ Kinesis::Kinesis(Aws::String streamName, Aws::String partition, Aws::String regi
     });
 }
 
-std::thread *Kinesis::thread()
+std::shared_ptr<std::thread> Kinesis::thread()
 {
     return _thread;
 }
@@ -40,7 +40,6 @@ bool Kinesis::isJoinable()
 
 Kinesis::~Kinesis()
 {
-    delete (_thread);
     logger.log(LOG_INFO, " - AWS Kinesis stopped");
 }
 

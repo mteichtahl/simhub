@@ -13,7 +13,6 @@
 #include <iostream>
 #include <stdio.h>
 #include <string.h>
-#define MAX_VA_LENGTH 4096
 
 typedef Aws::Kinesis::KinesisClient KinesisClient;
 
@@ -27,7 +26,7 @@ public:
     // Destructor
     ~Kinesis(void);
     //
-    std::thread *thread(void);
+    std::shared_ptr<std::thread> thread(void);
     bool isJoinable();
     bool putRecord(Aws::Utils::ByteBuffer data);
 
@@ -35,7 +34,7 @@ protected:
     std::shared_ptr<KinesisClient> _kinesisClient; ///< main kinesis client
 
     ConcurrentQueue<Aws::Utils::ByteBuffer> _queue;
-    std::thread *_thread;
+    std::shared_ptr<std::thread> _thread;
     int _maxVA_length; ///< maximum length (in char) of the log method variadic parameters
     Aws::String _partition;
     Aws::String _streamName;

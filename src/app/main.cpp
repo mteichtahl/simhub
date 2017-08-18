@@ -88,14 +88,23 @@ int main(int argc, char *argv[])
 
     ///! kick off the simhub envent loop
     simhubController->runEventLoop([=](std::shared_ptr<Attribute> value) {
-        bool deliveryResult = simhubController->deliverPokeyPluginValue(value);
+        bool deliveryResult = simhubController->deliverValue(value);
 
 #if defined(_AWS_SDK)
         std::string test = "this is a";
-        Aws::Utils::ByteBuffer data(test.length());
+        std::string name = value->name();
+        std::string val = value->getValueToString();
 
-        for (int i = 0; i < test.length(); i++)
-            data[i] = test[i];
+        // {s:"a",t:"b",v:"123", ts:121}
+        std::stringstream ss;
+
+        ss << "{s:\"" << name << "\", v:\"" << val << "\"}";
+        std::string dataString = ss.str();
+
+        Aws::Utils::ByteBuffer data(dataString.length());
+
+        for (int i = 0; i < dataString.length(); i++)
+            data[i] = dataString[i];
 
         awsHelper.kinesis()->putRecord(data);
 #endif

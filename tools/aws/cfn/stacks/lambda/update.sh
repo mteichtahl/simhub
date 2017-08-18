@@ -14,17 +14,15 @@ popd
 
 aws s3 cp $FUNCTION/$FUNCTION_NAME.zip $S3_BUCKET/$FUNCTION_NAME
 
-
-
 # aws cloudformation update-stack --stack-name $STACK_NAME$FUNCTION_NAME --template-body file://$FUNCTION_PATH/$FUNCTION_NAME/stack.json
-aws lambda update-function-code --zip-file fileb://$FUNCTION/$FUNCTION_NAME.zip --publish --function-name felicityLambdaingestCSV-IngestCSVFunction-UAZ7HQ47VPU4
+aws lambda update-function-code --zip-file fileb://$FUNCTION/$FUNCTION_NAME.zip --publish --function-name simhubLambdaprocessKinesis-ProcessKinesisFunction-16EZRH4FEEMK4
 
 rm $FUNCTION/$FUNCTION_NAME.zip
 
 if [ $? -eq 1 ] 
 then
   echo "... waiting for lambda update to complete"
-  aws cloudformation wait stack-create-complete --stack-name $STACK_NAME 
+  aws cloudformation wait stack-update-complete --stack-name $STACK_NAME$FUNCTION_NAME 
   echo "Lambda function "$FUNCTION_NAME" ihas been updated"
 else 
   echo "Lambda update failed"
