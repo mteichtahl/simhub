@@ -18,7 +18,6 @@ var analogs = [
   'A_CDU1_BRIGHTNESS', 'A_CDU2_BRIGHTNESS', 'R_XPDR1', 'R_XPDR2'
 ];
 
-
 var gauges = [
   // floats
   'G_OH_TEMPERATURE', 'G_OH_FUEL_TEMP', 'G_PED_RUDDER_TRIM', 'G_THROTTLE_LEFT',

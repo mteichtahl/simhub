@@ -8,6 +8,10 @@ PokeyDevice::PokeyDevice(sPoKeysNetworkDeviceSummary deviceSummary, uint8_t inde
     _callbackArg = NULL;
     _enqueueCallback = NULL;
     _pokey = PK_ConnectToNetworkDevice(&deviceSummary);
+
+    if (!_pokey)
+        throw std::exception();
+
     _index = index;
     _userId = deviceSummary.UserID;
     _serialNumber = std::to_string(deviceSummary.SerialNumber);
@@ -92,8 +96,8 @@ void PokeyDevice::stopPolling()
     assert(_pollLoop);
     uv_stop(_pollLoop);
 
-    assert(_pollThread->joinable());
-    _pollThread->join();
+    if (_pollThread->joinable())
+        _pollThread->join();
 }
 
 /**
