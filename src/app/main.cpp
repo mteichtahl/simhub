@@ -37,12 +37,10 @@ void configureCli(cmdline::parser *cli)
     cli->footer("\n");
 }
 
-static bool FinishEventLoop = false;
-
 void sigint_handler(int sigid)
 {
     // tell app event loop to end on control+c
-    FinishEventLoop = true;
+    SimHubEventController::EventControllerInstance()->ceaseEventLoop();
 }
 
 int main(int argc, char *argv[])
@@ -77,14 +75,7 @@ int main(int argc, char *argv[])
     simhubController->loadPrepare3dPlugin(); ///< load the prepare3d plugin
 
     ///! kick off the simhub envent loop
-    simhubController->runEventLoop([=](std::shared_ptr<Attribute> value) {
-        bool deliveryResult = simhubController->deliverPokeyPluginValue(value);
-
-        if (FinishEventLoop)
-            deliveryResult = false;
-
-        return deliveryResult;
-    });
+    simhubController->runEventLoop([=](std::shared_ptr<Attribute> value) { return simhubController->deliverPokeyPluginValue(value); });
 
 #if defined(_AWS_SDK)
     awsHelper.polly()->say("system ready %d %s", 1, "test");

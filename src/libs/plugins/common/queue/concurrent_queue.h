@@ -7,54 +7,71 @@
 #ifndef CONCURRENT_QUEUE_
 #define CONCURRENT_QUEUE_
 
+#include <atomic>
+#include <condition_variable>
+#include <mutex>
 #include <queue>
 #include <thread>
-#include <mutex>
-#include <condition_variable>
 
-template <typename T>
-class ConcurrentQueue
+class ConcurrentQueueInterrupted : std::exception
 {
- public:
-  T pop() 
-  {
-    std::unique_lock<std::mutex> mlock(mutex_);
-    while (queue_.empty())
-    {
-      cond_.wait(mlock);
-    }
-    auto val = queue_.front();
-    queue_.pop();
-    return val;
-  }
+};
 
-  void pop(T& item)
-  {
-    std::unique_lock<std::mutex> mlock(mutex_);
-    while (queue_.empty())
+template <typename T> class ConcurrentQueue
+{
+public:
+    T pop()
     {
-      cond_.wait(mlock);
+        std::unique_lock<std::mutex> mlock(mutex_);
+        while (!terminated_ && queue_.empty()) {
+            cond_.wait(mlock);
+        }
+        if (terminated_) {
+            throw ConcurrentQueueInterrupted();
+        }
+        auto val = queue_.front();
+        queue_.pop();
+        return val;
     }
-    item = queue_.front();
-    queue_.pop();
-  }
 
-  void push(const T& item)
-  {
-    std::unique_lock<std::mutex> mlock(mutex_);
-    queue_.push(item);
-    mlock.unlock();
-    cond_.notify_one();
-  }
-  
-  ConcurrentQueue () = default;
-  ConcurrentQueue (const ConcurrentQueue&) = delete;            // disable copying
-  ConcurrentQueue& operator = (const ConcurrentQueue&) = delete; // disable assignment
-  
- private:
-  std::queue<T> queue_;
-  std::mutex mutex_;
-  std::condition_variable cond_;
+    //! provide way to interrupt the blocking cond wait in "pop" member(s)
+    void unblock(void)
+    {
+        terminated_ = true;
+        cond_.notify_one();
+    }
+
+    void pop(T &item)
+    {
+        std::unique_lock<std::mutex> mlock(mutex_);
+        while (!terminated_ && queue_.empty()) {
+            cond_.wait(mlock);
+        }
+        if (terminated_) {
+            throw ConcurrentQueueInterrupted();
+        }
+        item = queue_.front();
+        queue_.pop();
+    }
+
+    void push(const T &item)
+    {
+        std::unique_lock<std::mutex> mlock(mutex_);
+        queue_.push(item);
+        mlock.unlock();
+        cond_.notify_one();
+    }
+
+    ConcurrentQueue()
+        : terminated_(false){};
+    ConcurrentQueue(const ConcurrentQueue &) = delete; // disable copying
+    ConcurrentQueue &operator=(const ConcurrentQueue &) = delete; // disable assignment
+
+private:
+    std::queue<T> queue_;
+    std::mutex mutex_;
+    std::condition_variable cond_;
+    std::atomic<bool> terminated_;
 };
 
 #endif

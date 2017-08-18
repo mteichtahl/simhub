@@ -31,9 +31,7 @@ protected:
 
     void prepare3dEventCallback(SPHANDLE eventSource, void *eventData);
     void pokeyEventCallback(SPHANDLE eventSource, void *eventData);
-    simplug_vtable loadPlugin(std::string dylibName, 
-                              libconfig::Config *pluginConfigs, 
-                              EnqueueEventHandler eventCallback);
+    simplug_vtable loadPlugin(std::string dylibName, libconfig::Config *pluginConfigs, EnqueueEventHandler eventCallback);
     void terminate(void);
     void shutdownPlugin(simplug_vtable &pluginMethods);
 
@@ -68,6 +66,8 @@ public:
 
     template <class F> void runEventLoop(F &&eventProcessorFunctor);
 
+    void ceaseEventLoop(void);
+
 public:
     static void LoggerWrapper(const int category, const char *msg, ...);
     static std::shared_ptr<SimHubEventController> EventControllerInstance(void);
@@ -83,9 +83,15 @@ template <class F> void SimHubEventController::runEventLoop(F &&eventProcessorFu
     bool breakLoop = false;
 
     while (!breakLoop) {
-        std::shared_ptr<Attribute> data = _eventQueue.pop();
-        // logger.log(LOG_INFO, "popped (%s: %s) off the concurrent event queue", data->_name.c_str(), data->getValueToString().c_str());
-        breakLoop = !eventProcessorFunctor(data);
+        try {
+            std::shared_ptr<Attribute> data = _eventQueue.pop();
+
+            // logger.log(LOG_INFO, "popped (%s: %s) off the concurrent event queue", data->_name.c_str(), data->getValueToString().c_str());
+            breakLoop = !eventProcessorFunctor(data);
+        }
+        catch (ConcurrentQueueInterrupted &queueException) {
+            breakLoop = true;
+        }
     }
 
     terminate();
