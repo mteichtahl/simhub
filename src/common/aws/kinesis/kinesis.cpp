@@ -13,7 +13,6 @@ Kinesis::Kinesis(Aws::String streamName, Aws::String partition, Aws::String regi
 {
 
     Aws::Client::ClientConfiguration config;
-    config.region = "ap-southeast-2";
     _kinesisClient = Aws::MakeShared<KinesisClient>(ALLOCATION_TAG, config);
 
     logger.log(LOG_INFO, " - Starting AWS Kinesis Service...");

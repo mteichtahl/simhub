@@ -90,15 +90,15 @@ int main(int argc, char *argv[])
     simhubController->runEventLoop([=](std::shared_ptr<Attribute> value) {
         bool deliveryResult = simhubController->deliverPokeyPluginValue(value);
 
-        Aws::Utils::ByteBuffer *data = (Aws::Utils::ByteBuffer *)calloc(1, 10);
-
+#if defined(_AWS_SDK)
         std::string test = "this is a";
+        Aws::Utils::ByteBuffer data(test.length());
 
-        memcpy((unsigned char *)data, test.c_str(), sizeof(test.length()));
+        for (int i = 0; i < test.length(); i++)
+            data[i] = test[i];
 
-        awsHelper.kinesis()->putRecord(*data);
-
-        free(data);
+        awsHelper.kinesis()->putRecord(data);
+#endif
 
         if (FinishEventLoop)
             deliveryResult = false;
