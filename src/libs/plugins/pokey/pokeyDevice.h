@@ -81,7 +81,11 @@ public:
     sPoKeysDevice *pokey() { return _pokey; }
     sPoKeysDevice_Info info() { return _pokey->info; }
     uint8_t numberOfPins() { return info().iPinCount; }
-    sPoKeysDevice_Data deviceData() { return _pokey->DeviceData; }
+    sPoKeysDevice_Data deviceData()
+    {
+        assert(_pokey);
+        return _pokey->DeviceData;
+    }
     uint8_t loadPinConfiguration() { return PK_PinConfigurationGet(_pokey); }
     bool isPinDigitalOutput(uint8_t pin);
     bool isPinDigitalInput(uint8_t pin);

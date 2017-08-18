@@ -37,6 +37,11 @@ void SimHubEventController::setConfigManager(ConfigManager *configManager)
     _configManager = configManager;
 }
 
+void SimHubEventController::ceaseEventLoop(void)
+{
+    _eventQueue.unblock();
+}
+
 bool SimHubEventController::deliverPokeyPluginValue(std::shared_ptr<Attribute> value)
 {
     assert(_pokeyMethods.simplug_deliver_value);
