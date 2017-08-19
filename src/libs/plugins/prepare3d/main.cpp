@@ -136,6 +136,9 @@ int SimSourcePluginStateManager::preflightComplete(void)
 
     uv_ip4_addr(ipAddress.c_str(), port, &req_addr);
 
+    // so the callback can see member values
+    _connectReq.data = this;
+
     int connectErr = uv_tcp_connect(&_connectReq, &_tcpClient, (struct sockaddr *)&req_addr, &SimSourcePluginStateManager::OnConnect);
 
     if (connectErr < 0) {
@@ -201,8 +204,12 @@ void SimSourcePluginStateManager::OnConnect(uv_connect_t *req, int status)
 {
     assert(SimSourcePluginStateManager::StateManagerInstance());
 
+    SimSourcePluginStateManager *self = static_cast<SimSourcePluginStateManager*>(req->data);
+
     if (status == SIM_CONNECT_NOT_FOUND) {
         SimSourcePluginStateManager::StateManagerInstance()->_logger(LOG_ERROR, "   - Failed to connect to simulator");
+        // deliver NULL value to indicate failure to app
+        self->_enqueueCallback(self, (void *)NULL, self->_callbackArg);
     }
     else {
         SimSourcePluginStateManager::StateManagerInstance()->_logger(LOG_INFO, " - Connected to simulator %i", status);
@@ -243,7 +250,9 @@ void SimSourcePluginStateManager::instanceReadHandler(uv_stream_t *server, ssize
     else if (nread < 0) {
         if (nread == UV_EOF) {
             SimSourcePluginStateManager::StateManagerInstance()->_logger(LOG_INFO, " - Stopping prepare3d ingest loop");
-            ceaseEventing();
+            stopUVLoop();
+            // deliver NULL value to indicate failure to app
+            _enqueueCallback(this, (void *)NULL, _callbackArg);
         }
         else {
             SimSourcePluginStateManager::StateManagerInstance()->_logger(LOG_INFO, " - %s", uv_strerror(nread));
@@ -438,7 +447,7 @@ void SimSourcePluginStateManager::stopUVLoop(void)
 
 void SimSourcePluginStateManager::ceaseEventing(void)
 {
-    if (_pluginThread != NULL) {
+    if (_pluginThread) {
         stopUVLoop();
 
         if (_pluginThread->joinable()) {
@@ -451,7 +460,10 @@ void SimSourcePluginStateManager::commenceEventing(EnqueueEventHandler enqueueCa
 {
     _enqueueCallback = enqueueCallback;
     _callbackArg = arg;
-    _pluginThread = std::make_shared<std::thread>([=] { check_uv(uv_run(_eventLoop, UV_RUN_DEFAULT)); });
+    _pluginThread = std::make_shared<std::thread>([=]
+    {
+	      check_uv(uv_run(_eventLoop, UV_RUN_DEFAULT));
+    });
 }
 
 // -- simple socket send/receive wrapper
