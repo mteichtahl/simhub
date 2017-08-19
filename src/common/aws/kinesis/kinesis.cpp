@@ -6,14 +6,14 @@
 #include "../aws.h"
 #endif
 
-Kinesis::Kinesis(Aws::String streamName, Aws::String partition, Aws::String region)
+Kinesis::Kinesis(std::string streamName, std::string partition, std::string region)
     : _partition(partition)
     , _streamName(streamName)
     , _region(region)
 {
 
     Aws::Client::ClientConfiguration config;
-    config.region = _region;
+    config.region = Aws::String(_region.c_str());
     _kinesisClient = Aws::MakeShared<KinesisClient>(ALLOCATION_TAG, config);
 
     logger.log(LOG_INFO, " - Starting AWS Kinesis Service...");
@@ -22,8 +22,8 @@ Kinesis::Kinesis(Aws::String streamName, Aws::String partition, Aws::String regi
         while (true) {
             Aws::Utils::ByteBuffer data = _queue.pop(); ///< grab an item off the queue
             Aws::Kinesis::Model::PutRecordRequest *request = new Aws::Kinesis::Model::PutRecordRequest();
-            request->SetStreamName(_streamName);
-            request->WithData(data).WithPartitionKey(_partition);
+            request->SetStreamName(Aws::String(_streamName.c_str()));
+            request->WithData(data).WithPartitionKey(Aws::String(_partition.c_str()));
             _kinesisClient->PutRecord(*request);
         }
     });

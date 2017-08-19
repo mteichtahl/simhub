@@ -24,7 +24,7 @@ public:
     ~AWS(void);
     void init();
     void initPolly(void);
-    void initKinesis(void);
+    void initKinesis(std::string streamName, std::string partition, std::string region);
     Polly *polly();
     Kinesis *kinesis();
 

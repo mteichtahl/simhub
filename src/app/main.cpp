@@ -60,16 +60,8 @@ int main(int argc, char *argv[])
     ConfigManager config(cli.get<std::string>("config"));
     std::shared_ptr<SimHubEventController> simhubController = SimHubEventController::EventControllerInstance();
 
-///! If the AWS SDK is being used then read in the polly cli and load up polly
-#if defined(_AWS_SDK)
-    awsHelper.init();
-    if (cli.get<bool>("polly")) {
-        awsHelper.initPolly();
-    }
-    if (cli.get<bool>("kinesis")) {
-        awsHelper.initKinesis();
-    }
-#endif
+    ///! If the AWS SDK is being used then read in the polly cli and load up polly
+
     ///! initialise the configuration
     if (!config.init(simhubController)) {
         logger.log(LOG_ERROR, "Could not initialise configuration");
@@ -77,7 +69,28 @@ int main(int argc, char *argv[])
     }
 
 #if defined(_AWS_SDK)
-    awsHelper.polly()->say("Loading plug in sub system");
+    awsHelper.init();
+    if (cli.get<bool>("polly")) {
+        awsHelper.initPolly();
+        awsHelper.polly()->say("Loading plug in sub system");
+    }
+    if (cli.get<bool>("kinesis")) {
+
+        // const libconfig::Setting &root = config.config()->getRoot();
+
+        const libconfig::Setting &aws = config.config()->lookup("aws");
+        const libconfig::Setting &kinesis = aws.lookup("kinesis");
+
+        std::string region;
+        std::string stream;
+        std::string partition;
+
+        aws.lookupValue("region", region);
+        kinesis.lookupValue("stream", stream);
+        kinesis.lookupValue("partition", partition);
+
+        awsHelper.initKinesis(stream, partition, region);
+    }
 #endif
 
     simhubController->loadPokeyPlugin(); ///< load the pokey plugin

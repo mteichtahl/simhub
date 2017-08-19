@@ -22,7 +22,7 @@ class Kinesis
 
 public:
     // Default constructor
-    Kinesis(Aws::String streamName, Aws::String partition, Aws::String region);
+    Kinesis(std::string streamName, std::string partition, std::string region);
     // Destructor
     ~Kinesis(void);
     //
@@ -36,9 +36,9 @@ protected:
     ConcurrentQueue<Aws::Utils::ByteBuffer> _queue;
     std::shared_ptr<std::thread> _thread;
     int _maxVA_length; ///< maximum length (in char) of the log method variadic parameters
-    Aws::String _partition;
-    Aws::String _streamName;
-    Aws::String _region;
+    std::string _partition;
+    std::string _streamName;
+    std::string _region;
 };
 
 #endif // Kinesis

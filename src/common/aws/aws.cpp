@@ -35,10 +35,10 @@ void AWS::initPolly()
     _polly = new Polly;
 }
 
-void AWS::initKinesis()
+void AWS::initKinesis(std::string streamName, std::string partition, std::string region)
 {
     // TODO: Make this part of a config file
-    _kinesis = new Kinesis("simhubTestStream", "simhub", "ap-southeast-2");
+    _kinesis = new Kinesis(streamName, partition, region);
 }
 
 void AWS::init()
