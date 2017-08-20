@@ -1,0 +1,48 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Parameters": {
+    "EnvironmentName": {
+      "Description": "The string that will be prefixed to each instance name",
+      "Type": "String",
+      "MinLength": "3",
+      "MaxLength": "16",
+      "Default": "simhub",
+      "AllowedPattern": "[a-zA-Z0-9]*",
+      "ConstraintDescription": "Environment names must be 3-16 characters and contain only a-z and 0-9."
+    },
+    "StreamName": {
+      "Description": "Kinesis Stream Name",
+      "Type": "String",
+      "MinLength": "3",
+      "MaxLength": "16",
+      "Default": "simhubStream",
+      "AllowedPattern": "[a-zA-Z0-9]*",
+      "ConstraintDescription": "Environment names must be 3-16 characters and contain only a-z and 0-9."
+    }
+  },
+  "Resources": {
+    "KinesisStream": {
+      "Type": "AWS::Kinesis::Stream",
+      "Properties": {
+        "Name": {
+          "Ref": "StreamName"
+        },
+        "RetentionPeriodHours": 24,
+        "ShardCount": 1
+      }
+    }
+  },
+  "Outputs": {
+    "KinesisStreamARN": {
+      "Value": {
+        "Fn::GetAtt": ["KinesisStream", "Arn"]
+      },
+      "Description": "Kinesis Stream",
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}-KinesisStream-ARN"
+        }
+      }
+    }
+  }
+}

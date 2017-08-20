@@ -48,7 +48,7 @@ public:
     virtual ~SimHubEventController(void);
     void loadPrepare3dPlugin(void);
     void loadPokeyPlugin(void);
-    bool deliverPokeyPluginValue(std::shared_ptr<Attribute> value);
+    bool deliverValue(std::shared_ptr<Attribute> value);
     void setConfigManager(ConfigManager *configManager);
 
     // -- temp solution to plugin device configuration conundrum

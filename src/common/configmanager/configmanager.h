@@ -66,6 +66,7 @@ public:
     std::string version(void);
     std::string name(void);
     std::shared_ptr<MappingConfigManager> mapManager(void);
+    libconfig::Config *config() { return &_config; }
 };
 
 #endif

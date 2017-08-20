@@ -60,16 +60,8 @@ int main(int argc, char *argv[])
     ConfigManager config(cli.get<std::string>("config"));
     std::shared_ptr<SimHubEventController> simhubController = SimHubEventController::EventControllerInstance();
 
-///! If the AWS SDK is being used then read in the polly cli and load up polly
-#if defined(_AWS_SDK)
-    awsHelper.init();
-    if (cli.get<bool>("polly")) {
-        awsHelper.initPolly();
-    }
-    if (cli.get<bool>("kinesis")) {
-        awsHelper.initKinesis();
-    }
-#endif
+    ///! If the AWS SDK is being used then read in the polly cli and load up polly
+
     ///! initialise the configuration
     if (!config.init(simhubController)) {
         logger.log(LOG_ERROR, "Could not initialise configuration");
@@ -77,7 +69,26 @@ int main(int argc, char *argv[])
     }
 
 #if defined(_AWS_SDK)
-    awsHelper.polly()->say("Loading plug in sub system");
+    awsHelper.init();
+    if (cli.get<bool>("polly")) {
+        awsHelper.initPolly();
+        awsHelper.polly()->say("Loading plug in sub system");
+    }
+    if (cli.get<bool>("kinesis")) {
+        //! read the configuration sections we need
+        const libconfig::Setting &aws = config.config()->lookup("aws");
+        const libconfig::Setting &kinesis = aws.lookup("kinesis");
+        //! somehwere to store our variables
+        std::string region;
+        std::string stream;
+        std::string partition;
+        //! read the configuration values
+        aws.lookupValue("region", region);
+        kinesis.lookupValue("stream", stream);
+        kinesis.lookupValue("partition", partition);
+        //! initialise the kinesis helper
+        awsHelper.initKinesis(stream, partition, region);
+    }
 #endif
 
     simhubController->loadPokeyPlugin(); ///< load the pokey plugin
@@ -89,18 +100,25 @@ int main(int argc, char *argv[])
 
     ///! kick off the simhub envent loop
     simhubController->runEventLoop([=](std::shared_ptr<Attribute> value) {
-        bool deliveryResult = simhubController->deliverPokeyPluginValue(value);
+        bool deliveryResult = simhubController->deliverValue(value);
 
 #if defined(_AWS_SDK)
-        Aws::Utils::ByteBuffer *data = (Aws::Utils::ByteBuffer *)calloc(1, 10);
+        std::string name = value->name();
+        std::string val = value->getValueToString();
+        std::string ts = value->getTimestampAsString();
 
-        std::string test = "this is a";
+        // {s:"a",t:"b",v:"123", ts:121}
+        std::stringstream ss;
 
-        memcpy((unsigned char *)data, test.c_str(), sizeof(test.length()));
+        ss << "{ \"s\" : \"" << name << "\", \"val\":\"" << val << "\", \"ts\":" << ts << "}";
+        std::string dataString = ss.str();
 
-        awsHelper.kinesis()->putRecord(*data);
+        Aws::Utils::ByteBuffer data(dataString.length());
 
-        free(data);
+        for (int i = 0; i < dataString.length(); i++)
+            data[i] = dataString[i];
+
+        awsHelper.kinesis()->putRecord(data);
 #endif
 
         return deliveryResult;

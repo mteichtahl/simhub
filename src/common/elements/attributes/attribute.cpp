@@ -90,8 +90,6 @@ std::shared_ptr<Attribute> AttributeFromCGeneric(GenericTLV *generic)
 Attribute::Attribute(SPHANDLE ownerPlugin)
     : _ownerPlugin(ownerPlugin)
 {
-    // _defaultValue = "0";
-    // _value = 0;
 }
 
 std::string Attribute::timestampString()
