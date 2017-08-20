@@ -44,9 +44,7 @@ Kinesis::~Kinesis()
     logger.log(LOG_INFO, " - AWS Kinesis stopped");
 }
 
-bool Kinesis::putRecord(Aws::Utils::ByteBuffer data)
+void Kinesis::putRecord(Aws::Utils::ByteBuffer data)
 {
-    // TODO: Assert here ?
     _queue.push(data);
-    return 0;
 }

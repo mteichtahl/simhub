@@ -25,17 +25,15 @@ public:
     Kinesis(std::string streamName, std::string partition, std::string region);
     // Destructor
     ~Kinesis(void);
-    //
     std::shared_ptr<std::thread> thread(void);
     bool isJoinable();
-    bool putRecord(Aws::Utils::ByteBuffer data);
+    void putRecord(Aws::Utils::ByteBuffer data);
 
 protected:
     std::shared_ptr<KinesisClient> _kinesisClient; ///< main kinesis client
 
     ConcurrentQueue<Aws::Utils::ByteBuffer> _queue;
     std::shared_ptr<std::thread> _thread;
-    int _maxVA_length; ///< maximum length (in char) of the log method variadic parameters
     std::string _partition;
     std::string _streamName;
     std::string _region;
