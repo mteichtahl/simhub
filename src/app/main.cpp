@@ -75,20 +75,18 @@ int main(int argc, char *argv[])
         awsHelper.polly()->say("Loading plug in sub system");
     }
     if (cli.get<bool>("kinesis")) {
-
-        // const libconfig::Setting &root = config.config()->getRoot();
-
+        //! read the configuration sections we need
         const libconfig::Setting &aws = config.config()->lookup("aws");
         const libconfig::Setting &kinesis = aws.lookup("kinesis");
-
+        //! somehwere to store our variables
         std::string region;
         std::string stream;
         std::string partition;
-
+        //! read the configuration values
         aws.lookupValue("region", region);
         kinesis.lookupValue("stream", stream);
         kinesis.lookupValue("partition", partition);
-
+        //! initialise the kinesis helper
         awsHelper.initKinesis(stream, partition, region);
     }
 #endif
@@ -112,7 +110,7 @@ int main(int argc, char *argv[])
         // {s:"a",t:"b",v:"123", ts:121}
         std::stringstream ss;
 
-        ss << "{s:\"" << name << "\", v:\"" << val << "\", ts: " << ts << "\"}";
+        ss << "{ \"s\" : \"" << name << "\", \"val\":\"" << val << "\", \"ts\":" << ts << "}";
         std::string dataString = ss.str();
 
         Aws::Utils::ByteBuffer data(dataString.length());
