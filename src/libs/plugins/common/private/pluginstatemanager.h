@@ -26,7 +26,6 @@ enum logCategory { LOG_INFO = 1, LOG_ERROR = 2, LOG_DEBUG = 3 };
 class PluginStateManager
 {
 protected:
-    virtual void runTestEventLoop(void);
     EnqueueEventHandler _enqueueCallback;
     std::thread _testEventThread;
     void *_callbackArg;
@@ -35,6 +34,7 @@ protected:
     //! config for use in preflightComplete
     libconfig::Config *_config;
     std::shared_ptr<std::thread> _pluginThread;
+    std::string _name;
 
 public:
     PluginStateManager(LoggingFunctionCB logger);
@@ -45,6 +45,7 @@ public:
     virtual void commenceEventing(EnqueueEventHandler enqueueCallback, void *arg);
     virtual int deliverValue(GenericTLV *value);
     virtual void ceaseEventing(void);
+    virtual std::string name() { return _name; }
 };
 
 #endif

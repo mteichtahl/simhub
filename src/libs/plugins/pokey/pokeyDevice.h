@@ -18,6 +18,7 @@ typedef struct {
     std::string pinName;
     int pinNumber;
     std::string type;
+    std::string description;
     uint8_t defaultValue;
     uint8_t value;
     uint8_t previousValue;
@@ -33,6 +34,7 @@ private:
 protected:
     uint8_t _index;
     std::string _serialNumber;
+    std::string _description;
     uint8_t _userId;
     uint8_t _firwareVersionMajorMajor;
     uint8_t _firwareVersionMajor;
@@ -40,6 +42,7 @@ protected:
     uint8_t _ipAddress[4];
     uint8_t _hardwareType;
     uint8_t _dhcp;
+
     std::map<std::string, int> _pinMap;
     sPoKeysDevice *_pokey;
     void *_callbackArg;
@@ -81,6 +84,7 @@ public:
     sPoKeysDevice *pokey() { return _pokey; }
     sPoKeysDevice_Info info() { return _pokey->info; }
     uint8_t numberOfPins() { return info().iPinCount; }
+    std::string description() { return _description; }
     sPoKeysDevice_Data deviceData()
     {
         assert(_pokey);
@@ -89,7 +93,7 @@ public:
     uint8_t loadPinConfiguration() { return PK_PinConfigurationGet(_pokey); }
     bool isPinDigitalOutput(uint8_t pin);
     bool isPinDigitalInput(uint8_t pin);
-    void addPin(std::string name, int pinNumber, std::string pinType, int defaultValue = 0);
+    void addPin(std::string name, int pinNumber, std::string pinType, int defaultValue = 0, std::string description = "None");
 
     void startPolling();
     void stopPolling();

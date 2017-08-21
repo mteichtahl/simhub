@@ -57,12 +57,12 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
                     // data has changed so send it ofr for processing
                     self->_pins[i].previousValue = self->_pins[i].value;
                     self->_pins[i].value = self->_pokey->Pins[i].DigitalValueGet;
-                    printf("State Change %s %d --> %d\n", self->_pins[i].pinName.c_str(), self->_pins[i].previousValue, self->_pins[i].value);
                     el.ownerPlugin = self->_pluginInstance;
                     el.type = CONFIG_BOOL;
                     el.value.bool_value = self->_pins[i].value;
                     el.length = sizeof(uint8_t);
                     el.name = (char *)self->_pins[i].pinName.c_str();
+                    el.description = (char *)self->_pins[i].description.c_str();
                     self->_enqueueCallback(self, (void *)&el, self->_callbackArg);
                 }
             }
@@ -70,7 +70,7 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
     }
 }
 
-void PokeyDevice::addPin(std::string pinName, int pinNumber, std::string pinType, int defaultValue)
+void PokeyDevice::addPin(std::string pinName, int pinNumber, std::string pinType, int defaultValue, std::string description)
 {
     if (pinType == "DIGITAL_OUTPUT")
         outputPin(pinNumber);
@@ -78,12 +78,14 @@ void PokeyDevice::addPin(std::string pinName, int pinNumber, std::string pinType
         inputPin(pinNumber);
 
     mapNameToPin(pinName.c_str(), pinNumber);
+    int portNumber = pinNumber - 1;
 
-    _pins[pinNumber - 1].pinName = pinName;
-    _pins[pinNumber - 1].type = pinType.c_str();
-    _pins[pinNumber - 1].pinNumber = pinNumber;
-    _pins[pinNumber - 1].defaultValue = defaultValue;
-    _pins[pinNumber - 1].value = defaultValue;
+    _pins[portNumber].pinName = pinName;
+    _pins[portNumber].type = pinType.c_str();
+    _pins[portNumber].pinNumber = pinNumber;
+    _pins[portNumber].defaultValue = defaultValue;
+    _pins[portNumber].value = defaultValue;
+    _pins[portNumber].description = description;
 }
 
 void PokeyDevice::startPolling()
@@ -190,7 +192,6 @@ int PokeyDevice::pinFromName(std::string targetName)
 
 void PokeyDevice::mapNameToPin(std::string name, int pin)
 {
-    // TODO: what if the pin name already exists as a key
     _pinMap.emplace(name, pin);
 }
 
