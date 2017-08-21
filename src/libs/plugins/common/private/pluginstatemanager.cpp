@@ -16,7 +16,6 @@ PluginStateManager::~PluginStateManager(void) {}
 int PluginStateManager::configPassthrough(libconfig::Config *pluginConfiguration)
 {
     _config = pluginConfiguration;
-
     return 0;
 }
 
@@ -35,7 +34,6 @@ void PluginStateManager::commenceEventing(EnqueueEventHandler enqueueCallback, v
     _logger(LOG_INFO, "  - commence eventing");
     _enqueueCallback = enqueueCallback;
     _callbackArg = arg;
-    //_testEventThread = std::thread(std::bind(&PluginStateManager::runTestEventLoop, this));
 }
 
 void PluginStateManager::ceaseEventing(void)
