@@ -58,6 +58,7 @@ PokeyDevicePluginStateManager::PokeyDevicePluginStateManager(LoggingFunctionCB l
     : PluginStateManager(logger)
 {
     _numberOfDevices = 0; ///< 0 devices discovered
+    _name = "pokey";
     _devices = (sPoKeysNetworkDeviceSummary *)calloc(sizeof(sPoKeysNetworkDeviceSummary), 16); ///< 0 initialise the network device summary
 }
 
@@ -232,12 +233,14 @@ bool PokeyDevicePluginStateManager::devicePinsConfiguration(libconfig::Setting *
             int pinNumber = 0;
             std::string pinName = "";
             std::string pinType = "";
+            std::string description = "";
             bool pinDefault = false;
 
             try {
                 iter->lookupValue("pin", pinNumber);
                 iter->lookupValue("name", pinName);
                 iter->lookupValue("type", pinType);
+                iter->lookupValue("description", description);
             }
             catch (const libconfig::SettingNotFoundException &nfex) {
                 _logger(LOG_ERROR, "Config file parse error at %s. Skipping....", nfex.getPath());
@@ -253,12 +256,12 @@ bool PokeyDevicePluginStateManager::devicePinsConfiguration(libconfig::Setting *
                         if (iter->exists("default"))
                             iter->lookupValue("default", defaultValue);
 
-                        pokeyDevice->addPin(pinName, pinNumber, pinType, defaultValue);
+                        pokeyDevice->addPin(pinName, pinNumber, pinType, defaultValue, description);
                         _logger(LOG_INFO, "        - [%d] Added target %s on pin %d", pinIndex, pinName.c_str(), pinNumber);
                     }
                 }
                 else if (pinType == "DIGITAL_INPUT") {
-                    pokeyDevice->addPin(pinName, pinNumber, pinType);
+                    pokeyDevice->addPin(pinName, pinNumber, pinType, 0, description);
                     _logger(LOG_INFO, "        - [%d] Added source %s on pin %d", pinIndex, pinName.c_str(), pinNumber);
                 }
                 pinIndex++;
