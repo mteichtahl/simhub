@@ -125,7 +125,7 @@ int SimSourcePluginStateManager::preflightComplete(void)
         }
     }
 
-    _logger(LOG_ERROR, "Connecting to simulator on %s:%d.", ipAddress.c_str(), port);
+    _logger(LOG_ERROR, "Connecting to simulator on %s:%d", ipAddress.c_str(), port);
 
     struct sockaddr_in req_addr;
 
@@ -413,16 +413,17 @@ int SimSourcePluginStateManager::deliverValue(GenericTLV *value)
     std::shared_ptr<Attribute> attribute = AttributeFromCGeneric(value);
 
     TransformFunction transformFunction = transform(attribute->name());
+    std::string val = "";
 
     if (transformFunction) {
-        std::string val = transformFunction(attribute->getValueToString(), "NULL", "NULL");
+        val = transformFunction(attribute->getValueToString(), "NULL", "NULL");
         oss << attribute->name() << "=" << val << "\n";
     }
     else {
         oss << attribute->name() << "=" << prosimValueString(attribute) << "\n";
     }
 
-    _logger(LOG_INFO, "[%s] %s", attribute->name().c_str(), attribute->description().c_str());
+    _logger(LOG_INFO, "%s --> %s", attribute->name().c_str(), val.c_str());
 
     _sendSocketClient.sendData(oss.str());
 
