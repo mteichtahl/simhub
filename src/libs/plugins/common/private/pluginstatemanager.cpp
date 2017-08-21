@@ -4,30 +4,19 @@
 #include "pluginstatemanager.h"
 
 PluginStateManager::PluginStateManager(LoggingFunctionCB logger)
-  : _enqueueCallback(NULL),
-    _logger(logger),
-    _pluginThread(NULL)
+    : _enqueueCallback(NULL)
+    , _logger(logger)
+    , _pluginThread(NULL)
 {
 }
 
-PluginStateManager::~PluginStateManager(void)
-{
-}
-
-void PluginStateManager::runTestEventLoop(void)
-{
-    std::cout << "generating 9 events in a sleep loop" << std::endl;
-    for (size_t i = 0; i < 9; i++) {
-        sleep(1);
-        _enqueueCallback(this, (void *)"echo", _callbackArg);
-    }
-    std::cout << "done" << std::endl;
-}
+PluginStateManager::~PluginStateManager(void) {}
 
 //! just queue up a copy of the device settings for use in preflightComplete
 int PluginStateManager::configPassthrough(libconfig::Config *pluginConfiguration)
 {
     _config = pluginConfiguration;
+
     return 0;
 }
 
