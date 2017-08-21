@@ -73,6 +73,7 @@ SimSourcePluginStateManager::SimSourcePluginStateManager(LoggingFunctionCB logge
 
     _StateManagerInstance = this;
     _processedElementCount = 0;
+    _name = "prepar3d";
 
     if (!(_rawBuffer = (char *)malloc(BUFFER_LEN))) {
         printf("Unable to allocate buffer of size %d", BUFFER_LEN);
@@ -130,7 +131,6 @@ int SimSourcePluginStateManager::preflightComplete(void)
 
     _eventLoop = uv_default_loop();
     check_uv(uv_loop_init(_eventLoop));
-
     check_uv(uv_tcp_init(_eventLoop, &_tcpClient));
     uv_tcp_keepalive(&_tcpClient, 1, 60);
 
@@ -146,6 +146,7 @@ int SimSourcePluginStateManager::preflightComplete(void)
     }
 
     // connect to simulated prosim listener
+    _sendSocketClient.setLogger(_logger);
     if (retVal != PREFLIGHT_FAIL && !_sendSocketClient.connect(ipAddress, port)) {
         retVal = PREFLIGHT_FAIL;
     }
@@ -204,7 +205,7 @@ void SimSourcePluginStateManager::OnConnect(uv_connect_t *req, int status)
 {
     assert(SimSourcePluginStateManager::StateManagerInstance());
 
-    SimSourcePluginStateManager *self = static_cast<SimSourcePluginStateManager*>(req->data);
+    SimSourcePluginStateManager *self = static_cast<SimSourcePluginStateManager *>(req->data);
 
     if (status == SIM_CONNECT_NOT_FOUND) {
         SimSourcePluginStateManager::StateManagerInstance()->_logger(LOG_ERROR, "   - Failed to connect to simulator");
@@ -212,7 +213,6 @@ void SimSourcePluginStateManager::OnConnect(uv_connect_t *req, int status)
         self->_enqueueCallback(self, (void *)NULL, self->_callbackArg);
     }
     else {
-        SimSourcePluginStateManager::StateManagerInstance()->_logger(LOG_INFO, " - Connected to simulator %i", status);
         SimSourcePluginStateManager::StateManagerInstance()->instanceConnectionHandler(req, status);
     }
 }
@@ -422,7 +422,7 @@ int SimSourcePluginStateManager::deliverValue(GenericTLV *value)
         oss << attribute->name() << "=" << prosimValueString(attribute) << "\n";
     }
 
-    std::cout << "about to send: " << oss.str() << std::endl;
+    _logger(LOG_INFO, "[%s] %s", attribute->name().c_str(), attribute->description().c_str());
 
     _sendSocketClient.sendData(oss.str());
 
@@ -460,10 +460,7 @@ void SimSourcePluginStateManager::commenceEventing(EnqueueEventHandler enqueueCa
 {
     _enqueueCallback = enqueueCallback;
     _callbackArg = arg;
-    _pluginThread = std::make_shared<std::thread>([=]
-    {
-	      check_uv(uv_run(_eventLoop, UV_RUN_DEFAULT));
-    });
+    _pluginThread = std::make_shared<std::thread>([=] { check_uv(uv_run(_eventLoop, UV_RUN_DEFAULT)); });
 }
 
 // -- simple socket send/receive wrapper
@@ -473,6 +470,11 @@ TCPClient::TCPClient(void)
     _sock = -1;
     _port = 0;
     _address = "";
+}
+
+void TCPClient::setLogger(LoggingFunctionCB logger)
+{
+    _logger = logger;
 }
 
 /**
@@ -488,7 +490,6 @@ bool TCPClient::connect(std::string address, int port)
         _sock = socket(AF_INET, SOCK_STREAM, 0);
         if (_sock == -1)
             perror("Could not create socket");
-        std::cout << "socket created" << std::endl;
     }
 
     // setup address structure
@@ -503,7 +504,8 @@ bool TCPClient::connect(std::string address, int port)
             return false;
         }
 
-        // cast the h_addr_list to in_addr , since h_addr_list also has the ip address in long format only
+        // cast the h_addr_list to in_addr , since h_addr_list also has the ip
+        // address in long format only
         addr_list = (struct in_addr **)he->h_addr_list;
         for (int i = 0; addr_list[i] != NULL; i++) {
             _server.sin_addr = *addr_list[i];
@@ -524,7 +526,7 @@ bool TCPClient::connect(std::string address, int port)
         return 1;
     }
 
-    std::cout << "Connected" << std::endl;
+    _logger(LOG_INFO, " - Connected to %s", address.c_str());
     return true;
 }
 
@@ -538,9 +540,6 @@ bool TCPClient::sendData(std::string data)
         perror("Send failed : ");
         return false;
     }
-
-    std::cout << "Data send" << std::endl;
-
     return true;
 }
 

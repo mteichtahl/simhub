@@ -46,12 +46,14 @@ private:
     std::string _address;
     int _port;
     struct sockaddr_in _server;
+    LoggingFunctionCB _logger;
 
 public:
     TCPClient(void);
     bool connect(std::string, int);
     bool sendData(std::string data);
     std::string receive(int);
+    void setLogger(LoggingFunctionCB logger);
 };
 
 // every function pointer will be stored as this type
