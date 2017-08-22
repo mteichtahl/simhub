@@ -21,7 +21,7 @@ public:
         assert(_threadRunning); 
         _threadCancelled = true; 
         do { 
-	  // noop
+	        // noop
         } while (_threadRunning);
         _thread->join();
     };
