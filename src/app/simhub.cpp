@@ -34,13 +34,12 @@ SimHubEventController::SimHubEventController()
 
 SimHubEventController::~SimHubEventController(void)
 {
-    terminate();
 }
 
 void SimHubEventController::startSustainThreads(void)
 {
 #if defined (_AWS_SDK)
-    _awsHelper.polly()->say("Simulator is ready.");
+    //_awsHelper.polly()->say("Simulator is ready.");
 #endif
     
     _continueSustainThreads = true;
@@ -97,7 +96,7 @@ void SimHubEventController::deliverKinesisValue(std::shared_ptr<Attribute> value
 void SimHubEventController::enablePolly(void)
 {
     _awsHelper.initPolly();
-    _awsHelper.polly()->say("Loading plug in sub system");
+    //_awsHelper.polly()->say("Loading plug in sub system");
 }
 
 void SimHubEventController::enableKinesis(void)
@@ -126,7 +125,6 @@ void SimHubEventController::setConfigManager(ConfigManager *configManager)
 
 void SimHubEventController::ceaseEventLoop(void)
 {
-    ceaseSustainThreads();
     _eventQueue.unblock();
 }
 
@@ -265,6 +263,7 @@ void SimHubEventController::loadPokeyPlugin(void)
 //! perform shutdown ceremonies on both plugins - this unloads both plugins
 void SimHubEventController::terminate(void)
 {
+    ceaseSustainThreads();
     shutdownPlugin(_prepare3dMethods);
     shutdownPlugin(_pokeyMethods);
 }
