@@ -14,7 +14,6 @@ AWS::AWS()
 
 AWS::~AWS()
 {
-    Aws::ShutdownAPI(_options);
 }
 
 std::shared_ptr<Polly> AWS::polly(void)
@@ -27,7 +26,7 @@ std::shared_ptr<Kinesis> AWS::kinesis(void)
     return _kinesis;
 }
 
-void AWS::initPolly()
+void AWS::initPolly(void)
 {
     _polly = std::make_shared<Polly>();
 }
@@ -38,8 +37,13 @@ void AWS::initKinesis(std::string streamName, std::string partition, std::string
     _kinesis = std::make_shared<Kinesis>(streamName, partition, region);
 }
 
-void AWS::init()
+void AWS::init(void)
 {
     Aws::InitAPI(_options);
     logger.log(LOG_INFO, "AWS SDK v%s started", _SDKVersion.c_str());
+}
+
+void AWS::shutdown(void)
+{
+    Aws::ShutdownAPI(_options);
 }

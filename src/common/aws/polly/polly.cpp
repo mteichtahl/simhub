@@ -7,7 +7,7 @@ Polly::Polly()
 {
     _pollyCanTalk = false; ///< No talking while we instantiate
     _maxVA_length = MAX_VA_LENGTH; ///< set the maximum variadic argument length
-    _pollyClient = Aws::MakeShared<Aws::Polly::PollyClient::PollyClient>(POLLY_MAIN_ALLOCATION_TAG); ///< create the AWS SDK client
+    _pollyClient = Aws::MakeShared<Aws::Polly::PollyClient>(POLLY_MAIN_ALLOCATION_TAG); ///< create the AWS SDK client
     _manager = std::make_shared<Aws::TextToSpeech::TextToSpeechManager>(_pollyClient); ///< create TTS manager
     _manager->SetActiveVoice(_defaultPollyVoice.c_str()); ///< set the active voice
     _threadCancelled = false;

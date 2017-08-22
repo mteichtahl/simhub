@@ -22,7 +22,8 @@ public:
     AWS(void);
     // Destructor
     ~AWS(void);
-    void init();
+    void init(void);
+    void shutdown(void);
     void initPolly(void);
     void initKinesis(std::string streamName, std::string partition, std::string region);
     std::shared_ptr<Polly> polly(void);

@@ -3,6 +3,7 @@
 
 #include "../../libs/queue/concurrent_queue.h"
 #include <aws/core/Aws.h>
+#include <aws/polly/PollyClient.h>
 #include <aws/core/Version.h>
 #include <aws/core/utils/memory/stl/AWSAllocator.h>
 #include <aws/text-to-speech/TextToSpeechManager.h>
@@ -40,7 +41,7 @@ protected:
     Aws::String _defaultPollyVoice = "Nicole";
     Aws::String _defaultAudioDevice = "default";
 
-    std::shared_ptr<Aws::Polly::PollyClient::PollyClient> _pollyClient;
+    std::shared_ptr<Aws::Polly::PollyClient> _pollyClient;
     std::shared_ptr<Aws::TextToSpeech::TextToSpeechManager> _manager;
     ConcurrentQueue<Aws::String> _pollyQueue;
     bool _pollyCanTalk;

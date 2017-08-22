@@ -25,7 +25,9 @@ SimHubEventController::SimHubEventController()
     _configManager = NULL;
     _sustainThreadCount = 0;
 
+#if defined (_AWS_SDK)
     _awsHelper.init();
+#endif
 
     logger.log(LOG_INFO, "Starting event controller");
 }
@@ -37,7 +39,9 @@ SimHubEventController::~SimHubEventController(void)
 
 void SimHubEventController::startSustainThreads(void)
 {
+#if defined (_AWS_SDK)
     _awsHelper.polly()->say("Simulator is ready.");
+#endif
     
     _continueSustainThreads = true;
 
@@ -64,9 +68,12 @@ void SimHubEventController::ceaseSustainThreads(void)
 #if defined(_AWS_SDK)
     _awsHelper.polly()->shutdown();
     _awsHelper.kinesis()->shutdown();
+
+    _awsHelper.shutdown();
 #endif
 }
 
+#if defined(_AWS_SDK)
 void SimHubEventController::deliverKinesisValue(std::shared_ptr<Attribute> value)
 {
     std::string name = value->name();
@@ -86,8 +93,6 @@ void SimHubEventController::deliverKinesisValue(std::shared_ptr<Attribute> value
 
     _awsHelper.kinesis()->putRecord(data);
 }
-
-#if defined(_AWS_SDK)
 
 void SimHubEventController::enablePolly(void)
 {

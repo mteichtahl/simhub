@@ -5,6 +5,7 @@
 #include <map>
 #include <thread>
 #include <atomic>
+#include <iostream>
 
 class CancellableThread
 {
@@ -20,7 +21,7 @@ public:
         assert(_threadRunning); 
         _threadCancelled = true; 
         do { 
-            std::this_thread::yield(); 
+	  // noop
         } while (_threadRunning);
         _thread->join();
     };
