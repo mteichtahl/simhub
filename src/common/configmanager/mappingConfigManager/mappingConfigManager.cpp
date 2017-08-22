@@ -38,7 +38,7 @@ bool MappingConfigManager::fileExists(std::string filename)
     return (filename.size() > 0 && access(filename.c_str(), 0) == 0);
 }
 
-std::string MappingConfigManager::getConfigFilename(void)
+std::string MappingConfigManager::configFilename(void)
 {
     return _configFilename;
 }
@@ -69,10 +69,12 @@ int MappingConfigManager::init(void)
         for (int i = 0; i <= _mappingConfig->getLength() - 1; i++) {
             std::string source;
             std::string target;
+            unsigned int sustain = 0;
 
             try {
-                source = (const char *)(&(*_mappingConfig)[i])->lookup("source");
-                target = (const char *)(&(*_mappingConfig)[i])->lookup("target");
+                source = (const char *)(*_mappingConfig)[i].lookup("source");
+                target = (const char *)(*_mappingConfig)[i].lookup("target");
+                (*_mappingConfig)[i].lookupValue("sustain", sustain);
             }
             catch (const libconfig::SettingNotFoundException &nfex) {
                 logger.log(LOG_ERROR, "Config file parse error at %s. Skipping....", nfex.getPath());
@@ -83,16 +85,17 @@ int MappingConfigManager::init(void)
                 continue;
             }
 
-            std::pair<std::map<std::string, MapEntry>::iterator, bool> ret;
-            auto pair = std::make_pair(source, target);
-            ret = _mapping.insert(std::make_pair(source, pair));
-
-            if (!ret.second) {
+            if (mapContains(_mapping, source)) {
                 logger.log(LOG_INFO, "  - skipping duplicate source %s ", source.c_str());
                 continue;
             }
             else {
+                _mapping[source] = std::make_pair(source, target);
                 logger.log(LOG_INFO, "  - adding %s -> %s", source.c_str(), target.c_str());
+            }
+
+            if (sustain > 0 && !mapContains(_sustainMap, source)) {
+                _sustainMap[source] = sustain;
             }
         }
         logger.log(LOG_INFO, " - Added %d mappings", _mapping.size());

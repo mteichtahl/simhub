@@ -396,11 +396,11 @@ std::string SimSourcePluginStateManager::prosimValueString(std::shared_ptr<Attri
 
     switch (attribute->name().c_str()[0]) {
     case SWITCH_IDENTIFIER:
-        retVal = attribute->getValue<bool>() ? 0 : 1;
+        retVal = attribute->value<bool>() ? 0 : 1;
         break;
 
     default:
-        retVal = attribute->getValueToString();
+        retVal = attribute->valueToString();
         break;
     }
 
@@ -416,7 +416,7 @@ int SimSourcePluginStateManager::deliverValue(GenericTLV *value)
     std::string val = "";
 
     if (transformFunction) {
-        val = transformFunction(attribute->getValueToString(), "NULL", "NULL");
+        val = transformFunction(attribute->valueToString(), "NULL", "NULL");
         oss << attribute->name() << "=" << val << "\n";
     }
     else {

@@ -16,6 +16,8 @@
 #include <sys/stat.h>
 #include <vector>
 
+#include "appsupport.h"
+
 #define RETURN_OK 1
 #define RETURN_ERROR 0
 
@@ -33,15 +35,18 @@ protected:
     libconfig::Setting *_root;
     ElementMap _mapping;
 
+    std::map<std::string, unsigned int> _sustainMap;
+
 public:
     MappingConfigManager(std::string);
     ~MappingConfigManager(void);
-    const libconfig::Setting *getConfig(void);
+    const libconfig::Setting *config(void);
     int init(void);
     bool fileExists(std::string filename);
-    std::string getConfigFilename(void);
+    std::string configFilename(void);
     std::string version(void);
     bool find(std::string key, MapEntry **retMapEntry);
+    const std::map<std::string, unsigned int> &sustainMap(void) { return _sustainMap; };
 };
 
 #endif

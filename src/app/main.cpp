@@ -69,68 +69,23 @@ int main(int argc, char *argv[])
     }
 
 #if defined(_AWS_SDK)
-    awsHelper.init();
-    if (cli.get<bool>("polly")) {
-        awsHelper.initPolly();
-        awsHelper.polly()->say("Loading plug in sub system");
-    }
-    if (cli.get<bool>("kinesis")) {
-        //! read the configuration sections we need
-        const libconfig::Setting &aws = config.config()->lookup("aws");
-        const libconfig::Setting &kinesis = aws.lookup("kinesis");
-        //! somehwere to store our variables
-        std::string region;
-        std::string stream;
-        std::string partition;
-        //! read the configuration values
-        aws.lookupValue("region", region);
-        kinesis.lookupValue("stream", stream);
-        kinesis.lookupValue("partition", partition);
-        //! initialise the kinesis helper
-        awsHelper.initKinesis(stream, partition, region);
-    }
+        simhubController->enablePolly();
+        simhubController->enableKinesis();
 #endif
 
     simhubController->loadPokeyPlugin(); ///< load the pokey plugin
     simhubController->loadPrepare3dPlugin(); ///< load the prepare3d plugin
-
-#if defined(_AWS_SDK)
-    awsHelper.polly()->say("Simulator is ready.");
-#endif
 
     ///! kick off the simhub envent loop
     simhubController->runEventLoop([=](std::shared_ptr<Attribute> value) {
         bool deliveryResult = simhubController->deliverValue(value);
 
 #if defined(_AWS_SDK)
-        std::string name = value->name();
-        std::string val = value->getValueToString();
-        std::string ts = value->getTimestampAsString();
-
-        // {s:"a",t:"b",v:"123", ts:121}
-        std::stringstream ss;
-
-        ss << "{ \"s\" : \"" << name << "\", \"val\":\"" << val << "\", \"ts\":" << ts << "}";
-        std::string dataString = ss.str();
-
-        Aws::Utils::ByteBuffer data(dataString.length());
-
-        for (int i = 0; i < dataString.length(); i++)
-            data[i] = dataString[i];
-
-        awsHelper.kinesis()->putRecord(data);
+        simhubController->deliverKinesisValue(value);
 #endif
 
         return deliveryResult;
     });
-
-#if defined(_AWS_SDK)
-    if (awsHelper.polly()->isJoinable())
-        awsHelper.polly()->thread()->join();
-
-    if (awsHelper.kinesis()->isJoinable())
-        awsHelper.kinesis()->thread()->join();
-#endif
 
     return 0;
 }

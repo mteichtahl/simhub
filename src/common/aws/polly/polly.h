@@ -8,9 +8,12 @@
 #include <aws/text-to-speech/TextToSpeechManager.h>
 #include <condition_variable>
 #include <cstdarg>
+#include <atomic>
 #include <iostream>
 #include <stdio.h>
 #include <string.h>
+
+#include "appsupport.h"
 #define MAX_VA_LENGTH 4096
 
 /**
@@ -18,9 +21,8 @@
  */
 static const char *POLLY_MAIN_ALLOCATION_TAG = "PollySample::Main";
 
-class Polly
+class Polly : public CancellableThread
 {
-
 public:
     // Default constructor
     Polly(void);
@@ -28,8 +30,11 @@ public:
     ~Polly(void);
     //
     void say(const char *pMsg, ...);
-    std::thread *thread(void);
-    bool isJoinable();
+    virtual void shutdown(void)
+    {
+        _pollyQueue.unblock();
+        CancellableThread::shutdown();
+    };
 
 protected:
     Aws::String _defaultPollyVoice = "Nicole";
@@ -39,7 +44,6 @@ protected:
     std::shared_ptr<Aws::TextToSpeech::TextToSpeechManager> _manager;
     ConcurrentQueue<Aws::String> _pollyQueue;
     bool _pollyCanTalk;
-    std::thread *_thread;
     int _maxVA_length; ///< maximum length (in char) of the log method variadic parameters
     void _handler(const char *, const Aws::Polly::Model::SynthesizeSpeechOutcome &, bool);
 };

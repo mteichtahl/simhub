@@ -23,6 +23,9 @@ SimHubEventController::SimHubEventController()
     _prepare3dMethods.plugin_instance = NULL;
     _pokeyMethods.plugin_instance = NULL;
     _configManager = NULL;
+    _sustainThreadCount = 0;
+
+    _awsHelper.init();
 
     logger.log(LOG_INFO, "Starting event controller");
 }
@@ -32,6 +35,85 @@ SimHubEventController::~SimHubEventController(void)
     terminate();
 }
 
+void SimHubEventController::startSustainThreads(void)
+{
+    _awsHelper.polly()->say("Simulator is ready.");
+    
+    _continueSustainThreads = true;
+
+    for (auto sustainEntry: _configManager->mapManager()->sustainMap()) {
+        _sustainThreads[sustainEntry.first] = std::make_shared<std::thread>([=] {
+            _sustainThreadCount++;
+            std::cout << "sustain thread start" << std::endl;
+            while (_continueSustainThreads) {
+                sleep(1);
+                std::cout << "bing" << std::endl;
+            }
+            std::cout << "sustain thread done" << std::endl;
+            _sustainThreadCount--;
+        });
+    }
+}
+
+void SimHubEventController::ceaseSustainThreads(void)
+{
+    _continueSustainThreads = false;
+
+    while (_sustainThreadCount > 0);
+
+#if defined(_AWS_SDK)
+    _awsHelper.polly()->shutdown();
+    _awsHelper.kinesis()->shutdown();
+#endif
+}
+
+void SimHubEventController::deliverKinesisValue(std::shared_ptr<Attribute> value)
+{
+    std::string name = value->name();
+    std::string val = value->valueToString();
+    std::string ts = value->timestampAsString();
+
+    // {s:"a",t:"b",v:"123", ts:121}
+    std::stringstream ss;
+
+    ss << "{ \"s\" : \"" << name << "\", \"val\":\"" << val << "\", \"ts\":" << ts << "}";
+    std::string dataString = ss.str();
+
+    Aws::Utils::ByteBuffer data(dataString.length());
+
+    for (int i = 0; i < dataString.length(); i++)
+        data[i] = dataString[i];
+
+    _awsHelper.kinesis()->putRecord(data);
+}
+
+#if defined(_AWS_SDK)
+
+void SimHubEventController::enablePolly(void)
+{
+    _awsHelper.initPolly();
+    _awsHelper.polly()->say("Loading plug in sub system");
+}
+
+void SimHubEventController::enableKinesis(void)
+{
+    //! read the configuration sections we need
+    const libconfig::Setting &aws = _configManager->config()->lookup("aws");
+    const libconfig::Setting &kinesis = aws.lookup("kinesis");
+    //! somehwere to store our variables
+    std::string region;
+    std::string stream;
+    std::string partition;
+    //! read the configuration values
+    aws.lookupValue("region", region);
+    kinesis.lookupValue("stream", stream);
+    kinesis.lookupValue("partition", partition);
+    //! initialise the kinesis helper
+    _awsHelper.initKinesis(stream, partition, region);
+}
+
+#endif
+
 void SimHubEventController::setConfigManager(ConfigManager *configManager)
 {
     _configManager = configManager;
@@ -39,6 +121,7 @@ void SimHubEventController::setConfigManager(ConfigManager *configManager)
 
 void SimHubEventController::ceaseEventLoop(void)
 {
+    ceaseSustainThreads();
     _eventQueue.unblock();
 }
 

@@ -24,10 +24,10 @@ Attribute atINT = el.getAttribute("attrInt");
 Attribute atFLOAT = el.getAttribute("attrFloat");
 
 printf("atINT int ----> %i\n", atINT.getValue<int>());
-printf("atINT string ----> %s\n", atINT.getValueToString().c_str());
+printf("atINT string ----> %s\n", atINT.valueToString().c_str());
 printf("atINT ----> %s\n", atINT.timestampString().c_str());
 
 printf("atFLOAT float ----> %0.5f\n", atFLOAT.getValue<float>());
-printf("atFLOAT string ----> %s\n", atFLOAT.getValueToString().c_str());
+printf("atFLOAT string ----> %s\n", atFLOAT.valueToString().c_str());
 printf("atFLOAT ----> %s\n", atFLOAT.timestampString().c_str());
 ```

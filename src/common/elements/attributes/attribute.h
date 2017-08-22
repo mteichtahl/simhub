@@ -37,7 +37,7 @@ public:
     void setType(eAttribute_t type) { _type = type; };
 
     std::chrono::milliseconds timestamp() { return _timestamp; };
-    std::string getTimestampAsString() { return std::to_string(_timestamp.count()); };
+    std::string timestampAsString() { return std::to_string(_timestamp.count()); };
 
     template <typename T> void setValue(T value)
     {
@@ -45,9 +45,9 @@ public:
         _timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
     };
 
-    template <typename T> T getValue(void) { return mpark::get<T>(_value); };
+    template <typename T> T value(void) { return mpark::get<T>(_value); };
 
-    std::string getValueToString(void)
+    std::string valueToString(void)
     {
         std::ostringstream oss; // create a stream
 

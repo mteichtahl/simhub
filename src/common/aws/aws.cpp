@@ -15,30 +15,27 @@ AWS::AWS()
 AWS::~AWS()
 {
     Aws::ShutdownAPI(_options);
-    delete _polly;
-    delete _kinesis;
-    logger.log(LOG_INFO, "AWS SDK shutdown");
 }
 
-Polly *AWS::polly()
+std::shared_ptr<Polly> AWS::polly(void)
 {
     return _polly;
 }
 
-Kinesis *AWS::kinesis()
+std::shared_ptr<Kinesis> AWS::kinesis(void)
 {
     return _kinesis;
 }
 
 void AWS::initPolly()
 {
-    _polly = new Polly;
+    _polly = std::make_shared<Polly>();
 }
 
 void AWS::initKinesis(std::string streamName, std::string partition, std::string region)
 {
     // TODO: Make this part of a config file
-    _kinesis = new Kinesis(streamName, partition, region);
+    _kinesis = std::make_shared<Kinesis>(streamName, partition, region);
 }
 
 void AWS::init()

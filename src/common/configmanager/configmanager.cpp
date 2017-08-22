@@ -44,12 +44,12 @@ bool ConfigManager::fileExists(std::string filename)
     return (filename.size() > 0 && access(filename.c_str(), 0) == 0);
 }
 
-std::string ConfigManager::getConfigFilename(void)
+std::string ConfigManager::configFilename(void)
 {
     return _configFilename;
 }
 
-std::string ConfigManager::getMappingConfigFilename(void)
+std::string ConfigManager::mappingConfigFilename(void)
 {
     if (_mappingConfigFilename.empty()) {
         try {
@@ -122,7 +122,7 @@ int ConfigManager::init(std::shared_ptr<SimHubEventController> simhubController)
         loadPokeyConfiguration();
         simhubController->setPokeyConfig(&_pokeyConfig);
 
-        _mappingConfigManager.reset(new MappingConfigManager(getMappingConfigFilename()));
+        _mappingConfigManager.reset(new MappingConfigManager(mappingConfigFilename()));
     }
     catch (std::exception &e) {
         logger.log(LOG_ERROR, "%s", e.what());
