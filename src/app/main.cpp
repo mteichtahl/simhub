@@ -76,14 +76,13 @@ int main(int argc, char *argv[])
     simhubController->loadPokeyPlugin(); ///< load the pokey plugin
     simhubController->loadPrepare3dPlugin(); ///< load the prepare3d plugin
 
-    ///! kick off the simhub envent loop
+    // kick off the simhub envent loop
+
     simhubController->runEventLoop([=](std::shared_ptr<Attribute> value) {
         bool deliveryResult = simhubController->deliverValue(value);
-
 #if defined(_AWS_SDK)
         simhubController->deliverKinesisValue(value);
 #endif
-
         return deliveryResult;
     });
 

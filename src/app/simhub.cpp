@@ -39,7 +39,7 @@ SimHubEventController::~SimHubEventController(void)
 void SimHubEventController::startSustainThreads(void)
 {
 #if defined (_AWS_SDK)
-    //_awsHelper.polly()->say("Simulator is ready.");
+    _awsHelper.polly()->say("Simulator is ready.");
 #endif
     
     _continueSustainThreads = true;
@@ -50,7 +50,6 @@ void SimHubEventController::startSustainThreads(void)
             std::cout << "sustain thread start" << std::endl;
             while (_continueSustainThreads) {
                 sleep(1);
-                std::cout << "bing" << std::endl;
             }
             std::cout << "sustain thread done" << std::endl;
             _sustainThreadCount--;
@@ -62,14 +61,14 @@ void SimHubEventController::ceaseSustainThreads(void)
 {
     _continueSustainThreads = false;
 
-    while (_sustainThreadCount > 0);
+    do {
+        // noop
+    } while (_sustainThreadCount > 0);
 
-#if defined(_AWS_SDK)
-    _awsHelper.polly()->shutdown();
-    _awsHelper.kinesis()->shutdown();
-
-    _awsHelper.shutdown();
-#endif
+    for (auto item: _sustainThreads) {
+        item.second->join();
+    }
+    _sustainThreads.clear();
 }
 
 #if defined(_AWS_SDK)
@@ -96,7 +95,7 @@ void SimHubEventController::deliverKinesisValue(std::shared_ptr<Attribute> value
 void SimHubEventController::enablePolly(void)
 {
     _awsHelper.initPolly();
-    //_awsHelper.polly()->say("Loading plug in sub system");
+    _awsHelper.polly()->say("Loading plug in sub system");
 }
 
 void SimHubEventController::enableKinesis(void)
@@ -266,6 +265,13 @@ void SimHubEventController::terminate(void)
     ceaseSustainThreads();
     shutdownPlugin(_prepare3dMethods);
     shutdownPlugin(_pokeyMethods);
+
+    #if defined(_AWS_SDK)
+    _awsHelper.polly()->shutdown();
+    _awsHelper.kinesis()->shutdown();
+
+    _awsHelper.shutdown();
+#endif
 }
 
 //! private support method - gracefully closes plugin instance represented by pluginMethods

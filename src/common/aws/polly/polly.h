@@ -12,6 +12,7 @@
 #include <atomic>
 #include <iostream>
 #include <stdio.h>
+#include <unistd.h>
 #include <string.h>
 
 #include "appsupport.h"
@@ -24,6 +25,17 @@ static const char *POLLY_MAIN_ALLOCATION_TAG = "PollySample::Main";
 
 class Polly : public CancellableThread
 {
+protected:
+    Aws::String _defaultPollyVoice = "Nicole";
+    Aws::String _defaultAudioDevice = "default";
+
+    std::shared_ptr<Aws::Polly::PollyClient> _pollyClient;
+    std::shared_ptr<Aws::TextToSpeech::TextToSpeechManager> _manager;
+    ConcurrentQueue<Aws::String> _pollyQueue;
+    bool _pollyCanTalk;
+    int _maxVA_length; ///< maximum length (in char) of the log method variadic parameters
+    void _handler(const char *, const Aws::Polly::Model::SynthesizeSpeechOutcome &, bool);
+
 public:
     // Default constructor
     Polly(void);
@@ -35,18 +47,13 @@ public:
     {
         _pollyQueue.unblock();
         CancellableThread::shutdown();
+        _pollyClient->DisableRequestProcessing();
+
+        // allow internall PollyClient threads to stop
+        sleep(1);
+        
+        _pollyClient.reset();
     };
-
-protected:
-    Aws::String _defaultPollyVoice = "Nicole";
-    Aws::String _defaultAudioDevice = "default";
-
-    std::shared_ptr<Aws::Polly::PollyClient> _pollyClient;
-    std::shared_ptr<Aws::TextToSpeech::TextToSpeechManager> _manager;
-    ConcurrentQueue<Aws::String> _pollyQueue;
-    bool _pollyCanTalk;
-    int _maxVA_length; ///< maximum length (in char) of the log method variadic parameters
-    void _handler(const char *, const Aws::Polly::Model::SynthesizeSpeechOutcome &, bool);
 };
 
 #endif // __AWS_POLLY_H
