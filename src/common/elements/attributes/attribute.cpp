@@ -16,28 +16,28 @@ GenericTLV *AttributeToCGeneric(std::shared_ptr<Attribute> value)
     switch (value->type()) {
     case BOOL_ATTRIBUTE:
         retVal->type = CONFIG_BOOL;
-        retVal->value.bool_value = value->getValue<bool>();
+        retVal->value.bool_value = value->value<bool>();
         break;
 
     case FLOAT_ATTRIBUTE:
         retVal->type = CONFIG_FLOAT;
-        retVal->value.float_value = value->getValue<float>();
+        retVal->value.float_value = value->value<float>();
         break;
 
     case INT_ATTRIBUTE:
         retVal->type = CONFIG_INT;
-        retVal->value.int_value = value->getValue<int>();
+        retVal->value.int_value = value->value<int>();
         break;
 
     case UINT_ATTRIBUTE:
         retVal->type = CONFIG_INT;
-        retVal->value.int_value = value->getValue<int>();
+        retVal->value.int_value = value->value<int>();
         break;
 
     case STRING_ATTRIBUTE:
         retVal->type = CONFIG_STRING;
-        retVal->value.string_value = (char *)calloc(value->getValue<std::string>().size() + 1, 1);
-        strncpy(retVal->value.string_value, value->getValue<std::string>().c_str(), value->getValue<std::string>().size());
+        retVal->value.string_value = (char *)calloc(value->value<std::string>().size() + 1, 1);
+        strncpy(retVal->value.string_value, value->value<std::string>().c_str(), value->value<std::string>().size());
         break;
 
     default:

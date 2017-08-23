@@ -4,10 +4,15 @@
 #include <list>
 #include <string>
 #include <thread>
+#include <atomic>
 
 #include "elements/attributes/attribute.h"
 #include "plugins/common/simhubdeviceplugin.h"
 #include "queue/concurrent_queue.h"
+
+#if defined(_AWS_SDK)
+#include "aws/aws.h"
+#endif
 
 class ConfigManager; // forward reference
 
@@ -34,11 +39,17 @@ protected:
     simplug_vtable loadPlugin(std::string dylibName, libconfig::Config *pluginConfigs, EnqueueEventHandler eventCallback);
     void terminate(void);
     void shutdownPlugin(simplug_vtable &pluginMethods);
+    void startSustainThreads(void);
+    void ceaseSustainThreads(void);
 
     ConcurrentQueue<std::shared_ptr<Attribute>> _eventQueue;
     simplug_vtable _prepare3dMethods;
     simplug_vtable _pokeyMethods;
     ConfigManager *_configManager;
+    std::map<std::string, std::shared_ptr<std::thread>> _sustainThreads;
+    std::atomic<bool> _continueSustainThreads;
+    std::atomic<size_t> _sustainThreadCount;
+    bool _terminated;
 
     // -- temp solution to plugin device configuration conundrum
     libconfig::Config *_pokeyDeviceConfig;
@@ -46,8 +57,8 @@ protected:
 
 public:
     virtual ~SimHubEventController(void);
-    void loadPrepare3dPlugin(void);
-    void loadPokeyPlugin(void);
+    bool loadPrepare3dPlugin(void);
+    bool loadPokeyPlugin(void);
     bool deliverValue(std::shared_ptr<Attribute> value);
     void setConfigManager(ConfigManager *configManager);
 
@@ -68,6 +79,14 @@ public:
 
     void ceaseEventLoop(void);
 
+    #if defined(_AWS_SDK)
+    AWS _awsHelper;
+
+    void enablePolly(void);
+    void enableKinesis(void);
+    void deliverKinesisValue(std::shared_ptr<Attribute> value);
+    #endif
+
 public:
     static void LoggerWrapper(const int category, const char *msg, ...);
     static std::shared_ptr<SimHubEventController> EventControllerInstance(void);
@@ -82,11 +101,12 @@ template <class F> void SimHubEventController::runEventLoop(F &&eventProcessorFu
 {
     bool breakLoop = false;
 
+    startSustainThreads();
+
     while (!breakLoop) {
         try {
             std::shared_ptr<Attribute> data = _eventQueue.pop();
-
-            // logger.log(LOG_INFO, "popped (%s: %s) off the concurrent event queue", data->_name.c_str(), data->getValueToString().c_str());
+            // logger.log(LOG_INFO, "popped (%s: %s) off the concurrent event queue", data->_name.c_str(), data->valueToString().c_str());
             breakLoop = !eventProcessorFunctor(data);
         }
         catch (ConcurrentQueueInterrupted &queueException) {

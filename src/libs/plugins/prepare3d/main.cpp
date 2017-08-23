@@ -291,7 +291,6 @@ void SimSourcePluginStateManager::processData(char *data, int len)
 
 void SimSourcePluginStateManager::processElement(char *element)
 {
-
     char *name = strtok(element, "=");
     char *value = strtok(NULL, " =");
     name[strlen(name) - 1] = '\0';
@@ -396,11 +395,11 @@ std::string SimSourcePluginStateManager::prosimValueString(std::shared_ptr<Attri
 
     switch (attribute->name().c_str()[0]) {
     case SWITCH_IDENTIFIER:
-        retVal = attribute->getValue<bool>() ? 0 : 1;
+        retVal = attribute->value<bool>() ? 0 : 1;
         break;
 
     default:
-        retVal = attribute->getValueToString();
+        retVal = attribute->valueToString();
         break;
     }
 
@@ -416,7 +415,7 @@ int SimSourcePluginStateManager::deliverValue(GenericTLV *value)
     std::string val = "";
 
     if (transformFunction) {
-        val = transformFunction(attribute->getValueToString(), "NULL", "NULL");
+        val = transformFunction(attribute->valueToString(), "NULL", "NULL");
         oss << attribute->name() << "=" << val << "\n";
     }
     else {
@@ -483,14 +482,19 @@ void TCPClient::setLogger(LoggingFunctionCB logger)
 */
 bool TCPClient::connect(std::string address, int port)
 {
+    bool retVal = true;
+
     _address = address;
     _port = port;
 
     // create socket if it is not already created
     if (_sock == -1) {
         _sock = socket(AF_INET, SOCK_STREAM, 0);
-        if (_sock == -1)
+
+        if (_sock == -1) {
             perror("Could not create socket");
+            retVal = false;
+        }
     }
 
     // setup address structure
@@ -501,17 +505,19 @@ bool TCPClient::connect(std::string address, int port)
         // resolve the hostname, its not an ip address
         if ((he = gethostbyname(_address.c_str())) == NULL) {
             herror("gethostbyname");
-            std::cout << "Failed to resolve hostname" << std::endl;
-            return false;
+            _logger(LOG_ERROR, "Failed to resolve hostname %s", _address.c_str());
+            retVal = false;
         }
-
-        // cast the h_addr_list to in_addr , since h_addr_list also has the ip
-        // address in long format only
-        addr_list = (struct in_addr **)he->h_addr_list;
-        for (int i = 0; addr_list[i] != NULL; i++) {
-            _server.sin_addr = *addr_list[i];
-            std::cout << address << " resolved to " << inet_ntoa(*addr_list[i]) << std::endl;
-            break;
+        else {
+            // cast the h_addr_list to in_addr , since h_addr_list also has the ip
+            // address in long format only
+            
+            addr_list = (struct in_addr **)he->h_addr_list;
+            for (int i = 0; addr_list[i] != NULL; i++) {
+                _server.sin_addr = *addr_list[i];
+                _logger(LOG_INFO, "prepar3d hostname resolved to %s", inet_ntoa(*addr_list[i]));
+                break;
+            }
         }
     }
     else {
@@ -524,11 +530,13 @@ bool TCPClient::connect(std::string address, int port)
     // connect to remote server
     if (::connect(_sock, (struct sockaddr *)&_server, sizeof(_server)) < 0) {
         perror("connect failed. Error");
-        return 1;
+        retVal = false;
     }
 
-    _logger(LOG_INFO, " - Connected to %s", address.c_str());
-    return true;
+    if (retVal)
+        _logger(LOG_INFO, " - Connected to %s", address.c_str());
+
+    return retVal;
 }
 
 /**

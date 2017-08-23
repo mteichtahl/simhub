@@ -14,10 +14,12 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "appsupport.h"
+
 typedef Aws::Kinesis::KinesisClient KinesisClient;
 
 static const char *ALLOCATION_TAG = "Kinesis::Main";
-class Kinesis
+class Kinesis : public CancellableThread
 {
 
 public:
@@ -25,15 +27,17 @@ public:
     Kinesis(std::string streamName, std::string partition, std::string region);
     // Destructor
     ~Kinesis(void);
-    std::shared_ptr<std::thread> thread(void);
-    bool isJoinable();
     void putRecord(Aws::Utils::ByteBuffer data);
+    virtual void shutdown(void)
+    {
+        _queue.unblock();
+        CancellableThread::shutdown();
+    };
 
 protected:
     std::shared_ptr<KinesisClient> _kinesisClient; ///< main kinesis client
 
     ConcurrentQueue<Aws::Utils::ByteBuffer> _queue;
-    std::shared_ptr<std::thread> _thread;
     std::string _partition;
     std::string _streamName;
     std::string _region;

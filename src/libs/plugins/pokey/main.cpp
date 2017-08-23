@@ -71,13 +71,6 @@ PokeyDevicePluginStateManager *PokeyDevicePluginStateManager::StateManagerInstan
 
 PokeyDevicePluginStateManager::~PokeyDevicePluginStateManager(void)
 {
-    if (_pluginThread) {
-        if (_pluginThread->joinable()) {
-            ceaseEventing();
-            _pluginThread->join();
-        }
-    }
-
     free(_devices);
 }
 

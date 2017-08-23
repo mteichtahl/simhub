@@ -59,8 +59,8 @@ public:
     virtual ~ConfigManager(void);
 
     int init(std::shared_ptr<SimHubEventController> simhubController);
-    std::string getConfigFilename(void);
-    std::string getMappingConfigFilename(void);
+    std::string configFilename(void);
+    std::string mappingConfigFilename(void);
     std::string loadPrepare3DConfiguration(void);
     std::string loadPokeyConfiguration(void);
     std::string version(void);

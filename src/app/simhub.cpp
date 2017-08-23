@@ -23,14 +23,100 @@ SimHubEventController::SimHubEventController()
     _prepare3dMethods.plugin_instance = NULL;
     _pokeyMethods.plugin_instance = NULL;
     _configManager = NULL;
+    _sustainThreadCount = 0;
+    _terminated = false;
+
+#if defined (_AWS_SDK)
+    _awsHelper.init();
+#endif
 
     logger.log(LOG_INFO, "Starting event controller");
 }
 
 SimHubEventController::~SimHubEventController(void)
 {
-    terminate();
+    if (!_terminated)
+        terminate();
 }
+
+void SimHubEventController::startSustainThreads(void)
+{
+#if defined (_AWS_SDK)
+    _awsHelper.polly()->say("Simulator is ready.");
+#endif
+    
+    _continueSustainThreads = true;
+
+    for (auto sustainEntry: _configManager->mapManager()->sustainMap()) {
+        _sustainThreads[sustainEntry.first] = std::make_shared<std::thread>([=] {
+            _sustainThreadCount++;
+            while (_continueSustainThreads) {
+                sleep(1);
+            }
+            _sustainThreadCount--;
+        });
+    }
+}
+
+void SimHubEventController::ceaseSustainThreads(void)
+{
+    _continueSustainThreads = false;
+
+    do {
+        // noop
+    } while (_sustainThreadCount > 0);
+
+    for (auto item: _sustainThreads) {
+        item.second->join();
+    }
+    _sustainThreads.clear();
+}
+
+#if defined(_AWS_SDK)
+void SimHubEventController::deliverKinesisValue(std::shared_ptr<Attribute> value)
+{
+    std::string name = value->name();
+    std::string val = value->valueToString();
+    std::string ts = value->timestampAsString();
+
+    // {s:"a",t:"b",v:"123", ts:121}
+    std::stringstream ss;
+
+    ss << "{ \"s\" : \"" << name << "\", \"val\":\"" << val << "\", \"ts\":" << ts << "}";
+    std::string dataString = ss.str();
+
+    Aws::Utils::ByteBuffer data(dataString.length());
+
+    for (int i = 0; i < dataString.length(); i++)
+        data[i] = dataString[i];
+
+    _awsHelper.kinesis()->putRecord(data);
+}
+
+void SimHubEventController::enablePolly(void)
+{
+    _awsHelper.initPolly();
+    _awsHelper.polly()->say("Loading plug in sub system");
+}
+
+void SimHubEventController::enableKinesis(void)
+{
+    //! read the configuration sections we need
+    const libconfig::Setting &aws = _configManager->config()->lookup("aws");
+    const libconfig::Setting &kinesis = aws.lookup("kinesis");
+    //! somehwere to store our variables
+    std::string region;
+    std::string stream;
+    std::string partition;
+    //! read the configuration values
+    aws.lookupValue("region", region);
+    kinesis.lookupValue("stream", stream);
+    kinesis.lookupValue("partition", partition);
+    //! initialise the kinesis helper
+    _awsHelper.initKinesis(stream, partition, region);
+}
+
+#endif
 
 void SimHubEventController::setConfigManager(ConfigManager *configManager)
 {
@@ -150,35 +236,47 @@ simplug_vtable SimHubEventController::loadPlugin(std::string dylibName, libconfi
             pluginMethods.simplug_commence_eventing(pluginInstance, eventCallback, this);
         }
         else {
-            assert(false);
+            pluginMethods.simplug_release(pluginInstance);
+            pluginMethods.plugin_instance = NULL;
         }
-    }
-    else {
-        assert(false);
     }
 
     return pluginMethods;
 }
 
-void SimHubEventController::loadPrepare3dPlugin(void)
+bool SimHubEventController::loadPrepare3dPlugin(void)
 {
     auto prepare3dCallback = [](SPHANDLE eventSource, void *eventData, void *arg) { static_cast<SimHubEventController *>(arg)->prepare3dEventCallback(eventSource, eventData); };
 
     _prepare3dMethods = loadPlugin("libprepare3d", _prepare3dDeviceConfig, prepare3dCallback);
+
+    return _prepare3dMethods.plugin_instance != NULL;
 }
 
-void SimHubEventController::loadPokeyPlugin(void)
+bool SimHubEventController::loadPokeyPlugin(void)
 {
     auto pokeyCallback = [](SPHANDLE eventSource, void *eventData, void *arg) { static_cast<SimHubEventController *>(arg)->pokeyEventCallback(eventSource, eventData); };
 
     _pokeyMethods = loadPlugin("libpokey", _pokeyDeviceConfig, pokeyCallback);
+
+    return _pokeyMethods.plugin_instance != NULL;
 }
 
 //! perform shutdown ceremonies on both plugins - this unloads both plugins
 void SimHubEventController::terminate(void)
 {
+    ceaseSustainThreads();
     shutdownPlugin(_prepare3dMethods);
     shutdownPlugin(_pokeyMethods);
+
+#if defined(_AWS_SDK)
+    _awsHelper.polly()->shutdown();
+    _awsHelper.kinesis()->shutdown();
+
+    _awsHelper.shutdown();
+#endif
+
+    _terminated = true;
 }
 
 //! private support method - gracefully closes plugin instance represented by pluginMethods

@@ -22,20 +22,19 @@ public:
     AWS(void);
     // Destructor
     ~AWS(void);
-    void init();
+    void init(void);
+    void shutdown(void);
     void initPolly(void);
     void initKinesis(std::string streamName, std::string partition, std::string region);
-    Polly *polly();
-    Kinesis *kinesis();
+    std::shared_ptr<Polly> polly(void);
+    std::shared_ptr<Kinesis> kinesis(void);
 
 protected:
     Aws::SDKOptions _options;
     std::string _SDKVersion;
 
-    Polly *_polly;
-    Kinesis *_kinesis;
+    std::shared_ptr<Polly> _polly;
+    std::shared_ptr<Kinesis> _kinesis;
 };
-
-extern AWS awsHelper; ///< allow externals to access logger
 
 #endif // __AWS_H
