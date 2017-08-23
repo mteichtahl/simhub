@@ -91,7 +91,7 @@ int MappingConfigManager::init(void)
             }
             else {
                 _mapping[source] = std::make_pair(source, target);
-                logger.log(LOG_INFO, "  - adding %s -> %s", source.c_str(), target.c_str());
+                logger.log(LOG_INFO, "  - adding %s", target.c_str());
             }
 
             if (sustain > 0 && !mapContains(_sustainMap, source)) {

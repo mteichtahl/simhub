@@ -86,6 +86,7 @@ void PokeyDevicePluginStateManager::ceaseEventing(void)
 int PokeyDevicePluginStateManager::deliverValue(GenericTLV *data)
 {
     assert(data);
+    _logger(LOG_INFO, "getting %s as data type %i", data->name, data->type);
 
     std::shared_ptr<PokeyDevice> device = targetFromDeviceTargetList(data->name);
 
@@ -330,6 +331,84 @@ bool PokeyDevicePluginStateManager::deviceEncodersConfiguration(libconfig::Setti
     return retVal;
 }
 
+bool PokeyDevicePluginStateManager::deviceDisplaysConfiguration(libconfig::Setting *displays, std::shared_ptr<PokeyDevice> pokeyDevice)
+{
+    bool retVal = true;
+    int displayCount = displays->getLength();
+    int displayIndex = 0;
+
+    if (displayCount > 2) {
+        retVal = false;
+        _logger(LOG_ERROR, "Invalid number of displays (%i). Maximum 2", displayCount);
+    }
+    else {
+        _logger(LOG_INFO, "    [%s]  - Found %i displays", pokeyDevice->name().c_str(), displayCount);
+        for (libconfig::SettingIterator iter = displays->begin(); iter != displays->end(); iter++) {
+
+            std::string name = "None";
+            int id = 0;
+            std::string type = "";
+            int enabled = 0;
+
+            try {
+                iter->lookupValue("id", id);
+                iter->lookupValue("name", name);
+                iter->lookupValue("type", type);
+                iter->lookupValue("enabled", enabled);
+
+                _logger(LOG_INFO, "    [%s]  - %s [id:%i %s]", pokeyDevice->name().c_str(), name.c_str(), id, type.c_str());
+                pokeyDevice->addMatrixLED(id, name, type);
+
+                int matrixRows = deviceDisplaysGroupsConfiguration(&iter->lookup("groups"), id, pokeyDevice);
+                _logger(LOG_INFO, "Added %i digits", matrixRows);
+
+                pokeyDevice->configMatrixLED(displayIndex++, matrixRows, 8, enabled);
+            }
+            catch (const libconfig::SettingNotFoundException &nfex) {
+                _logger(LOG_ERROR, "Could not find %s. Skipping....", nfex.what());
+                continue;
+            }
+        }
+    }
+
+    return retVal;
+}
+
+int PokeyDevicePluginStateManager::deviceDisplaysGroupsConfiguration(libconfig::Setting *displayGroups, int displayId, std::shared_ptr<PokeyDevice> pokeyDevice)
+{
+    int groupCount = displayGroups->getLength();
+    int totalDigits = 0;
+
+    if (groupCount == 0 || groupCount > 8) {
+        _logger(LOG_ERROR, "Invalid number of display groups (%i). Minimum 1 Maximum 8", groupCount);
+    }
+    else {
+        _logger(LOG_INFO, "    [%s]  - Found %i display groups", pokeyDevice->name().c_str(), groupCount);
+        int id = 0;
+        for (libconfig::SettingIterator iter = displayGroups->begin(); iter != displayGroups->end(); iter++) {
+            std::string name = "None";
+            int digits = 0;
+            int position = 0;
+
+            try {
+                iter->lookupValue("name", name);
+                iter->lookupValue("digits", digits);
+                iter->lookupValue("position", position);
+
+                _logger(LOG_INFO, "    [%s]    - %s %i digits / position %i", pokeyDevice->name().c_str(), name.c_str(), digits, position);
+                pokeyDevice->addGroupToMatrixLED(id++, displayId, name, digits, position);
+                addTargetToDeviceTargetList(name, pokeyDevice);
+                totalDigits += digits;
+            }
+            catch (const libconfig::SettingNotFoundException &nfex) {
+                _logger(LOG_ERROR, "Could not find %s. Skipping....", nfex.what());
+                continue;
+            }
+        }
+    }
+    return totalDigits;
+}
+
 int PokeyDevicePluginStateManager::preflightComplete(void)
 {
     int retVal = PREFLIGHT_OK;
@@ -362,12 +441,20 @@ int PokeyDevicePluginStateManager::preflightComplete(void)
 
         devicePinsConfiguration(&iter->lookup("pins"), pokeyDevice);
 
-        ///! check if there is an encoder section in the config
+        // check if there is an encoder section in the config
         try {
             deviceEncodersConfiguration(&iter->lookup("encoders"), pokeyDevice);
         }
         catch (const libconfig::SettingNotFoundException &nfex) {
             _logger(LOG_ERROR, "Could not find encoder setting %s", nfex.what());
+        }
+
+        // check if there is an encoder section in the config
+        try {
+            deviceDisplaysConfiguration(&iter->lookup("displays"), pokeyDevice);
+        }
+        catch (const libconfig::SettingNotFoundException &nfex) {
+            _logger(LOG_ERROR, "Could not find display setting %s", nfex.what());
         }
 
         pokeyDevice->startPolling();

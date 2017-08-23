@@ -95,7 +95,6 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
     }
 
     int ret = PK_DigitalIOGet(self->_pokey);
-
     if (ret == PK_OK) {
         GenericTLV el;
 
@@ -295,6 +294,42 @@ void PokeyDevice::addEncoder(int encoderNumber, uint32_t defaultValue, std::stri
     }
 }
 
+void PokeyDevice::addMatrixLED(int id, std::string name, std::string type)
+{
+    PK_MatrixLEDConfigurationGet(_pokey);
+    _matrixLED[id].id = id;
+    _matrixLED[id].name = name;
+    _matrixLED[id].type = type;
+    mapNameToMatrixLED(name.c_str(), id);
+}
+
+void PokeyDevice::addGroupToMatrixLED(int id, int displayId, std::string name, int digits, int position)
+{
+    _matrixLED[displayId].group[id].name = name;
+    _matrixLED[displayId].group[id].position = position;
+    _matrixLED[displayId].group[id].length = digits;
+    _matrixLED[displayId].group[id].value = 0;
+}
+
+void PokeyDevice::configMatrixLED(int id, int rows, int cols, int enabled)
+{
+    _pokey->MatrixLED[id].rows = rows;
+    _pokey->MatrixLED[id].columns = cols;
+    _pokey->MatrixLED[id].displayEnabled = enabled;
+    _pokey->MatrixLED[id].RefreshFlag = 1;
+    _pokey->MatrixLED[id].data[0] = 0b11111111;
+    _pokey->MatrixLED[id].data[1] = 0b11111111;
+    _pokey->MatrixLED[id].data[2] = 0b11111111;
+    _pokey->MatrixLED[id].data[3] = 0b11111111;
+    _pokey->MatrixLED[id].data[4] = 0b11111111;
+    _pokey->MatrixLED[id].data[5] = 0b11111111;
+    _pokey->MatrixLED[id].data[6] = 0b11111111;
+    _pokey->MatrixLED[id].data[7] = 0b11111111;
+
+    int32_t ret = PK_MatrixLEDConfigurationSet(_pokey);
+    PK_MatrixLEDUpdate(_pokey);
+}
+
 uint32_t PokeyDevice::targetValue(std::string targetName, bool value)
 {
     uint8_t pin = pinFromName(targetName) - 1;
@@ -315,7 +350,7 @@ uint32_t PokeyDevice::targetValue(std::string targetName, bool value)
 
 uint32_t PokeyDevice::outputPin(uint8_t pin)
 {
-    _pokey->Pins[--pin].PinFunction = PK_PinCap_digitalOutput;
+    _pokey->Pins[--pin].PinFunction = PK_PinCap_digitalOutput | PK_PinCap_invertPin;
     return PK_PinConfigurationSet(_pokey);
 }
 
@@ -351,6 +386,11 @@ void PokeyDevice::mapNameToPin(std::string name, int pin)
 void PokeyDevice::mapNameToEncoder(std::string name, int encoderNumber)
 {
     _encoderMap.emplace(name, encoderNumber);
+}
+
+void PokeyDevice::mapNameToMatrixLED(std::string name, int id)
+{
+    _displayMap.emplace(name, id);
 }
 
 bool PokeyDevice::isPinDigitalOutput(uint8_t pin)

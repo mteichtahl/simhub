@@ -357,7 +357,7 @@ char *SimSourcePluginStateManager::getElementDataType(char identifier)
         return (char *)"float";
         break;
     case NUMBER_IDENTIFIER:
-        return (char *)"float";
+        return (char *)"int";
         break;
     case INDICATOR_IDENTIFIER:
         return (char *)"bool";
@@ -511,7 +511,7 @@ bool TCPClient::connect(std::string address, int port)
         else {
             // cast the h_addr_list to in_addr , since h_addr_list also has the ip
             // address in long format only
-            
+
             addr_list = (struct in_addr **)he->h_addr_list;
             for (int i = 0; addr_list[i] != NULL; i++) {
                 _server.sin_addr = *addr_list[i];
