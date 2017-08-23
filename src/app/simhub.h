@@ -39,17 +39,17 @@ protected:
     simplug_vtable loadPlugin(std::string dylibName, libconfig::Config *pluginConfigs, EnqueueEventHandler eventCallback);
     void terminate(void);
     void shutdownPlugin(simplug_vtable &pluginMethods);
-    void startSustainThreads(void);
-    void ceaseSustainThreads(void);
+    void startSustainThread(void);
+    void ceaseSustainThread(void);
 
     ConcurrentQueue<std::shared_ptr<Attribute>> _eventQueue;
     simplug_vtable _prepare3dMethods;
     simplug_vtable _pokeyMethods;
     ConfigManager *_configManager;
-    std::map<std::string, std::shared_ptr<std::thread>> _sustainThreads;
-    std::atomic<bool> _continueSustainThreads;
-    std::atomic<size_t> _sustainThreadCount;
-    bool _terminated;
+
+    CancellableThreadManager _sustainThreadManager;
+
+    bool _running;
 
     // -- temp solution to plugin device configuration conundrum
     libconfig::Config *_pokeyDeviceConfig;
@@ -68,7 +68,7 @@ public:
         assert(prepare3dConfig != NULL);
         _prepare3dDeviceConfig = prepare3dConfig;
     };
-    ;
+    
     void setPokeyConfig(libconfig::Config *pokeyConfig)
     {
         assert(pokeyConfig != NULL);
@@ -101,7 +101,9 @@ template <class F> void SimHubEventController::runEventLoop(F &&eventProcessorFu
 {
     bool breakLoop = false;
 
-    startSustainThreads();
+    _running = true;
+
+    startSustainThread();
 
     while (!breakLoop) {
         try {

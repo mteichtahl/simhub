@@ -23,8 +23,7 @@ SimHubEventController::SimHubEventController()
     _prepare3dMethods.plugin_instance = NULL;
     _pokeyMethods.plugin_instance = NULL;
     _configManager = NULL;
-    _sustainThreadCount = 0;
-    _terminated = false;
+    _running = false;
 
 #if defined (_AWS_SDK)
     _awsHelper.init();
@@ -35,41 +34,49 @@ SimHubEventController::SimHubEventController()
 
 SimHubEventController::~SimHubEventController(void)
 {
-    if (!_terminated)
+    if (_running)
         terminate();
+#if defined(_AWS_SDK)
+    if (_awsHelper.polly())
+        _awsHelper.polly()->shutdown();
+    
+    if (_awsHelper.kinesis())
+        _awsHelper.kinesis()->shutdown();
+
+    _awsHelper.shutdown();
+#endif
 }
 
-void SimHubEventController::startSustainThreads(void)
+void SimHubEventController::startSustainThread(void)
 {
 #if defined (_AWS_SDK)
     _awsHelper.polly()->say("Simulator is ready.");
 #endif
     
-    _continueSustainThreads = true;
+    std::shared_ptr<std::thread> sustainThread = std::make_shared<std::thread>([=] {
+        _sustainThreadManager.setThreadRunning(true);
+        while (!_sustainThreadManager.threadCancelled()) {
+            sleep(1);
+            std::cout << "bing" << std::endl;
 
-    for (auto sustainEntry: _configManager->mapManager()->sustainMap()) {
-        _sustainThreads[sustainEntry.first] = std::make_shared<std::thread>([=] {
-            _sustainThreadCount++;
-            while (_continueSustainThreads) {
-                sleep(1);
-            }
-            _sustainThreadCount--;
-        });
-    }
+            /*
+             * TODO: keep a map of values to sustain
+             *       - sleep for time equal to shortest time to value sustain
+             *         -> send that value to kinesis
+             *         -> reset send time for that value
+             *         -> repeat loop
+             *
+             */
+        }
+        _sustainThreadManager.setThreadRunning(false);
+    });
+
+    _sustainThreadManager.setManagedThread(sustainThread);
 }
 
-void SimHubEventController::ceaseSustainThreads(void)
+void SimHubEventController::ceaseSustainThread(void)
 {
-    _continueSustainThreads = false;
-
-    do {
-        // noop
-    } while (_sustainThreadCount > 0);
-
-    for (auto item: _sustainThreads) {
-        item.second->join();
-    }
-    _sustainThreads.clear();
+    _sustainThreadManager.shutdownThread();
 }
 
 #if defined(_AWS_SDK)
@@ -265,18 +272,12 @@ bool SimHubEventController::loadPokeyPlugin(void)
 //! perform shutdown ceremonies on both plugins - this unloads both plugins
 void SimHubEventController::terminate(void)
 {
-    ceaseSustainThreads();
+    assert(_running);
+
+    ceaseSustainThread();
     shutdownPlugin(_prepare3dMethods);
     shutdownPlugin(_pokeyMethods);
-
-#if defined(_AWS_SDK)
-    _awsHelper.polly()->shutdown();
-    _awsHelper.kinesis()->shutdown();
-
-    _awsHelper.shutdown();
-#endif
-
-    _terminated = true;
+    _running = false;
 }
 
 //! private support method - gracefully closes plugin instance represented by pluginMethods

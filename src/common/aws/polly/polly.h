@@ -23,12 +23,13 @@
  */
 static const char *POLLY_MAIN_ALLOCATION_TAG = "PollySample::Main";
 
-class Polly : public CancellableThread
+class Polly
 {
 protected:
     Aws::String _defaultPollyVoice = "Nicole";
     Aws::String _defaultAudioDevice = "default";
 
+    CancellableThreadManager _threadManager;
     std::shared_ptr<Aws::Polly::PollyClient> _pollyClient;
     std::shared_ptr<Aws::TextToSpeech::TextToSpeechManager> _manager;
     ConcurrentQueue<Aws::String> _pollyQueue;
@@ -43,19 +44,7 @@ public:
     ~Polly(void);
     //
     void say(const char *pMsg, ...);
-    virtual void shutdown(void)
-    {
-        _pollyQueue.unblock();
-        CancellableThread::shutdown();
-
-        // abort async operations
-        _pollyClient->DisableRequestProcessing();
-
-        // allow internall PollyClient threads to stop
-        sleep(1);
-
-        _pollyClient.reset();
-    };
+    virtual void shutdown(void);
 };
 
 #endif // __AWS_POLLY_H

@@ -38,6 +38,7 @@ void configureCli(cmdline::parser *cli)
     cli->footer("\n");
 }
 
+// TODO: handle SIGHUP for settings reload
 void sigint_handler(int sigid)
 {
     // tell app event loop to end on control+c
