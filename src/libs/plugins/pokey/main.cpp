@@ -94,6 +94,9 @@ int PokeyDevicePluginStateManager::deliverValue(GenericTLV *data)
         if (data->type == ConfigType::CONFIG_BOOL) {
             device->targetValue(data->name, (int)data->value);
         }
+        else if (data->type == ConfigType::CONFIG_INT) {
+            device->targetValue(data->name, (int)data->value);
+        }
     }
 
     return 0;

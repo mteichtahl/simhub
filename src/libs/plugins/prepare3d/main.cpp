@@ -316,7 +316,7 @@ void SimSourcePluginStateManager::processElement(char *element)
             el.value.string_value = value;
             el.length = strlen(value);
         }
-        else if (strncmp(type, "integer", sizeof(&type)) == 0) {
+        else if (strncmp(type, "int", sizeof(&type)) == 0) {
             el.type = CONFIG_INT;
             el.value.int_value = atoi(value);
             el.length = sizeof(int);

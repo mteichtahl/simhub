@@ -332,6 +332,7 @@ void PokeyDevice::configMatrixLED(int id, int rows, int cols, int enabled)
 
 uint32_t PokeyDevice::targetValue(std::string targetName, bool value)
 {
+    printf("---> %s\n", targetName.c_str());
     uint8_t pin = pinFromName(targetName) - 1;
     uint32_t retValue = PK_DigitalIOSetSingle(_pokey, pin, (uint8_t)value);
 
