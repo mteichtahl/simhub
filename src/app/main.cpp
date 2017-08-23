@@ -41,7 +41,7 @@ void configureCli(cmdline::parser *cli)
 void sigint_handler(int sigid)
 {
     // tell app event loop to end on control+c
-    std::cout << "shutting down..." << std::endl;
+    logger.log(LOG_INFO, "Shutting down simhub, this may take a couple seconds...");
     SimHubEventController::EventControllerInstance()->ceaseEventLoop();
 }
 
@@ -73,18 +73,27 @@ int main(int argc, char *argv[])
         simhubController->enableKinesis();
 #endif
 
-    simhubController->loadPokeyPlugin(); ///< load the pokey plugin
-    simhubController->loadPrepare3dPlugin(); ///< load the prepare3d plugin
+    if (simhubController->loadPokeyPlugin()) {
+        if (simhubController->loadPrepare3dPlugin()) {
 
-    // kick off the simhub envent loop
+            // kick off the simhub envent loop
 
-    simhubController->runEventLoop([=](std::shared_ptr<Attribute> value) {
-        bool deliveryResult = simhubController->deliverValue(value);
+            simhubController->runEventLoop([=](std::shared_ptr<Attribute> value) {
+                bool deliveryResult = simhubController->deliverValue(value);
+
 #if defined(_AWS_SDK)
-        simhubController->deliverKinesisValue(value);
+                simhubController->deliverKinesisValue(value);
 #endif
-        return deliveryResult;
-    });
+                return deliveryResult;
+            });
+        }
+        else {
+            logger.log(LOG_ERROR, "error loading prepare3d plugin");
+        }
+    }
+    else {
+        logger.log(LOG_ERROR, "Could not pokey plugin");
+    }
 
     return 0;
 }

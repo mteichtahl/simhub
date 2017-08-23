@@ -12,14 +12,12 @@ Polly::Polly()
     _manager->SetActiveVoice(_defaultPollyVoice.c_str()); ///< set the active voice
     _threadCancelled = false;
 
-    /**
-    This is the worker thread - it blocks on _pollQueue until there is something to read
-    **/
-    logger.log(LOG_INFO, " - Starting AWS Polly Service...");
+    
+    // this is the worker thread - it blocks on _pollQueue until there is something to read
 
     _thread = std::make_shared<std::thread>([=] {
         _threadRunning = true;
-        std::cout << "polly thread started" << std::endl;
+        logger.log(LOG_INFO, " - Starting AWS Polly Service...");
         while (!_threadCancelled) {
             if (_pollyCanTalk) { ///< only do this if we are allowed to talk
                 try {
@@ -33,7 +31,7 @@ Polly::Polly()
             }
         }
         _threadRunning = false;
-        std::cout << "polly thread done" << std::endl;
+        logger.log(LOG_INFO, " - Terminated AWS Polly Service");
     });
 
     _pollyCanTalk = true; ///< we can start talking because everything is ready to go

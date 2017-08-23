@@ -16,11 +16,11 @@ Kinesis::Kinesis(std::string streamName, std::string partition, std::string regi
     config.region = Aws::String(_region.c_str());
     _kinesisClient = Aws::MakeShared<KinesisClient>(ALLOCATION_TAG, config);
 
-    logger.log(LOG_INFO, " - Starting AWS Kinesis Service...");
+    
 
     _thread = std::make_shared<std::thread>([=] {
         _threadRunning = true;
-        std::cout << "kinesis thread started" << std::endl;
+        logger.log(LOG_INFO, " - Starting AWS Kinesis Service...");
         while (!_threadCancelled) {
             try {
                 Aws::Utils::ByteBuffer data = _queue.pop(); ///< grab an item off the queue
@@ -33,7 +33,7 @@ Kinesis::Kinesis(std::string streamName, std::string partition, std::string regi
             }
         }
         _threadRunning = false;
-        std::cout << "kinesis thread done" << std::endl;
+        logger.log(LOG_INFO, " - Terminated AWS Kinesis Service");
     });
 }
 

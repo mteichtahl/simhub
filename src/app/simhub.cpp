@@ -24,6 +24,7 @@ SimHubEventController::SimHubEventController()
     _pokeyMethods.plugin_instance = NULL;
     _configManager = NULL;
     _sustainThreadCount = 0;
+    _terminated = false;
 
 #if defined (_AWS_SDK)
     _awsHelper.init();
@@ -34,6 +35,8 @@ SimHubEventController::SimHubEventController()
 
 SimHubEventController::~SimHubEventController(void)
 {
+    if (!_terminated)
+        terminate();
 }
 
 void SimHubEventController::startSustainThreads(void)
@@ -47,11 +50,9 @@ void SimHubEventController::startSustainThreads(void)
     for (auto sustainEntry: _configManager->mapManager()->sustainMap()) {
         _sustainThreads[sustainEntry.first] = std::make_shared<std::thread>([=] {
             _sustainThreadCount++;
-            std::cout << "sustain thread start" << std::endl;
             while (_continueSustainThreads) {
                 sleep(1);
             }
-            std::cout << "sustain thread done" << std::endl;
             _sustainThreadCount--;
         });
     }
@@ -235,28 +236,30 @@ simplug_vtable SimHubEventController::loadPlugin(std::string dylibName, libconfi
             pluginMethods.simplug_commence_eventing(pluginInstance, eventCallback, this);
         }
         else {
-            assert(false);
+            pluginMethods.simplug_release(pluginInstance);
+            pluginMethods.plugin_instance = NULL;
         }
-    }
-    else {
-        assert(false);
     }
 
     return pluginMethods;
 }
 
-void SimHubEventController::loadPrepare3dPlugin(void)
+bool SimHubEventController::loadPrepare3dPlugin(void)
 {
     auto prepare3dCallback = [](SPHANDLE eventSource, void *eventData, void *arg) { static_cast<SimHubEventController *>(arg)->prepare3dEventCallback(eventSource, eventData); };
 
     _prepare3dMethods = loadPlugin("libprepare3d", _prepare3dDeviceConfig, prepare3dCallback);
+
+    return _prepare3dMethods.plugin_instance != NULL;
 }
 
-void SimHubEventController::loadPokeyPlugin(void)
+bool SimHubEventController::loadPokeyPlugin(void)
 {
     auto pokeyCallback = [](SPHANDLE eventSource, void *eventData, void *arg) { static_cast<SimHubEventController *>(arg)->pokeyEventCallback(eventSource, eventData); };
 
     _pokeyMethods = loadPlugin("libpokey", _pokeyDeviceConfig, pokeyCallback);
+
+    return _pokeyMethods.plugin_instance != NULL;
 }
 
 //! perform shutdown ceremonies on both plugins - this unloads both plugins
@@ -266,12 +269,14 @@ void SimHubEventController::terminate(void)
     shutdownPlugin(_prepare3dMethods);
     shutdownPlugin(_pokeyMethods);
 
-    #if defined(_AWS_SDK)
+#if defined(_AWS_SDK)
     _awsHelper.polly()->shutdown();
     _awsHelper.kinesis()->shutdown();
 
     _awsHelper.shutdown();
 #endif
+
+    _terminated = true;
 }
 
 //! private support method - gracefully closes plugin instance represented by pluginMethods

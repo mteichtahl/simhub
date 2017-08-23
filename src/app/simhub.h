@@ -49,7 +49,7 @@ protected:
     std::map<std::string, std::shared_ptr<std::thread>> _sustainThreads;
     std::atomic<bool> _continueSustainThreads;
     std::atomic<size_t> _sustainThreadCount;
-
+    bool _terminated;
 
     // -- temp solution to plugin device configuration conundrum
     libconfig::Config *_pokeyDeviceConfig;
@@ -57,8 +57,8 @@ protected:
 
 public:
     virtual ~SimHubEventController(void);
-    void loadPrepare3dPlugin(void);
-    void loadPokeyPlugin(void);
+    bool loadPrepare3dPlugin(void);
+    bool loadPokeyPlugin(void);
     bool deliverValue(std::shared_ptr<Attribute> value);
     void setConfigManager(ConfigManager *configManager);
 
