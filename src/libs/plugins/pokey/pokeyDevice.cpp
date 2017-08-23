@@ -45,6 +45,55 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
 {
     PokeyDevice *self = static_cast<PokeyDevice *>(timer->data);
 
+    int encoderRetValue = PK_EncoderValuesGet(self->_pokey);
+    if (encoderRetValue == PK_OK) {
+        GenericTLV el;
+        for (int i = 0; i < self->_encoderMap.size(); i++) {
+
+            uint32_t step = self->_encoders[i].step;
+            uint32_t newEncoderValue = self->_pokey->Encoders[i].encoderValue;
+            uint32_t previousEncoderValue = self->_encoders[i].previousEncoderValue;
+
+            uint32_t currentValue = self->_encoders[i].value;
+            uint32_t min = self->_encoders[i].min;
+            uint32_t max = self->_encoders[i].max;
+
+            if (previousEncoderValue != newEncoderValue) {
+
+                if (newEncoderValue < previousEncoderValue) {
+                    // values are decreasing
+                    if (currentValue <= min) {
+                        self->_encoders[i].previousValue = min;
+                        self->_encoders[i].value = min;
+                    }
+                    else {
+                        self->_encoders[i].value = currentValue - step;
+                    }
+                }
+                else {
+                    // values are increasing
+                    if (currentValue >= max) {
+                        self->_encoders[i].previousValue = max;
+                        self->_encoders[i].value = max;
+                    }
+                    else {
+                        self->_encoders[i].value = currentValue + step;
+                    }
+                }
+
+                el.ownerPlugin = self->_pluginInstance;
+                el.type = CONFIG_INT;
+                el.value.int_value = (int)self->_encoders[i].value;
+                el.length = sizeof(uint32_t);
+                el.name = (char *)self->_encoders[i].name.c_str();
+                el.description = (char *)self->_encoders[i].description.c_str();
+                self->_enqueueCallback(self, (void *)&el, self->_callbackArg);
+
+                self->_encoders[i].previousEncoderValue = newEncoderValue;
+            }
+        }
+    }
+
     int ret = PK_DigitalIOGet(self->_pokey);
 
     if (ret == PK_OK) {
@@ -142,6 +191,110 @@ bool PokeyDevice::validatePinCapability(int pin, std::string type)
     return retVal;
 }
 
+bool PokeyDevice::validateEncoder(int encoderNumber)
+{
+    assert(_pokey);
+    bool retVal = false;
+
+    if (encoderNumber == ENCODER_1) {
+        //! TODO: Check pins 1 and 2 are not allocated already
+        retVal = isEncoderCapable(1) && isEncoderCapable(2);
+    }
+    else if (encoderNumber == ENCODER_2) {
+        //! TODO: Check pins 5 and 6 are not allocated already
+        retVal = isEncoderCapable(5) && isEncoderCapable(6);
+    }
+    else if (encoderNumber == ENCODER_3) {
+        //! TODO: Check pins 15 and 16 are not allocated already
+        retVal = isEncoderCapable(15) && isEncoderCapable(16);
+    }
+
+    return retVal;
+}
+
+bool PokeyDevice::isEncoderCapable(int pin)
+{
+
+    switch (pin) {
+    case 1:
+        return (bool)PK_CheckPinCapability(_pokey, 0, PK_AllPinCap_fastEncoder1A);
+    case 2:
+        return (bool)PK_CheckPinCapability(_pokey, 1, PK_AllPinCap_fastEncoder1B);
+    case 5:
+        return (bool)PK_CheckPinCapability(_pokey, 4, PK_AllPinCap_fastEncoder2A);
+    case 6:
+        return (bool)PK_CheckPinCapability(_pokey, 5, PK_AllPinCap_fastEncoder2B);
+    case 15:
+        return (bool)PK_CheckPinCapability(_pokey, 14, PK_AllPinCap_fastEncoder3A);
+    case 16:
+        return (bool)PK_CheckPinCapability(_pokey, 14, PK_AllPinCap_fastEncoder3B);
+    default:
+        return false;
+    }
+
+    return false;
+}
+
+void PokeyDevice::addEncoder(int encoderNumber, uint32_t defaultValue, std::string name, std::string description, int min, int max, int step, int invertDirection)
+{
+
+    PK_EncoderConfigurationGet(_pokey);
+    int encoderIndex = encoderNumber - 1;
+
+    _pokey->Encoders[encoderIndex].encoderValue = defaultValue;
+    _pokey->Encoders[encoderIndex].encoderOptions = 0b11;
+
+    if (encoderNumber == 1) {
+        if (invertDirection) {
+            _pokey->Encoders[encoderIndex].channelApin = 1;
+            _pokey->Encoders[encoderIndex].channelBpin = 0;
+        }
+        else {
+            _pokey->Encoders[encoderIndex].channelApin = 1;
+            _pokey->Encoders[encoderIndex].channelBpin = 0;
+        }
+    }
+    else if (encoderNumber == 2) {
+        if (invertDirection) {
+            _pokey->Encoders[encoderIndex].channelApin = 5;
+            _pokey->Encoders[encoderIndex].channelBpin = 4;
+        }
+        else {
+            _pokey->Encoders[encoderIndex].channelApin = 4;
+            _pokey->Encoders[encoderIndex].channelBpin = 5;
+        }
+    }
+    else if (encoderNumber == 3) {
+        if (invertDirection) {
+            _pokey->Encoders[encoderIndex].channelApin = 15;
+            _pokey->Encoders[encoderIndex].channelBpin = 14;
+        }
+        else {
+            _pokey->Encoders[encoderIndex].channelApin = 14;
+            _pokey->Encoders[encoderIndex].channelBpin = 15;
+        }
+    }
+
+    _encoders[encoderIndex].name = name;
+    _encoders[encoderIndex].number = encoderNumber;
+    _encoders[encoderIndex].defaultValue = defaultValue;
+    _encoders[encoderIndex].value = defaultValue;
+    _encoders[encoderIndex].previousValue = defaultValue;
+    _encoders[encoderIndex].previousEncoderValue = defaultValue;
+    _encoders[encoderIndex].min = min;
+    _encoders[encoderIndex].max = max;
+    _encoders[encoderIndex].step = step;
+
+    int val = PK_EncoderConfigurationSet(_pokey);
+    if (val == PK_OK) {
+        PK_EncoderValuesSet(_pokey);
+        mapNameToEncoder(name.c_str(), encoderNumber);
+    }
+    else {
+        // throw exception
+    }
+}
+
 uint32_t PokeyDevice::targetValue(std::string targetName, bool value)
 {
     uint8_t pin = pinFromName(targetName) - 1;
@@ -193,6 +346,11 @@ int PokeyDevice::pinFromName(std::string targetName)
 void PokeyDevice::mapNameToPin(std::string name, int pin)
 {
     _pinMap.emplace(name, pin);
+}
+
+void PokeyDevice::mapNameToEncoder(std::string name, int encoderNumber)
+{
+    _encoderMap.emplace(name, encoderNumber);
 }
 
 bool PokeyDevice::isPinDigitalOutput(uint8_t pin)
