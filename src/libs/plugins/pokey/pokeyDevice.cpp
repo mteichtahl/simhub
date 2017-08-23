@@ -22,6 +22,15 @@ PokeyDevice::PokeyDevice(sPoKeysNetworkDeviceSummary deviceSummary, uint8_t inde
     _hardwareType = deviceSummary.HWtype;
     _dhcp = deviceSummary.DHCP;
 
+    _intToDisplayRow[0] = 0b11111111;
+    _intToDisplayRow[1] = 0b11111110;
+    _intToDisplayRow[2] = 0b11111100;
+    _intToDisplayRow[3] = 0b11111000;
+    _intToDisplayRow[4] = 0b11110000;
+    _intToDisplayRow[5] = 0b11100000;
+    _intToDisplayRow[6] = 0b11000000;
+    _intToDisplayRow[7] = 0b10000000;
+
     loadPinConfiguration();
     _pollTimer.data = this;
     _pollLoop = uv_loop_new();
@@ -332,9 +341,18 @@ void PokeyDevice::configMatrixLED(int id, int rows, int cols, int enabled)
 
 uint32_t PokeyDevice::targetValue(std::string targetName, bool value)
 {
-    printf("---> %s\n", targetName.c_str());
+    uint32_t retValue = -1;
+
     uint8_t pin = pinFromName(targetName) - 1;
-    uint32_t retValue = PK_DigitalIOSetSingle(_pokey, pin, (uint8_t)value);
+    if (pin > 0) {
+        retValue = PK_DigitalIOSetSingle(_pokey, pin, (uint8_t)value);
+    }
+    else {
+        uint8_t displayIndex = displayFromName(targetName);
+        if (displayIndex > 0) {
+            displayNumber(displayIndex - 1, targetName, (uint8_t)value);
+        }
+    }
 
     if (retValue == PK_ERR_TRANSFER) {
         printf("----> PK_ERR_TRANSFER pin %d --> %d %d\n\n", pin, (uint8_t)value, retValue);
@@ -347,6 +365,45 @@ uint32_t PokeyDevice::targetValue(std::string targetName, bool value)
     }
 
     return retValue;
+}
+
+uint8_t PokeyDevice::displayNumber(int displayNumber, std::string targetName, uint8_t value)
+{
+    int groupIndex = 0;
+
+    for (int i = 0; i < MAX_MATRIX_LED_GROUPS; i++) {
+        if (_matrixLED[displayNumber].group[i].name == targetName) {
+            groupIndex = i;
+            continue;
+        }
+    }
+
+    char *charValue = reinterpret_cast<char *>(value);
+    int charValueLength = strlen(charValue);
+
+    if (charValueLength <= _matrixLED[displayNumber].group[groupIndex].length) {
+        for (int i = 0; i < charValueLength; i++) {
+
+            int charOffset = (int)charValue[i];
+            uint8_t convertedValue = _intToDisplayRow[charOffset];
+            int position = _matrixLED[displayNumber].group[groupIndex].position + i;
+
+            _matrixLED[displayNumber].group[groupIndex].value = convertedValue;
+            _pokey->MatrixLED[displayNumber].data[position] = convertedValue;
+        }
+        uint8_t ret = PK_MatrixLEDConfigurationSet(_pokey);
+        if (ret == PK_OK) {
+            if (PK_MatrixLEDUpdate(_pokey) != PK_OK) {
+                printf("---> could not update Maxtix LED \n");
+            }
+        }
+        else {
+            printf("---> could not set Maxtix LED config\n");
+            return -1;
+        }
+    }
+
+    return 0;
 }
 
 uint32_t PokeyDevice::outputPin(uint8_t pin)
@@ -365,6 +422,19 @@ int32_t PokeyDevice::name(std::string name)
 {
     strncpy((char *)_pokey->DeviceData.DeviceName, name.c_str(), 30);
     return PK_DeviceNameSet(_pokey);
+}
+
+int PokeyDevice::displayFromName(std::string targetName)
+{
+    printf("---> finding %s\n", targetName.c_str());
+    std::map<std::string, int>::iterator it;
+    it = _displayMap.find(targetName);
+
+    if (it != _displayMap.end()) {
+        return it->second;
+    }
+    else
+        return -1;
 }
 
 int PokeyDevice::pinFromName(std::string targetName)

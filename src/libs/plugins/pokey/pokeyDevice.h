@@ -91,6 +91,7 @@ protected:
     device_port_t _pins[MAX_PINS];
     device_encoder_t _encoders[MAX_ENCODERS];
     device_matrixLED_t _matrixLED[MAX_MATRIX_LEDS];
+    uint8_t _intToDisplayRow[8];
     EnqueueEventHandler _enqueueCallback;
 
     std::shared_ptr<std::thread> _pollThread;
@@ -98,6 +99,9 @@ protected:
     uv_timer_t _pollTimer;
 
     int pinFromName(std::string targetName);
+    int displayFromName(std::string targetName);
+    uint8_t displayNumber(int displayNumber, std::string targetName, uint8_t value);
+
     void pollCallback(uv_timer_t *timer, int status);
 
 public:
