@@ -13,6 +13,15 @@
 
 #define DEVICE_READ_INTERVAL 100
 #define DEVICE_START_DELAY 100
+#define ENCODER_1 1
+#define ENCODER_2 2
+#define ENCODER_3 3
+#define DEFAULT_ENCODER_NAME ""
+#define DEFAULT_ENCODER_DESCRIPTION ""
+#define DEFAULT_ENCODER_MIN 0
+#define DEFAULT_ENCODER_MAX 60000
+#define DEFAULT_ENCODER_STEP 1
+#define DEFAULT_ENCODER_DIRECTION 0
 
 typedef struct {
     std::string pinName;
@@ -24,7 +33,21 @@ typedef struct {
     uint8_t previousValue;
 } device_port_t;
 
+typedef struct {
+    std::string name;
+    int number;
+    std::string description;
+    int32_t defaultValue;
+    int32_t value;
+    int32_t previousValue;
+    int32_t previousEncoderValue;
+    int32_t min;
+    int32_t max;
+    int32_t step;
+} device_encoder_t;
+
 #define MAX_PINS 55
+#define MAX_ENCODERS 10
 
 class PokeyDevice
 {
@@ -44,10 +67,13 @@ protected:
     uint8_t _dhcp;
 
     std::map<std::string, int> _pinMap;
+    std::map<std::string, int> _encoderMap;
+
     sPoKeysDevice *_pokey;
     void *_callbackArg;
     SPHANDLE _pluginInstance;
     device_port_t _pins[MAX_PINS];
+    device_encoder_t _encoders[MAX_ENCODERS];
     EnqueueEventHandler _enqueueCallback;
 
     std::shared_ptr<std::thread> _pollThread;
@@ -62,7 +88,9 @@ public:
     virtual ~PokeyDevice(void);
 
     bool validatePinCapability(int, std::string);
+    bool validateEncoder(int encoderNumber);
     void mapNameToPin(std::string name, int pin);
+    void mapNameToEncoder(std::string name, int encoderNumber);
     uint32_t targetValue(std::string targetName, bool value);
     uint32_t inputPin(uint8_t pin);
     uint32_t outputPin(uint8_t pin);
@@ -81,6 +109,7 @@ public:
     uint8_t index() { return _index; }
     uint8_t *ipAddress() { return _ipAddress; }
     device_port_t *pins(void) { return _pins; };
+    device_encoder_t *encoders() { return _encoders; };
     sPoKeysDevice *pokey() { return _pokey; }
     sPoKeysDevice_Info info() { return _pokey->info; }
     uint8_t numberOfPins() { return info().iPinCount; }
@@ -90,10 +119,14 @@ public:
         assert(_pokey);
         return _pokey->DeviceData;
     }
+
     uint8_t loadPinConfiguration() { return PK_PinConfigurationGet(_pokey); }
     bool isPinDigitalOutput(uint8_t pin);
     bool isPinDigitalInput(uint8_t pin);
+    bool isEncoderCapable(int pin);
     void addPin(std::string name, int pinNumber, std::string pinType, int defaultValue = 0, std::string description = "None");
+    void addEncoder(int encoderNumber, uint32_t defaultValue, std::string name = DEFAULT_ENCODER_NAME, std::string description = DEFAULT_ENCODER_DESCRIPTION,
+        int min = DEFAULT_ENCODER_MIN, int max = DEFAULT_ENCODER_MAX, int step = DEFAULT_ENCODER_STEP, int invertDirection = DEFAULT_ENCODER_DIRECTION);
 
     void startPolling();
     void stopPolling();
