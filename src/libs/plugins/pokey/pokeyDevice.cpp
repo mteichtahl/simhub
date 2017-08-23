@@ -196,15 +196,15 @@ bool PokeyDevice::validateEncoder(int encoderNumber)
     assert(_pokey);
     bool retVal = false;
 
-    if (encoderNumber == 1) {
+    if (encoderNumber == ENCODER_1) {
         //! TODO: Check pins 1 and 2 are not allocated already
         retVal = isEncoderCapable(1) && isEncoderCapable(2);
     }
-    else if (encoderNumber == 2) {
+    else if (encoderNumber == ENCODER_2) {
         //! TODO: Check pins 5 and 6 are not allocated already
         retVal = isEncoderCapable(5) && isEncoderCapable(6);
     }
-    else if (encoderNumber == 3) {
+    else if (encoderNumber == ENCODER_3) {
         //! TODO: Check pins 15 and 16 are not allocated already
         retVal = isEncoderCapable(15) && isEncoderCapable(16);
     }
@@ -214,18 +214,23 @@ bool PokeyDevice::validateEncoder(int encoderNumber)
 
 bool PokeyDevice::isEncoderCapable(int pin)
 {
-    if (pin == 1)
+
+    switch (pin) {
+    case 1:
         return (bool)PK_CheckPinCapability(_pokey, 0, PK_AllPinCap_fastEncoder1A);
-    else if (pin == 2)
+    case 2:
         return (bool)PK_CheckPinCapability(_pokey, 1, PK_AllPinCap_fastEncoder1B);
-    else if (pin == 5)
+    case 5:
         return (bool)PK_CheckPinCapability(_pokey, 4, PK_AllPinCap_fastEncoder2A);
-    else if (pin == 6)
+    case 6:
         return (bool)PK_CheckPinCapability(_pokey, 5, PK_AllPinCap_fastEncoder2B);
-    else if (pin == 15)
+    case 15:
         return (bool)PK_CheckPinCapability(_pokey, 14, PK_AllPinCap_fastEncoder3A);
-    else if (pin == 16)
-        return (bool)PK_CheckPinCapability(_pokey, 15, PK_AllPinCap_fastEncoder3B);
+    case 16:
+        return (bool)PK_CheckPinCapability(_pokey, 14, PK_AllPinCap_fastEncoder3B);
+    default:
+        return false;
+    }
 
     return false;
 }
@@ -235,8 +240,6 @@ void PokeyDevice::addEncoder(int encoderNumber, uint32_t defaultValue, std::stri
 
     PK_EncoderConfigurationGet(_pokey);
     int encoderIndex = encoderNumber - 1;
-
-    printf("----> setting default value %i\n", defaultValue);
 
     _pokey->Encoders[encoderIndex].encoderValue = defaultValue;
     _pokey->Encoders[encoderIndex].encoderOptions = 0b11;
@@ -288,7 +291,7 @@ void PokeyDevice::addEncoder(int encoderNumber, uint32_t defaultValue, std::stri
         mapNameToEncoder(name.c_str(), encoderNumber);
     }
     else {
-        printf("\n !!!! cannot set encoder config !!!! \n");
+        // throw exception
     }
 }
 

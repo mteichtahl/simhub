@@ -321,6 +321,7 @@ bool PokeyDevicePluginStateManager::deviceEncodersConfiguration(libconfig::Setti
             }
             catch (const libconfig::SettingNotFoundException &nfex) {
                 _logger(LOG_ERROR, "Could not find %s. Skipping....", nfex.what());
+                continue;
             }
 
             if (pokeyDevice->validateEncoder(encoderNumber)) {
@@ -373,7 +374,7 @@ int PokeyDevicePluginStateManager::preflightComplete(void)
             deviceEncodersConfiguration(&iter->lookup("encoders"), pokeyDevice);
         }
         catch (const libconfig::SettingNotFoundException &nfex) {
-            printf("\n %s\n", nfex.what());
+            _logger(LOG_ERROR, "Could not find encoder setting %s", nfex.what());
         }
 
         pokeyDevice->startPolling();

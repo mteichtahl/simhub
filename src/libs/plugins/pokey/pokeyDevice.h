@@ -13,6 +13,15 @@
 
 #define DEVICE_READ_INTERVAL 100
 #define DEVICE_START_DELAY 100
+#define ENCODER_1 1
+#define ENCODER_2 2
+#define ENCODER_3 3
+#define DEFAULT_ENCODER_NAME ""
+#define DEFAULT_ENCODER_DESCRIPTION ""
+#define DEFAULT_ENCODER_MIN 0
+#define DEFAULT_ENCODER_MAX 60000
+#define DEFAULT_ENCODER_STEP 1
+#define DEFAULT_ENCODER_DIRECTION 0
 
 typedef struct {
     std::string pinName;
@@ -116,8 +125,8 @@ public:
     bool isPinDigitalInput(uint8_t pin);
     bool isEncoderCapable(int pin);
     void addPin(std::string name, int pinNumber, std::string pinType, int defaultValue = 0, std::string description = "None");
-    void addEncoder(
-        int encoderNumber, uint32_t defaultValue, std::string name = "", std::string description = "None", int min = 0, int max = 9999, int step = 1, int invertDirection = 0);
+    void addEncoder(int encoderNumber, uint32_t defaultValue, std::string name = DEFAULT_ENCODER_NAME, std::string description = DEFAULT_ENCODER_DESCRIPTION,
+        int min = DEFAULT_ENCODER_MIN, int max = DEFAULT_ENCODER_MAX, int step = DEFAULT_ENCODER_STEP, int invertDirection = DEFAULT_ENCODER_DIRECTION);
 
     void startPolling();
     void stopPolling();
