@@ -6,6 +6,7 @@
 #include <thread>
 #include <atomic>
 
+#include "appsupport.h"
 #include "elements/attributes/attribute.h"
 #include "plugins/common/simhubdeviceplugin.h"
 #include "queue/concurrent_queue.h"
