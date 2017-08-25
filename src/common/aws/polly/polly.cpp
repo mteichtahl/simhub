@@ -48,7 +48,7 @@ void Polly::shutdown(void)
     _pollyClient->DisableRequestProcessing();
 
     // allow internall PollyClient threads to stop
-    std::this_thread::sleep_for(100ms);
+    std::this_thread::sleep_for(1000ms);
 
     _pollyClient.reset();
 }

@@ -36,7 +36,7 @@ public:
     virtual void setManagedThread(std::shared_ptr<std::thread> managedThread) { _managedThread = managedThread; };
 };
 
-template <typename T, typename E> bool mapContains(std::map<T, E> &mapInstance, T key)
+template <typename T, typename E> bool mapContains(const std::map<T, E> &mapInstance, T key)
 {
     return mapInstance.find(key) != mapInstance.end();
 }

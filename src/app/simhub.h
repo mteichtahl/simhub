@@ -29,7 +29,7 @@ class ConfigManager; // forward reference
  *   the callback stub, to call into the proper 'eventCallback' member
  */
  
- typedef std::pair<unsigned int, std::shared_ptr<Attribute>> SustainMapEntry;
+ typedef std::pair<std::chrono::milliseconds, std::shared_ptr<Attribute>> SustainMapEntry;
 
 class SimHubEventController
 {

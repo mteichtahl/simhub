@@ -64,21 +64,23 @@ void SimHubEventController::startSustainThread(void)
         _sustainThreadManager.setThreadRunning(true);
         while (!_sustainThreadManager.threadCancelled()) {
             std::this_thread::sleep_for(100ms);
-            std::cout << "bing" << std::endl;
 
+            // build up list of values that need to be resent to kinesis
+            // due to expiration of their sustain timer
             std::lock_guard<std::mutex> sustainGuard(_sustainValuesMutex);
 
+            std::chrono::milliseconds now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+
             for (std::pair<std::string, SustainMapEntry> entry: _sustainValues) {
-                std::cout << "sustaining: " << entry.first << std::endl;
+                std::chrono::milliseconds sustain = entry.second.first;
+                std::chrono::milliseconds ts = entry.second.second->timestamp();
+
+                if ((ts + sustain) <= now) {
+                    entry.second.second->resetTimestamp();
+                    logger.log(LOG_INFO, "sustaining value: %s", entry.second.second->name().c_str());
+                    deliverKinesisValue(entry.second.second);
+                }
             }
-            /*
-             * TODO: keep a map of values to sustain
-             *       - sleep for time equal to shortest time to value sustain
-             *         -> send that value to kinesis
-             *         -> reset send time for that value
-             *         -> repeat loop
-             *
-             */
         }
         _sustainThreadManager.setThreadRunning(false);
     });
@@ -111,12 +113,6 @@ void SimHubEventController::deliverKinesisValue(std::shared_ptr<Attribute> value
     }
 
     _awsHelper.kinesis()->putRecord(data);
-
-    if (mapContains(_sustainValues, name)) {
-        // update the sustain value map entry
-        std::lock_guard<std::mutex> sustainGuard(_sustainValuesMutex);
-        _sustainValues[name].second = value;
-    }
 }
 
 void SimHubEventController::enablePolly(void)
@@ -161,6 +157,13 @@ bool SimHubEventController::deliverValue(std::shared_ptr<Attribute> value)
     GenericTLV *c_value = AttributeToCGeneric(value);
 
     bool retVal = false;
+
+    if (mapContains(_configManager->mapManager()->sustainMap(), value->name())) {
+        // update the sustain value map entry
+        std::lock_guard<std::mutex> sustainGuard(_sustainValuesMutex);
+        _sustainValues[value->name()].second = value;
+        _sustainValues[value->name()].first = std::chrono::milliseconds(_configManager->mapManager()->sustainMap()[value->name()]);
+    }
 
     // determine value destination from the source - very simple at the moment
     // (just deliver to whatever instance is not the source) - may want more
