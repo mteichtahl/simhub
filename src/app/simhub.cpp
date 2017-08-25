@@ -1,9 +1,12 @@
 #include <assert.h>
 #include <utility>
+#include <chrono>
 
 #include "common/configmanager/configmanager.h"
 #include "log/clog.h"
 #include "simhub.h"
+
+using namespace std::chrono_literals;
 
 // TODO: FIX EVERYTHING
 
@@ -12,8 +15,9 @@ std::shared_ptr<SimHubEventController> SimHubEventController::_EventControllerIn
 //! static singleton accessor
 std::shared_ptr<SimHubEventController> SimHubEventController::EventControllerInstance(void)
 {
-    if (!_EventControllerInstance)
+    if (!_EventControllerInstance) {
         _EventControllerInstance.reset(new SimHubEventController());
+    }
 
     return SimHubEventController::_EventControllerInstance;
 }
@@ -34,14 +38,17 @@ SimHubEventController::SimHubEventController()
 
 SimHubEventController::~SimHubEventController(void)
 {
-    if (_running)
+    if (_running) {
         terminate();
+    }
 #if defined(_AWS_SDK)
-    if (_awsHelper.polly())
+    if (_awsHelper.polly()) {
         _awsHelper.polly()->shutdown();
+    }
     
-    if (_awsHelper.kinesis())
+    if (_awsHelper.kinesis()) {
         _awsHelper.kinesis()->shutdown();
+    }
 
     _awsHelper.shutdown();
 #endif
@@ -56,9 +63,14 @@ void SimHubEventController::startSustainThread(void)
     std::shared_ptr<std::thread> sustainThread = std::make_shared<std::thread>([=] {
         _sustainThreadManager.setThreadRunning(true);
         while (!_sustainThreadManager.threadCancelled()) {
-            sleep(1);
+            std::this_thread::sleep_for(100ms);
             std::cout << "bing" << std::endl;
 
+            std::lock_guard<std::mutex> sustainGuard(_sustainValuesMutex);
+
+            for (std::pair<std::string, SustainMapEntry> entry: _sustainValues) {
+                std::cout << "sustaining: " << entry.first << std::endl;
+            }
             /*
              * TODO: keep a map of values to sustain
              *       - sleep for time equal to shortest time to value sustain
@@ -94,10 +106,17 @@ void SimHubEventController::deliverKinesisValue(std::shared_ptr<Attribute> value
 
     Aws::Utils::ByteBuffer data(dataString.length());
 
-    for (int i = 0; i < dataString.length(); i++)
+    for (int i = 0; i < dataString.length(); i++) {
         data[i] = dataString[i];
+    }
 
     _awsHelper.kinesis()->putRecord(data);
+
+    if (mapContains(_sustainValues, name)) {
+        // update the sustain value map entry
+        std::lock_guard<std::mutex> sustainGuard(_sustainValuesMutex);
+        _sustainValues[name].second = value;
+    }
 }
 
 void SimHubEventController::enablePolly(void)
@@ -147,13 +166,17 @@ bool SimHubEventController::deliverValue(std::shared_ptr<Attribute> value)
     // (just deliver to whatever instance is not the source) - may want more
     // sophisticated logic here
 
-    if (value->ownerPlugin() == _pokeyMethods.plugin_instance)
+    if (value->ownerPlugin() == _pokeyMethods.plugin_instance) {
         retVal = !_prepare3dMethods.simplug_deliver_value(_prepare3dMethods.plugin_instance, c_value);
-    else if (value->ownerPlugin() == _prepare3dMethods.plugin_instance)
+    }
+    else if (value->ownerPlugin() == _prepare3dMethods.plugin_instance) {
         retVal = !_pokeyMethods.simplug_deliver_value(_pokeyMethods.plugin_instance, c_value);
+    }
 
-    if (c_value->type == CONFIG_STRING)
+    if (c_value->type == CONFIG_STRING) {
         free(c_value->value.string_value);
+    }
+
     free(c_value->name);
     free(c_value);
 
@@ -235,6 +258,7 @@ simplug_vtable SimHubEventController::loadPlugin(std::string dylibName, libconfi
         //    - been given for this plugin and pass them through
 
         pluginMethods.simplug_config_passthrough(pluginInstance, pluginConfig);
+
         // TODO: add error checking
 
         if (pluginMethods.simplug_preflight_complete(pluginInstance) == 0) {

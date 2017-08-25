@@ -5,6 +5,7 @@
 #include <string>
 #include <thread>
 #include <atomic>
+#include <mutex>
 
 #include "appsupport.h"
 #include "elements/attributes/attribute.h"
@@ -27,6 +28,9 @@ class ConfigManager; // forward reference
  *   void * to 'this' that was passed to the plugin when it registered
  *   the callback stub, to call into the proper 'eventCallback' member
  */
+ 
+ typedef std::pair<unsigned int, std::shared_ptr<Attribute>> SustainMapEntry;
+
 class SimHubEventController
 {
 protected:
@@ -49,6 +53,8 @@ protected:
     ConfigManager *_configManager;
 
     CancellableThreadManager _sustainThreadManager;
+    std::map<std::string, SustainMapEntry> _sustainValues;
+    std::mutex _sustainValuesMutex;
 
     bool _running;
 

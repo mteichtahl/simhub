@@ -41,9 +41,13 @@ void configureCli(cmdline::parser *cli)
 // TODO: handle SIGHUP for settings reload
 void sigint_handler(int sigid)
 {
-    // tell app event loop to end on control+c
-    logger.log(LOG_INFO, "Shutting down simhub, this may take a couple seconds...");
-    SimHubEventController::EventControllerInstance()->ceaseEventLoop();
+    if (sigid == SIGINT) {        
+        // tell app event loop to end on control+c
+        logger.log(LOG_INFO, "Shutting down simhub, this may take a couple seconds...");
+        SimHubEventController::EventControllerInstance()->ceaseEventLoop();
+    }
+    else if (sigid == SIGHUP) {
+    }
 }
 
 int main(int argc, char *argv[])
@@ -51,6 +55,7 @@ int main(int argc, char *argv[])
     struct sigaction act;
     act.sa_handler = sigint_handler;
     sigaction(SIGINT, &act, NULL);
+    sigaction(SIGHUP, &act, NULL);
 
     cmdline::parser cli;
     configureCli(&cli);

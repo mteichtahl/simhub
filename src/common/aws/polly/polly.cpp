@@ -3,6 +3,8 @@
 #include "../../log/clog.h"
 #include "polly.h"
 
+using namespace std::chrono_literals;
+
 Polly::Polly()
 {
     _pollyCanTalk = false; ///< No talking while we instantiate
@@ -46,7 +48,7 @@ void Polly::shutdown(void)
     _pollyClient->DisableRequestProcessing();
 
     // allow internall PollyClient threads to stop
-    sleep(1);
+    std::this_thread::sleep_for(100ms);
 
     _pollyClient.reset();
 }
