@@ -2,18 +2,18 @@
 #define __AWS_POLLY_H
 
 #include "../../libs/queue/concurrent_queue.h"
+#include <atomic>
 #include <aws/core/Aws.h>
-#include <aws/polly/PollyClient.h>
 #include <aws/core/Version.h>
 #include <aws/core/utils/memory/stl/AWSAllocator.h>
+#include <aws/polly/PollyClient.h>
 #include <aws/text-to-speech/TextToSpeechManager.h>
 #include <condition_variable>
 #include <cstdarg>
-#include <atomic>
 #include <iostream>
 #include <stdio.h>
-#include <unistd.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "appsupport.h"
 #define MAX_VA_LENGTH 4096
@@ -26,7 +26,7 @@ static const char *POLLY_MAIN_ALLOCATION_TAG = "PollySample::Main";
 class Polly : public CancellableThread
 {
 protected:
-    Aws::String _defaultPollyVoice = "Nicole";
+    Aws::String _defaultPollyVoice = "Amy";
     Aws::String _defaultAudioDevice = "default";
 
     std::shared_ptr<Aws::Polly::PollyClient> _pollyClient;

@@ -143,9 +143,12 @@ bool SimHubEventController::deliverValue(std::shared_ptr<Attribute> value)
     if (value->ownerPlugin() == _pokeyMethods.plugin_instance)
         retVal = !_prepare3dMethods.simplug_deliver_value(_prepare3dMethods.plugin_instance, c_value);
     else if (value->ownerPlugin() == _prepare3dMethods.plugin_instance) {
+
         if (value->name() == "N_ELEC_PANEL_LOWER_LEFT") {
-            _awsHelper.polly()->say("dc volts %i", c_value->value);
+            if (c_value >= 0)
+                _awsHelper.polly()->say("dc volts %i", c_value->value);
         }
+
         retVal = !_pokeyMethods.simplug_deliver_value(_pokeyMethods.plugin_instance, c_value);
     }
 
