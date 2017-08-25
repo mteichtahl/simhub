@@ -25,11 +25,12 @@ typedef enum { CONFIG_INT = 0, CONFIG_STRING, CONFIG_FLOAT, CONFIG_BOOL, CONFIG_
 
 typedef union {
     float float_value;
-    long int_value;
+    int int_value;
     unsigned int uint_value;
     char *string_value;
     int bool_value;
     operator bool() const { return bool_value; }
+    operator int() const { return int_value; }
 } VariantUnion;
 
 typedef struct {

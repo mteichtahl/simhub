@@ -4,6 +4,7 @@
 #include "PoKeysLib.h"
 #include "common/simhubdeviceplugin.h"
 #include <assert.h>
+#include <cmath>
 #include <iostream>
 #include <map>
 #include <stdlib.h>
@@ -91,7 +92,7 @@ protected:
     device_port_t _pins[MAX_PINS];
     device_encoder_t _encoders[MAX_ENCODERS];
     device_matrixLED_t _matrixLED[MAX_MATRIX_LEDS];
-    uint8_t _intToDisplayRow[8];
+    uint8_t _intToDisplayRow[10];
     EnqueueEventHandler _enqueueCallback;
 
     std::shared_ptr<std::thread> _pollThread;
@@ -99,8 +100,8 @@ protected:
     uv_timer_t _pollTimer;
 
     int pinFromName(std::string targetName);
-    int displayFromName(std::string targetName);
-    uint8_t displayNumber(int displayNumber, std::string targetName, uint8_t value);
+    uint8_t displayFromName(std::string targetName);
+    uint8_t displayNumber(uint8_t displayNumwber, std::string targetName, int value);
 
     void pollCallback(uv_timer_t *timer, int status);
 
@@ -115,6 +116,7 @@ public:
     void mapNameToMatrixLED(std::string name, int id);
 
     uint32_t targetValue(std::string targetName, bool value);
+    uint32_t targetValue(std::string targetName, int value);
     uint32_t inputPin(uint8_t pin);
     uint32_t outputPin(uint8_t pin);
     int32_t name(std::string name);
