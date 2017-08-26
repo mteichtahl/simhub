@@ -98,8 +98,11 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
                 el.length = sizeof(uint32_t);
                 el.name = (char *)self->_encoders[i].name.c_str();
                 el.description = (char *)self->_encoders[i].description.c_str();
-                self->_enqueueCallback(self, (void *)&el, self->_callbackArg);
+                el.units = (char *)self->_encoders[i].units.c_str();
 
+                // enqueue the element
+                self->_enqueueCallback(self, (void *)&el, self->_callbackArg);
+                // set previous to equal new
                 self->_encoders[i].previousEncoderValue = newEncoderValue;
             }
         }
@@ -122,6 +125,7 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
                     el.length = sizeof(uint8_t);
                     el.name = (char *)self->_pins[i].pinName.c_str();
                     el.description = (char *)self->_pins[i].description.c_str();
+                    el.units = (char *)self->_encoders[i].units.c_str();
                     self->_enqueueCallback(self, (void *)&el, self->_callbackArg);
                 }
             }
@@ -245,7 +249,8 @@ bool PokeyDevice::isEncoderCapable(int pin)
     return false;
 }
 
-void PokeyDevice::addEncoder(int encoderNumber, uint32_t defaultValue, std::string name, std::string description, int min, int max, int step, int invertDirection)
+void PokeyDevice::addEncoder(
+    int encoderNumber, uint32_t defaultValue, std::string name, std::string description, int min, int max, int step, int invertDirection, std::string units)
 {
 
     PK_EncoderConfigurationGet(_pokey);
@@ -294,6 +299,7 @@ void PokeyDevice::addEncoder(int encoderNumber, uint32_t defaultValue, std::stri
     _encoders[encoderIndex].min = min;
     _encoders[encoderIndex].max = max;
     _encoders[encoderIndex].step = step;
+    _encoders[encoderIndex].units = units;
 
     int val = PK_EncoderConfigurationSet(_pokey);
     if (val == PK_OK) {

@@ -29,7 +29,12 @@ function cleanJSONString(string) {
 
 function writeToDynamo(name, value) {
   var params = {
-    Item: {'source': {S: name}, 'Value': {S: value}},
+    Item: {
+      'source': {S: name},
+      'value': {S: value},
+      'units': {S: units},
+      'description': {S: description}
+    },
     ReturnConsumedCapacity: 'TOTAL',
     TableName: 'simhub'
   };

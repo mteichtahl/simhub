@@ -43,6 +43,7 @@ typedef struct {
     std::string name;
     int number;
     std::string description;
+    std::string units;
     int32_t defaultValue;
     int32_t value;
     int32_t previousValue;
@@ -154,7 +155,7 @@ public:
     bool isEncoderCapable(int pin);
     void addPin(std::string name, int pinNumber, std::string pinType, int defaultValue = 0, std::string description = "None");
     void addEncoder(int encoderNumber, uint32_t defaultValue, std::string name = DEFAULT_ENCODER_NAME, std::string description = DEFAULT_ENCODER_DESCRIPTION,
-        int min = DEFAULT_ENCODER_MIN, int max = DEFAULT_ENCODER_MAX, int step = DEFAULT_ENCODER_STEP, int invertDirection = DEFAULT_ENCODER_DIRECTION);
+        int min = DEFAULT_ENCODER_MIN, int max = DEFAULT_ENCODER_MAX, int step = DEFAULT_ENCODER_STEP, int invertDirection = DEFAULT_ENCODER_DIRECTION, std::string units = "");
 
     void addMatrixLED(int id, std::string name, std::string type);
     void configMatrixLED(int id, int rows, int cols = 8, int enabled = 0);

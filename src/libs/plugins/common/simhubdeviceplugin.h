@@ -39,6 +39,7 @@ typedef struct {
     long length;
     VariantUnion value;
     char *description;
+    char *units;
     SPHANDLE ownerPlugin;
 } GenericTLV;
 

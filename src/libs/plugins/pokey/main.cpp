@@ -231,6 +231,7 @@ bool PokeyDevicePluginStateManager::devicePinsConfiguration(libconfig::Setting *
             std::string pinName = "";
             std::string pinType = "";
             std::string description = "";
+            std::string units = "";
             bool pinDefault = false;
 
             try {
@@ -238,6 +239,7 @@ bool PokeyDevicePluginStateManager::devicePinsConfiguration(libconfig::Setting *
                 iter->lookupValue("name", pinName);
                 iter->lookupValue("type", pinType);
                 iter->lookupValue("description", description);
+                iter->lookupValue("units", units);
             }
             catch (const libconfig::SettingNotFoundException &nfex) {
                 _logger(LOG_ERROR, "Config file parse error at %s. Skipping....", nfex.getPath());
@@ -304,6 +306,7 @@ bool PokeyDevicePluginStateManager::deviceEncodersConfiguration(libconfig::Setti
             int encoderMax = 1000;
             int encoderStep = 1;
             int invertDirection = 0;
+            std::string units = "";
 
             try {
                 iter->lookupValue("encoder", encoderNumber);
@@ -314,6 +317,7 @@ bool PokeyDevicePluginStateManager::deviceEncodersConfiguration(libconfig::Setti
                 iter->lookupValue("max", encoderMax);
                 iter->lookupValue("step", encoderStep);
                 iter->lookupValue("invertDirection", invertDirection);
+                iter->lookupValue("units", units);
             }
             catch (const libconfig::SettingNotFoundException &nfex) {
                 _logger(LOG_ERROR, "Could not find %s. Skipping....", nfex.what());
@@ -321,7 +325,7 @@ bool PokeyDevicePluginStateManager::deviceEncodersConfiguration(libconfig::Setti
             }
 
             if (pokeyDevice->validateEncoder(encoderNumber)) {
-                pokeyDevice->addEncoder(encoderNumber, encoderDefault, encoderName, encoderDescription, encoderMin, encoderMax, encoderStep, invertDirection);
+                pokeyDevice->addEncoder(encoderNumber, encoderDefault, encoderName, encoderDescription, encoderMin, encoderMax, encoderStep, invertDirection, units);
                 _logger(LOG_INFO, "        - [%s] Added encoder %i (%s)", pokeyDevice->name().c_str(), encoderNumber, encoderName.c_str());
             }
         }
