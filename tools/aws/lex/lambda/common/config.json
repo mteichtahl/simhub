@@ -1,0 +1,23 @@
+{
+  "version": "Version 1.0",
+  "CFNStackPrefix": "keyvalquery",
+  "AWSAccountId": "346073464284",
+  "AWSRegion": "us-east-1",
+  "debug": {
+    "logEvent": true,
+    "lambdaLoggerEnabled": false,
+    "useLocalDynamoDB": false,
+    "dynamoDBLocalEndpoint": "http://localhost:8000"
+  },
+  "region": "us-east-1",
+  "dev": {
+    "AWS": {}
+  },
+  "DynamoDBTablePrefix": "<CFN_STACKNAME>",
+  "DynamoDBTablePrefixSeparator": "-",
+  "DynamoDBTableNames": {
+
+    "KeyVal": "KeyVal"
+  }
+
+}

@@ -1,0 +1,197 @@
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  ReadCapacityUnits:
+    Default: 5
+    Description: Throughtput for DDB tables
+    Type: Number
+  WriteCapacityUnits:
+    Default: 5
+    Description: Throughtput for DDB tables
+    Type: Number
+Resources:
+  CleverLambdaFunction:
+    Properties:
+      CodeUri:
+        Bucket:
+          Fn::Sub: simhub-keyvalquery-${AWS::Region}
+        Key: KeyValQuery/master-artefacts/lambda/CleverFunction_latest.zip
+      Description: Does something awesome
+      Environment:
+        Variables:
+          SomeEnvironmentVariable: Some Clever Value
+      Events:
+        GetEvent:
+          Properties:
+            Method: get
+            Path: /cleverfunction
+            RestApiId:
+              Ref: RestAPI
+          Type: Api
+      Handler: index.handler
+      MemorySize: 1024
+      Role:
+        Fn::GetAtt:
+        - LambdaExecRole
+        - Arn
+      Runtime: nodejs6.10
+      Timeout: 30
+      Tracing: Active
+    Type: AWS::Serverless::Function
+  DDBTableKeyVal:
+    Properties:
+      AttributeDefinitions:
+      - AttributeName: source
+        AttributeType: S
+      - AttributeName: title
+        AttributeType: S
+      GlobalSecondaryIndexes:
+      - IndexName: title-index
+        KeySchema:
+        - AttributeName: title
+          KeyType: HASH
+        Projection:
+          ProjectionType: ALL
+        ProvisionedThroughput:
+          ReadCapacityUnits:
+            Ref: ReadCapacityUnits
+          WriteCapacityUnits:
+            Ref: WriteCapacityUnits
+      KeySchema:
+      - AttributeName: source
+        KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits:
+          Ref: ReadCapacityUnits
+        WriteCapacityUnits:
+          Ref: WriteCapacityUnits
+      TableName:
+        Fn::Sub: ${AWS::StackName}-KeyVal
+    Type: AWS::DynamoDB::Table
+  KeyValQueryIAMRoleLambdaCustomResource:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+        Version: '2012-10-17'
+      Path: /
+      Policies:
+      - PolicyDocument:
+          Statement:
+          - Action: '*'
+            Effect: Allow
+            Resource: '*'
+          Version: '2012-10-17'
+        PolicyName: AdminAccess
+    Type: AWS::IAM::Role
+  LambdaCustomResourceSetupEnvironmentPhase1:
+    DependsOn: LambdaLexPermissions
+    Properties:
+      Code:
+        S3Bucket:
+          Fn::Sub: simhub-keyvalquery-${AWS::Region}
+        S3Key: KeyValQuery/master-artefacts/lambda/SetupPhase1-CustomResource_latest.zip
+      Description: Lambda function Custom Resource for KeyValQuery setup phase 1
+      FunctionName:
+        Fn::Sub: ${AWS::StackName}-CustomResourceSetupEnvironmentPhase1
+      Handler: index.handler
+      MemorySize: 512
+      Role:
+        Fn::GetAtt:
+        - KeyValQueryIAMRoleLambdaCustomResource
+        - Arn
+      Runtime: nodejs6.10
+      Timeout: 300
+    Type: AWS::Lambda::Function
+  LambdaExecRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+        Version: '2012-10-17'
+      Path: /
+      Policies:
+      - PolicyDocument:
+          Statement:
+          - Action: dynamodb:*
+            Effect: Allow
+            Resource: '*'
+          - Action: lex:*
+            Effect: Allow
+            Resource: '*'
+          - Action:
+            - xray:PutTraceSegments
+            - xray:PutTelemetryRecords
+            Effect: Allow
+            Resource: '*'
+          Version: '2012-10-17'
+        PolicyName: LambdaFunctionsAccess
+    Type: AWS::IAM::Role
+  LambdaLexPermissions:
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+        - LexBotHandler
+        - Arn
+      Principal: lex.amazonaws.com
+      SourceArn:
+        Fn::Sub: arn:aws:lex:${AWS::Region}:${AWS::AccountId}:intent:${AWS::StackName}_KeyValQuery_WhatsMyParameterIntent:*
+    Type: AWS::Lambda::Permission
+  LexBotHandler:
+    Properties:
+      CodeUri:
+        Bucket:
+          Fn::Sub: simhub-keyvalquery-${AWS::Region}
+        Key: KeyValQuery/master-artefacts/lambda/LexBotHandler_latest.zip
+      Description: Handles the Lex requests
+      Environment:
+        Variables:
+          dynamoDBPrefix:
+            Fn::Sub: ${AWS::StackName}
+      Handler: index.handler
+      MemorySize: 1024
+      Role:
+        Fn::GetAtt:
+        - LambdaExecRole
+        - Arn
+      Runtime: nodejs4.3
+      Timeout: 30
+      Tracing: Active
+    Type: AWS::Serverless::Function
+  RestAPI:
+    Properties:
+      DefinitionUri: s3://simhub-keyvalquery-us-east-1/ca3a4cc5f4b77c7ac85a499d17a3b842
+      StageName: Prod
+      Variables:
+        CleverLambdaFunction_Lambda:
+          Ref: CleverLambdaFunction
+        SomeStageVariable: SomeValue
+    Type: AWS::Serverless::Api
+  SetupEnvironmentPhase1:
+    Properties:
+      AWSAccountId:
+        Ref: AWS::AccountId
+      LexBotHandlerARN:
+        Fn::GetAtt:
+        - LexBotHandler
+        - Arn
+      Region:
+        Ref: AWS::Region
+      ServiceToken:
+        Fn::GetAtt:
+        - LambdaCustomResourceSetupEnvironmentPhase1
+        - Arn
+      StackName:
+        Ref: AWS::StackName
+    Type: Custom::SetupEnvironmentPhase1
+Transform: AWS::Serverless-2016-10-31
