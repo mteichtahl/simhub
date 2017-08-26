@@ -27,6 +27,7 @@
 #define MAX_ENCODERS 10
 #define MAX_MATRIX_LEDS 2
 #define MAX_MATRIX_LED_GROUPS 8
+#define MAX_DIGITS 10
 
 typedef struct {
     std::string pinName;
@@ -92,7 +93,7 @@ protected:
     device_port_t _pins[MAX_PINS];
     device_encoder_t _encoders[MAX_ENCODERS];
     device_matrixLED_t _matrixLED[MAX_MATRIX_LEDS];
-    uint8_t _intToDisplayRow[10];
+    uint8_t _intToDisplayRow[MAX_DIGITS];
     EnqueueEventHandler _enqueueCallback;
 
     std::shared_ptr<std::thread> _pollThread;

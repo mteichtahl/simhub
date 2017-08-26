@@ -59,8 +59,7 @@ PokeyDevicePluginStateManager::PokeyDevicePluginStateManager(LoggingFunctionCB l
 {
     _numberOfDevices = 0; ///< 0 devices discovered
     _name = "pokey";
-    _devices = (sPoKeysNetworkDeviceSummary *)calloc(sizeof(sPoKeysNetworkDeviceSummary),
-        16); ///< 0 initialise the network device summary
+    _devices = (sPoKeysNetworkDeviceSummary *)calloc(sizeof(sPoKeysNetworkDeviceSummary), 16); ///< 0 initialise the network device summary
 }
 
 //! static getter for singleton instance of our class
@@ -347,7 +346,6 @@ bool PokeyDevicePluginStateManager::deviceDisplaysConfiguration(libconfig::Setti
     else {
         _logger(LOG_INFO, "    [%s]  - Found %i displays", pokeyDevice->name().c_str(), displayCount);
         for (libconfig::SettingIterator iter = displays->begin(); iter != displays->end(); iter++) {
-
             std::string name = "None";
             std::string type = "";
             int enabled = 0;

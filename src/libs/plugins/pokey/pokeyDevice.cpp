@@ -408,7 +408,6 @@ uint8_t PokeyDevice::displayNumber(uint8_t displayNumber, std::string targetName
                 _matrixLED[displayNumber].group[groupIndex].value = convertedValue;
                 _pokey->MatrixLED[displayNumber].data[position] = convertedValue;
             }
-
             else if (value == -1) {
                 for (int i = groupIndex; i < groupLength + groupIndex; i++) {
                     _pokey->MatrixLED[displayNumber].data[i] = 0b00000000;
@@ -447,8 +446,6 @@ int32_t PokeyDevice::name(std::string name)
 
 uint8_t PokeyDevice::displayFromName(std::string targetName)
 {
-    // printf("---> displayFromName %s\n", targetName.c_str());
-
     std::map<std::string, int>::iterator it;
     it = _displayMap.find(targetName);
 
@@ -463,8 +460,6 @@ uint8_t PokeyDevice::displayFromName(std::string targetName)
 
 int PokeyDevice::pinFromName(std::string targetName)
 {
-
-    // printf("---> pinFromName %s\n", targetName.c_str());
     std::map<std::string, int>::iterator it;
     it = _pinMap.find(targetName);
 
