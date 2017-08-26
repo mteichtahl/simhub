@@ -15,7 +15,8 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "appsupport.h"
+#include "common/support/threadmanager.h"
+
 #define MAX_VA_LENGTH 4096
 
 /**
@@ -29,7 +30,7 @@ protected:
     Aws::String _defaultPollyVoice = "Nicole";
     Aws::String _defaultAudioDevice = "default";
 
-    CancellableThreadManager _threadManager;
+    CancelableThreadManager _threadManager;
     std::shared_ptr<Aws::Polly::PollyClient> _pollyClient;
     std::shared_ptr<Aws::TextToSpeech::TextToSpeechManager> _manager;
     ConcurrentQueue<Aws::String> _pollyQueue;

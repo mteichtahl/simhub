@@ -52,7 +52,7 @@ protected:
     simplug_vtable _pokeyMethods;
     ConfigManager *_configManager;
 
-    CancellableThreadManager _sustainThreadManager;
+    CancelableThreadManager _sustainThreadManager;
     std::map<std::string, SustainMapEntry> _sustainValues;
     std::mutex _sustainValuesMutex;
 
@@ -99,7 +99,7 @@ public:
     static std::shared_ptr<SimHubEventController> EventControllerInstance(void);
 };
 
-//! TODO - add perpetual and cancellable loop
+//! TODO - add perpetual and cancelable loop
 // - currently just waits on the concurrent event queue
 //   -> when another thread pushes an event on the queue, this thread
 //      will awake and pop the event

@@ -62,7 +62,7 @@ void SimHubEventController::startSustainThread(void)
     
     std::shared_ptr<std::thread> sustainThread = std::make_shared<std::thread>([=] {
         _sustainThreadManager.setThreadRunning(true);
-        while (!_sustainThreadManager.threadCancelled()) {
+        while (!_sustainThreadManager.threadCanceled()) {
             std::this_thread::sleep_for(100ms);
 
             // build up list of values that need to be resent to kinesis

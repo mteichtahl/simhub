@@ -18,7 +18,7 @@ Polly::Polly()
     std::shared_ptr<std::thread> pollyThread  = std::make_shared<std::thread>([=] {
         _threadManager.setThreadRunning(true);
         logger.log(LOG_INFO, " - Starting AWS Polly Service...");
-        while (!_threadManager.threadCancelled()) {
+        while (!_threadManager.threadCanceled()) {
             if (_pollyCanTalk) { ///< only do this if we are allowed to talk
                 try {
                     auto item = _pollyQueue.pop(); ///< grab an item off the queue

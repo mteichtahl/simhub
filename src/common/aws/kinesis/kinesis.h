@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "appsupport.h"
+#include "common/support/threadmanager.h"
 
 typedef Aws::Kinesis::KinesisClient KinesisClient;
 
@@ -27,7 +27,7 @@ protected:
     std::string _partition;
     std::string _streamName;
     std::string _region;
-    CancellableThreadManager _threadManager;
+    CancelableThreadManager _threadManager;
 
 public:
     // Default constructor
