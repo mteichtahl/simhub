@@ -4,6 +4,7 @@
 #include "PoKeysLib.h"
 #include "common/simhubdeviceplugin.h"
 #include <assert.h>
+#include <cmath>
 #include <iostream>
 #include <map>
 #include <stdlib.h>
@@ -22,6 +23,11 @@
 #define DEFAULT_ENCODER_MAX 60000
 #define DEFAULT_ENCODER_STEP 1
 #define DEFAULT_ENCODER_DIRECTION 0
+#define MAX_PINS 55
+#define MAX_ENCODERS 10
+#define MAX_MATRIX_LEDS 2
+#define MAX_MATRIX_LED_GROUPS 8
+#define MAX_DIGITS 10
 
 typedef struct {
     std::string pinName;
@@ -46,8 +52,19 @@ typedef struct {
     int32_t step;
 } device_encoder_t;
 
-#define MAX_PINS 55
-#define MAX_ENCODERS 10
+typedef struct {
+    uint8_t position;
+    std::string name;
+    uint8_t length;
+    uint8_t value;
+} device_matrixLED_group_t;
+
+typedef struct {
+    uint8_t id;
+    std::string type;
+    std::string name;
+    device_matrixLED_group_t group[MAX_MATRIX_LED_GROUPS];
+} device_matrixLED_t;
 
 class PokeyDevice
 {
@@ -68,12 +85,15 @@ protected:
 
     std::map<std::string, int> _pinMap;
     std::map<std::string, int> _encoderMap;
+    std::map<std::string, int> _displayMap;
 
     sPoKeysDevice *_pokey;
     void *_callbackArg;
     SPHANDLE _pluginInstance;
     device_port_t _pins[MAX_PINS];
     device_encoder_t _encoders[MAX_ENCODERS];
+    device_matrixLED_t _matrixLED[MAX_MATRIX_LEDS];
+    uint8_t _intToDisplayRow[MAX_DIGITS];
     EnqueueEventHandler _enqueueCallback;
 
     std::shared_ptr<std::thread> _pollThread;
@@ -81,6 +101,9 @@ protected:
     uv_timer_t _pollTimer;
 
     int pinFromName(std::string targetName);
+    uint8_t displayFromName(std::string targetName);
+    uint8_t displayNumber(uint8_t displayNumwber, std::string targetName, int value);
+
     void pollCallback(uv_timer_t *timer, int status);
 
 public:
@@ -91,7 +114,10 @@ public:
     bool validateEncoder(int encoderNumber);
     void mapNameToPin(std::string name, int pin);
     void mapNameToEncoder(std::string name, int encoderNumber);
+    void mapNameToMatrixLED(std::string name, int id);
+
     uint32_t targetValue(std::string targetName, bool value);
+    uint32_t targetValue(std::string targetName, int value);
     uint32_t inputPin(uint8_t pin);
     uint32_t outputPin(uint8_t pin);
     int32_t name(std::string name);
@@ -112,6 +138,8 @@ public:
     device_encoder_t *encoders() { return _encoders; };
     sPoKeysDevice *pokey() { return _pokey; }
     sPoKeysDevice_Info info() { return _pokey->info; }
+    sPoKeysMatrixLED *matrixLED() { return _pokey->MatrixLED; };
+
     uint8_t numberOfPins() { return info().iPinCount; }
     std::string description() { return _description; }
     sPoKeysDevice_Data deviceData()
@@ -128,6 +156,9 @@ public:
     void addEncoder(int encoderNumber, uint32_t defaultValue, std::string name = DEFAULT_ENCODER_NAME, std::string description = DEFAULT_ENCODER_DESCRIPTION,
         int min = DEFAULT_ENCODER_MIN, int max = DEFAULT_ENCODER_MAX, int step = DEFAULT_ENCODER_STEP, int invertDirection = DEFAULT_ENCODER_DIRECTION);
 
+    void addMatrixLED(int id, std::string name, std::string type);
+    void configMatrixLED(int id, int rows, int cols = 8, int enabled = 0);
+    void addGroupToMatrixLED(int id, int displayId, std::string name, int digits, int position);
     void startPolling();
     void stopPolling();
     std::string name()

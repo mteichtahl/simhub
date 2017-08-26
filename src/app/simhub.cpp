@@ -26,7 +26,7 @@ SimHubEventController::SimHubEventController()
     _sustainThreadCount = 0;
     _terminated = false;
 
-#if defined (_AWS_SDK)
+#if defined(_AWS_SDK)
     _awsHelper.init();
 #endif
 
@@ -41,13 +41,13 @@ SimHubEventController::~SimHubEventController(void)
 
 void SimHubEventController::startSustainThreads(void)
 {
-#if defined (_AWS_SDK)
+#if defined(_AWS_SDK)
     _awsHelper.polly()->say("Simulator is ready.");
 #endif
-    
+
     _continueSustainThreads = true;
 
-    for (auto sustainEntry: _configManager->mapManager()->sustainMap()) {
+    for (auto sustainEntry : _configManager->mapManager()->sustainMap()) {
         _sustainThreads[sustainEntry.first] = std::make_shared<std::thread>([=] {
             _sustainThreadCount++;
             while (_continueSustainThreads) {
@@ -66,7 +66,7 @@ void SimHubEventController::ceaseSustainThreads(void)
         // noop
     } while (_sustainThreadCount > 0);
 
-    for (auto item: _sustainThreads) {
+    for (auto item : _sustainThreads) {
         item.second->join();
     }
     _sustainThreads.clear();
@@ -142,8 +142,15 @@ bool SimHubEventController::deliverValue(std::shared_ptr<Attribute> value)
 
     if (value->ownerPlugin() == _pokeyMethods.plugin_instance)
         retVal = !_prepare3dMethods.simplug_deliver_value(_prepare3dMethods.plugin_instance, c_value);
-    else if (value->ownerPlugin() == _prepare3dMethods.plugin_instance)
+    else if (value->ownerPlugin() == _prepare3dMethods.plugin_instance) {
+
+        if (value->name() == "N_ELEC_PANEL_LOWER_LEFT") {
+            if (c_value >= 0)
+                _awsHelper.polly()->say("dc volts %i", c_value->value);
+        }
+
         retVal = !_pokeyMethods.simplug_deliver_value(_pokeyMethods.plugin_instance, c_value);
+    }
 
     if (c_value->type == CONFIG_STRING)
         free(c_value->value.string_value);
