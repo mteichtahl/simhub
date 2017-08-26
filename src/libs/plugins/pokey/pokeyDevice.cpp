@@ -359,7 +359,7 @@ uint32_t PokeyDevice::targetValue(std::string targetName, bool value)
     uint32_t retValue = -1;
     uint8_t pin = pinFromName(targetName) - 1;
 
-    if (pin > 0) {
+    if (pin >= 0) {
         retValue = PK_DigitalIOSetSingle(_pokey, pin, value);
     }
 
