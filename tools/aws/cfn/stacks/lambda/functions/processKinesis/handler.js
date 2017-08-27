@@ -27,7 +27,7 @@ function cleanJSONString(string) {
   return string.replace(/[\u0000-\u0019]+/g, '');
 }
 
-function writeToDynamo(name, value) {
+function writeToDynamo(name, value, units, description) {
   var params = {
     Item: {
       'source': {S: name},
@@ -89,9 +89,9 @@ exports.index = function(event, context, callback) {
     // convert from base64, clean up and "funny" characters and parse into
     // JSON
     data = JSON.parse(cleanJSONString(base64.decode(kinesis.data)));
-
-    putCloudwatchMetric(data.s, data.s, 'On/Off', data.ts, data.val);
-    writeToDynamo(data.s, data.val);
+    console.log(data);
+    putCloudwatchMetric(data.s, data.s, 'On/Off', parseInt(data.ts), data.val);
+    writeToDynamo(data.s, data.val, data.units, data.description);
   }
 
 
