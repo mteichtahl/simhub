@@ -15,13 +15,12 @@ Kinesis::Kinesis(std::string streamName, std::string partition, std::string regi
     Aws::Client::ClientConfiguration config;
     config.region = Aws::String(_region.c_str());
     _kinesisClient = Aws::MakeShared<KinesisClient>(ALLOCATION_TAG, config);
-
     _recordCounter = 0;
-
-    _thread = std::make_shared<std::thread>([=] {
-        _threadRunning = true;
+      
+    std::shared_ptr<std::thread> kinesisThread = std::make_shared<std::thread>([=] {
+        _threadManager.setThreadRunning(true);
         logger.log(LOG_INFO, " - Starting AWS Kinesis Service...");
-        while (!_threadCancelled) {
+        while (!_threadManager.threadCanceled()) {
             try {
                 Aws::Utils::ByteBuffer data = _queue.pop(); ///< grab an item off the queue
                 Aws::Kinesis::Model::PutRecordRequest *request = new Aws::Kinesis::Model::PutRecordRequest();
@@ -33,14 +32,22 @@ Kinesis::Kinesis(std::string streamName, std::string partition, std::string regi
             catch (ConcurrentQueueInterrupted &except) {
             }
         }
-        _threadRunning = false;
+        _threadManager.setThreadRunning(false);
         logger.log(LOG_INFO, " - Terminated AWS Kinesis Service");
     });
+
+    _threadManager.setManagedThread(kinesisThread);
 }
 
 Kinesis::~Kinesis()
 {
     logger.log(LOG_INFO, " - AWS Kinesis stopped");
+}
+
+void Kinesis::shutdown(void)
+{
+    _queue.unblock();
+    _threadManager.shutdownThread();
 }
 
 void Kinesis::putRecord(Aws::Utils::ByteBuffer data)

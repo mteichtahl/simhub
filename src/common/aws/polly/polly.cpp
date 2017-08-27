@@ -3,6 +3,8 @@
 #include "../../log/clog.h"
 #include "polly.h"
 
+using namespace std::chrono_literals;
+
 Polly::Polly()
 {
     _pollyCanTalk = false; ///< No talking while we instantiate
@@ -10,15 +12,13 @@ Polly::Polly()
     _pollyClient = Aws::MakeShared<Aws::Polly::PollyClient>(POLLY_MAIN_ALLOCATION_TAG); ///< create the AWS SDK client
     _manager = std::make_shared<Aws::TextToSpeech::TextToSpeechManager>(_pollyClient); ///< create TTS manager
     _manager->SetActiveVoice(_defaultPollyVoice.c_str()); ///< set the active voice
-    _threadCancelled = false;
-
     
     // this is the worker thread - it blocks on _pollQueue until there is something to read
 
-    _thread = std::make_shared<std::thread>([=] {
-        _threadRunning = true;
+    std::shared_ptr<std::thread> pollyThread  = std::make_shared<std::thread>([=] {
+        _threadManager.setThreadRunning(true);
         logger.log(LOG_INFO, " - Starting AWS Polly Service...");
-        while (!_threadCancelled) {
+        while (!_threadManager.threadCanceled()) {
             if (_pollyCanTalk) { ///< only do this if we are allowed to talk
                 try {
                     auto item = _pollyQueue.pop(); ///< grab an item off the queue
@@ -30,11 +30,27 @@ Polly::Polly()
                 }
             }
         }
-        _threadRunning = false;
+        _threadManager.setThreadRunning(false);
         logger.log(LOG_INFO, " - Terminated AWS Polly Service");
     });
 
+    _threadManager.setManagedThread(pollyThread);
+
     _pollyCanTalk = true; ///< we can start talking because everything is ready to go
+}
+
+void Polly::shutdown(void)
+{
+    _pollyQueue.unblock();
+    _threadManager.shutdownThread();
+
+    // abort async operations
+    _pollyClient->DisableRequestProcessing();
+
+    // allow internall PollyClient threads to stop
+    std::this_thread::sleep_for(1000ms);
+
+    _pollyClient.reset();
 }
 
 void Polly::say(const char *pMsg, ...)

@@ -5,7 +5,11 @@
 #include <list>
 #include <string>
 #include <thread>
+#include <atomic>
+#include <mutex>
 
+
+#include "appsupport.h"
 #include "elements/attributes/attribute.h"
 #include "plugins/common/simhubdeviceplugin.h"
 #include "queue/concurrent_queue.h"
@@ -26,6 +30,9 @@ class ConfigManager; // forward reference
  *   void * to 'this' that was passed to the plugin when it registered
  *   the callback stub, to call into the proper 'eventCallback' member
  */
+ 
+ typedef std::pair<std::chrono::milliseconds, std::shared_ptr<Attribute>> SustainMapEntry;
+
 class SimHubEventController
 {
 protected:
@@ -39,17 +46,19 @@ protected:
     simplug_vtable loadPlugin(std::string dylibName, libconfig::Config *pluginConfigs, EnqueueEventHandler eventCallback);
     void terminate(void);
     void shutdownPlugin(simplug_vtable &pluginMethods);
-    void startSustainThreads(void);
-    void ceaseSustainThreads(void);
+    void startSustainThread(void);
+    void ceaseSustainThread(void);
 
     ConcurrentQueue<std::shared_ptr<Attribute>> _eventQueue;
     simplug_vtable _prepare3dMethods;
     simplug_vtable _pokeyMethods;
     ConfigManager *_configManager;
-    std::map<std::string, std::shared_ptr<std::thread>> _sustainThreads;
-    std::atomic<bool> _continueSustainThreads;
-    std::atomic<size_t> _sustainThreadCount;
-    bool _terminated;
+
+    CancelableThreadManager _sustainThreadManager;
+    std::map<std::string, SustainMapEntry> _sustainValues;
+    std::mutex _sustainValuesMutex;
+
+    bool _running;
 
     // -- temp solution to plugin device configuration conundrum
     libconfig::Config *_pokeyDeviceConfig;
@@ -68,7 +77,7 @@ public:
         assert(prepare3dConfig != NULL);
         _prepare3dDeviceConfig = prepare3dConfig;
     };
-    ;
+    
     void setPokeyConfig(libconfig::Config *pokeyConfig)
     {
         assert(pokeyConfig != NULL);
@@ -92,7 +101,7 @@ public:
     static std::shared_ptr<SimHubEventController> EventControllerInstance(void);
 };
 
-//! TODO - add perpetual and cancellable loop
+//! TODO - add perpetual and cancelable loop
 // - currently just waits on the concurrent event queue
 //   -> when another thread pushes an event on the queue, this thread
 //      will awake and pop the event
@@ -101,7 +110,9 @@ template <class F> void SimHubEventController::runEventLoop(F &&eventProcessorFu
 {
     bool breakLoop = false;
 
-    startSustainThreads();
+    _running = true;
+
+    startSustainThread();
 
     while (!breakLoop) {
         try {

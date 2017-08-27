@@ -14,13 +14,21 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "appsupport.h"
+#include "common/support/threadmanager.h"
 
 typedef Aws::Kinesis::KinesisClient KinesisClient;
 
 static const char *ALLOCATION_TAG = "Kinesis::Main";
-class Kinesis : public CancellableThread
+class Kinesis
 {
+protected:
+    std::shared_ptr<KinesisClient> _kinesisClient; ///< main kinesis client
+    ConcurrentQueue<Aws::Utils::ByteBuffer> _queue;
+    std::string _partition;
+    std::string _streamName;
+    std::string _region;
+    CancelableThreadManager _threadManager;
+    long _recordCounter;
 
 public:
     // Default constructor
@@ -28,21 +36,7 @@ public:
     // Destructor
     ~Kinesis(void);
     void putRecord(Aws::Utils::ByteBuffer data);
-    virtual void shutdown(void)
-    {
-        _queue.unblock();
-        CancellableThread::shutdown();
-    };
-
-protected:
-    std::shared_ptr<KinesisClient> _kinesisClient; ///< main kinesis client
-
-    ConcurrentQueue<Aws::Utils::ByteBuffer> _queue;
-    std::string _partition;
-    std::string _streamName;
-    std::string _region;
-
-    long _recordCounter;
+    virtual void shutdown(void);
 };
 
 #endif // Kinesis

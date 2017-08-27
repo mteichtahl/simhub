@@ -15,7 +15,8 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "appsupport.h"
+#include "common/support/threadmanager.h"
+
 #define MAX_VA_LENGTH 4096
 
 /**
@@ -23,12 +24,13 @@
  */
 static const char *POLLY_MAIN_ALLOCATION_TAG = "PollySample::Main";
 
-class Polly : public CancellableThread
+class Polly
 {
 protected:
     Aws::String _defaultPollyVoice = "Amy";
     Aws::String _defaultAudioDevice = "default";
 
+    CancelableThreadManager _threadManager;
     std::shared_ptr<Aws::Polly::PollyClient> _pollyClient;
     std::shared_ptr<Aws::TextToSpeech::TextToSpeechManager> _manager;
     ConcurrentQueue<Aws::String> _pollyQueue;
@@ -43,19 +45,7 @@ public:
     ~Polly(void);
     //
     void say(const char *pMsg, ...);
-    virtual void shutdown(void)
-    {
-        _pollyQueue.unblock();
-        CancellableThread::shutdown();
-
-        // abort async operations
-        _pollyClient->DisableRequestProcessing();
-
-        // allow internall PollyClient threads to stop
-        sleep(1);
-
-        _pollyClient.reset();
-    };
+    virtual void shutdown(void);
 };
 
 #endif // __AWS_POLLY_H

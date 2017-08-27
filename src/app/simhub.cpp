@@ -1,9 +1,12 @@
 #include <assert.h>
 #include <utility>
+#include <chrono>
 
 #include "common/configmanager/configmanager.h"
 #include "log/clog.h"
 #include "simhub.h"
+
+using namespace std::chrono_literals;
 
 // TODO: FIX EVERYTHING
 
@@ -12,8 +15,9 @@ std::shared_ptr<SimHubEventController> SimHubEventController::_EventControllerIn
 //! static singleton accessor
 std::shared_ptr<SimHubEventController> SimHubEventController::EventControllerInstance(void)
 {
-    if (!_EventControllerInstance)
+    if (!_EventControllerInstance) {
         _EventControllerInstance.reset(new SimHubEventController());
+    }
 
     return SimHubEventController::_EventControllerInstance;
 }
@@ -23,8 +27,7 @@ SimHubEventController::SimHubEventController()
     _prepare3dMethods.plugin_instance = NULL;
     _pokeyMethods.plugin_instance = NULL;
     _configManager = NULL;
-    _sustainThreadCount = 0;
-    _terminated = false;
+    _running = false;
 
 #if defined(_AWS_SDK)
     _awsHelper.init();
@@ -35,41 +38,59 @@ SimHubEventController::SimHubEventController()
 
 SimHubEventController::~SimHubEventController(void)
 {
-    if (!_terminated)
+    if (_running) {
         terminate();
+    }
+#if defined(_AWS_SDK)
+    if (_awsHelper.polly()) {
+        _awsHelper.polly()->shutdown();
+    }
+    
+    if (_awsHelper.kinesis()) {
+        _awsHelper.kinesis()->shutdown();
+    }
+
+    _awsHelper.shutdown();
+#endif
 }
 
-void SimHubEventController::startSustainThreads(void)
+void SimHubEventController::startSustainThread(void)
 {
 #if defined(_AWS_SDK)
     _awsHelper.polly()->say("Simulator is ready.");
 #endif
+   
+    std::shared_ptr<std::thread> sustainThread = std::make_shared<std::thread>([=] {
+        _sustainThreadManager.setThreadRunning(true);
+        while (!_sustainThreadManager.threadCanceled()) {
+            std::this_thread::sleep_for(100ms);
 
-    _continueSustainThreads = true;
+            // build up list of values that need to be resent to kinesis
+            // due to expiration of their sustain timer
+            std::lock_guard<std::mutex> sustainGuard(_sustainValuesMutex);
 
-    for (auto sustainEntry : _configManager->mapManager()->sustainMap()) {
-        _sustainThreads[sustainEntry.first] = std::make_shared<std::thread>([=] {
-            _sustainThreadCount++;
-            while (_continueSustainThreads) {
-                sleep(1);
+            std::chrono::milliseconds now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+
+            for (std::pair<std::string, SustainMapEntry> entry: _sustainValues) {
+                std::chrono::milliseconds sustain = entry.second.first;
+                std::chrono::milliseconds ts = entry.second.second->timestamp();
+
+                if ((ts + sustain) <= now) {
+                    entry.second.second->resetTimestamp();
+                    logger.log(LOG_INFO, "sustaining value: %s", entry.second.second->name().c_str());
+                    deliverKinesisValue(entry.second.second);
+                }
             }
-            _sustainThreadCount--;
-        });
-    }
+        }
+        _sustainThreadManager.setThreadRunning(false);
+    });
+
+    _sustainThreadManager.setManagedThread(sustainThread);
 }
 
-void SimHubEventController::ceaseSustainThreads(void)
+void SimHubEventController::ceaseSustainThread(void)
 {
-    _continueSustainThreads = false;
-
-    do {
-        // noop
-    } while (_sustainThreadCount > 0);
-
-    for (auto item : _sustainThreads) {
-        item.second->join();
-    }
-    _sustainThreads.clear();
+    _sustainThreadManager.shutdownThread();
 }
 
 #if defined(_AWS_SDK)
@@ -89,8 +110,9 @@ void SimHubEventController::deliverKinesisValue(std::shared_ptr<Attribute> value
 
     Aws::Utils::ByteBuffer data(dataString.length());
 
-    for (int i = 0; i < dataString.length(); i++)
+    for (int i = 0; i < dataString.length(); i++) {
         data[i] = dataString[i];
+    }
 
     _awsHelper.kinesis()->putRecord(data);
 }
@@ -137,12 +159,20 @@ bool SimHubEventController::deliverValue(std::shared_ptr<Attribute> value)
 
     bool retVal = false;
 
+    if (mapContains(_configManager->mapManager()->sustainMap(), value->name())) {
+        // update the sustain value map entry
+        std::lock_guard<std::mutex> sustainGuard(_sustainValuesMutex);
+        _sustainValues[value->name()].second = value;
+        _sustainValues[value->name()].first = std::chrono::milliseconds(_configManager->mapManager()->sustainMap()[value->name()]);
+    }
+
     // determine value destination from the source - very simple at the moment
     // (just deliver to whatever instance is not the source) - may want more
     // sophisticated logic here
 
-    if (value->ownerPlugin() == _pokeyMethods.plugin_instance)
+    if (value->ownerPlugin() == _pokeyMethods.plugin_instance) {
         retVal = !_prepare3dMethods.simplug_deliver_value(_prepare3dMethods.plugin_instance, c_value);
+    }
     else if (value->ownerPlugin() == _prepare3dMethods.plugin_instance) {
 
         if (value->name() == "N_ELEC_PANEL_LOWER_LEFT") {
@@ -153,8 +183,10 @@ bool SimHubEventController::deliverValue(std::shared_ptr<Attribute> value)
         retVal = !_pokeyMethods.simplug_deliver_value(_pokeyMethods.plugin_instance, c_value);
     }
 
-    if (c_value->type == CONFIG_STRING)
+    if (c_value->type == CONFIG_STRING) {
         free(c_value->value.string_value);
+    }
+
     free(c_value->name);
     free(c_value);
 
@@ -236,6 +268,7 @@ simplug_vtable SimHubEventController::loadPlugin(std::string dylibName, libconfi
         //    - been given for this plugin and pass them through
 
         pluginMethods.simplug_config_passthrough(pluginInstance, pluginConfig);
+
         // TODO: add error checking
 
         if (pluginMethods.simplug_preflight_complete(pluginInstance) == 0) {
@@ -273,18 +306,12 @@ bool SimHubEventController::loadPokeyPlugin(void)
 //! perform shutdown ceremonies on both plugins - this unloads both plugins
 void SimHubEventController::terminate(void)
 {
-    ceaseSustainThreads();
+    assert(_running);
+
+    ceaseSustainThread();
     shutdownPlugin(_prepare3dMethods);
     shutdownPlugin(_pokeyMethods);
-
-#if defined(_AWS_SDK)
-    _awsHelper.polly()->shutdown();
-    _awsHelper.kinesis()->shutdown();
-
-    _awsHelper.shutdown();
-#endif
-
-    _terminated = true;
+    _running = false;
 }
 
 //! private support method - gracefully closes plugin instance represented by pluginMethods

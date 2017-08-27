@@ -46,7 +46,7 @@ public:
     std::string configFilename(void);
     std::string version(void);
     bool find(std::string key, MapEntry **retMapEntry);
-    const std::map<std::string, unsigned int> &sustainMap(void) { return _sustainMap; };
+    std::map<std::string, unsigned int> &sustainMap(void) { return _sustainMap; };
 };
 
 #endif

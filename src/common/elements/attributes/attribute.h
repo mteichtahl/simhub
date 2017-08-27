@@ -46,6 +46,11 @@ public:
     template <typename T> void setValue(T value)
     {
         _value = value;
+        resetTimestamp();
+    };
+
+    void resetTimestamp(void)
+    {
         _timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
     };
 
