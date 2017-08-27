@@ -41,6 +41,8 @@ protected:
     std::string _partition;
     std::string _streamName;
     std::string _region;
+
+    long _recordCounter;
 };
 
 #endif // Kinesis

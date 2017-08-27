@@ -31,9 +31,11 @@ public:
 
     SPHANDLE ownerPlugin(void) { return _ownerPlugin; };
 
-    std::string description(void) { return _description; };
-    std::string units(void) { return _units; }
+    std::string description(void) { return _description.empty() ? "none" : _description; };
+    std::string units(void) { return _units.empty() ? "none" : _units; }
+
     void setDescription(std::string description) { _description = description; };
+    // void setUnits(std::string units) { _units = units; };
 
     eAttribute_t type(void) { return _type; };
     void setType(eAttribute_t type) { _type = type; };

@@ -422,8 +422,6 @@ int SimSourcePluginStateManager::deliverValue(GenericTLV *value)
         oss << attribute->name() << "=" << prosimValueString(attribute) << "\n";
     }
 
-    _logger(LOG_INFO, "%s --> %s", attribute->name().c_str(), val.c_str());
-
     _sendSocketClient.sendData(oss.str());
 
     return 0;

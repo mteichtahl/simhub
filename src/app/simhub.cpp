@@ -78,11 +78,13 @@ void SimHubEventController::deliverKinesisValue(std::shared_ptr<Attribute> value
     std::string name = value->name();
     std::string val = value->valueToString();
     std::string ts = value->timestampAsString();
+    std::string description = value->description();
+    std::string units = value->units();
 
     // {s:"a",t:"b",v:"123", ts:121}
     std::stringstream ss;
 
-    ss << "{ \"s\" : \"" << name << "\", \"val\":\"" << val << "\", \"ts\":" << ts << "}";
+    ss << "{ \"s\" : \"" << name << "\", \"val\" : \"" << val << "\", \"ts\" : \"" << ts << "\", \"d\" : \"" << description << "\", \"u\":\"" << units << "\"}";
     std::string dataString = ss.str();
 
     Aws::Utils::ByteBuffer data(dataString.length());
@@ -96,7 +98,6 @@ void SimHubEventController::deliverKinesisValue(std::shared_ptr<Attribute> value
 void SimHubEventController::enablePolly(void)
 {
     _awsHelper.initPolly();
-    _awsHelper.polly()->say("Loading plug in sub system");
 }
 
 void SimHubEventController::enableKinesis(void)

@@ -12,6 +12,8 @@ GenericTLV *AttributeToCGeneric(std::shared_ptr<Attribute> value)
     retVal->ownerPlugin = value->ownerPlugin();
 
     strncpy(retVal->name, value->name().c_str(), value->name().size());
+    // strncpy(retVal->description, value->description().c_str(), value->description().size());
+    // strncpy(retVal->units, value->units().c_str(), value->units().size());
 
     switch (value->type()) {
     case BOOL_ATTRIBUTE:
@@ -81,6 +83,8 @@ std::shared_ptr<Attribute> AttributeFromCGeneric(GenericTLV *generic)
     }
 
     retVal->setName(generic->name);
+    // retVal->setDescription(generic->description);
+    // retVal->setUnits(generic->units);
 
     return retVal;
 }

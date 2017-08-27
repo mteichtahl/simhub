@@ -252,6 +252,7 @@ bool PokeyDevice::isEncoderCapable(int pin)
 void PokeyDevice::addEncoder(
     int encoderNumber, uint32_t defaultValue, std::string name, std::string description, int min, int max, int step, int invertDirection, std::string units)
 {
+    assert(encoderNumber >= 1);
 
     PK_EncoderConfigurationGet(_pokey);
     int encoderIndex = encoderNumber - 1;
@@ -300,6 +301,7 @@ void PokeyDevice::addEncoder(
     _encoders[encoderIndex].max = max;
     _encoders[encoderIndex].step = step;
     _encoders[encoderIndex].units = units;
+    _encoders[encoderIndex].description = description;
 
     int val = PK_EncoderConfigurationSet(_pokey);
     if (val == PK_OK) {

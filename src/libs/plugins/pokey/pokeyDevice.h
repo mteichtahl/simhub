@@ -34,6 +34,7 @@ typedef struct {
     int pinNumber;
     std::string type;
     std::string description;
+    std::string units;
     uint8_t defaultValue;
     uint8_t value;
     uint8_t previousValue;

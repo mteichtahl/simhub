@@ -300,7 +300,7 @@ bool PokeyDevicePluginStateManager::deviceEncodersConfiguration(libconfig::Setti
         for (libconfig::SettingIterator iter = encoders->begin(); iter != encoders->end(); iter++) {
             int encoderNumber = 0;
             std::string encoderName = "";
-            std::string encoderDescription = "";
+            std::string description = "";
             int encoderDefault = 0;
             int encoderMin = 0;
             int encoderMax = 1000;
@@ -312,7 +312,7 @@ bool PokeyDevicePluginStateManager::deviceEncodersConfiguration(libconfig::Setti
                 iter->lookupValue("encoder", encoderNumber);
                 iter->lookupValue("name", encoderName);
                 iter->lookupValue("default", encoderDefault);
-                iter->lookupValue("description", encoderDescription);
+                iter->lookupValue("description", description);
                 iter->lookupValue("min", encoderMin);
                 iter->lookupValue("max", encoderMax);
                 iter->lookupValue("step", encoderStep);
@@ -325,8 +325,9 @@ bool PokeyDevicePluginStateManager::deviceEncodersConfiguration(libconfig::Setti
             }
 
             if (pokeyDevice->validateEncoder(encoderNumber)) {
-                pokeyDevice->addEncoder(encoderNumber, encoderDefault, encoderName, encoderDescription, encoderMin, encoderMax, encoderStep, invertDirection, units);
+                pokeyDevice->addEncoder(encoderNumber, encoderDefault, encoderName, description, encoderMin, encoderMax, encoderStep, invertDirection, units);
                 _logger(LOG_INFO, "        - [%s] Added encoder %i (%s)", pokeyDevice->name().c_str(), encoderNumber, encoderName.c_str());
+                encoderIndex++;
             }
         }
     }
