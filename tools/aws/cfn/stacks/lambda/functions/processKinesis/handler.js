@@ -41,7 +41,7 @@ function writeToDynamo(name, value, units, description) {
 
   dynamodb.putItem(params, function(err, data) {
     if (err)
-      console.log(err, err.stack);  // an error occurred
+      console.log(err, err.stack, params);  // an error occurred
     else
       console.log(data);  // successful response
   });
@@ -93,8 +93,6 @@ exports.index = function(event, context, callback) {
     data = JSON.parse(cleanJSONString(base64.decode(kinesis.data)));
 
     putCloudwatchMetric(data.s, data.s, 'On/Off', parseInt(data.ts), data.val);
-
-
     writeToDynamo(data.s, data.val, data.u, data.d);
   }
 
