@@ -28,6 +28,7 @@ protected:
     std::string _streamName;
     std::string _region;
     CancelableThreadManager _threadManager;
+    long _recordCounter;
 
 public:
     // Default constructor

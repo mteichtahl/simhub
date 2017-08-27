@@ -27,16 +27,21 @@ function cleanJSONString(string) {
   return string.replace(/[\u0000-\u0019]+/g, '');
 }
 
-function writeToDynamo(name, value) {
+function writeToDynamo(name, value, units, description) {
   var params = {
-    Item: {'source': {S: name}, 'Value': {S: value}},
+    Item: {
+      'source': {S: name},
+      'value': {S: value},
+      'units': {S: units},
+      'description': {S: description}
+    },
     ReturnConsumedCapacity: 'TOTAL',
     TableName: 'simhub'
   };
 
   dynamodb.putItem(params, function(err, data) {
     if (err)
-      console.log(err, err.stack);  // an error occurred
+      console.log(err, err.stack, params);  // an error occurred
     else
       console.log(data);  // successful response
   });
@@ -83,10 +88,12 @@ exports.index = function(event, context, callback) {
 
     // convert from base64, clean up and "funny" characters and parse into
     // JSON
+    console.log(kinesis.data);
+    console.log(base64.decode(kinesis.data));
     data = JSON.parse(cleanJSONString(base64.decode(kinesis.data)));
 
-    putCloudwatchMetric(data.s, data.s, 'On/Off', data.ts, data.val);
-    writeToDynamo(data.s, data.val);
+    putCloudwatchMetric(data.s, data.s, 'On/Off', parseInt(data.ts), data.val);
+    writeToDynamo(data.s, data.val, data.u, data.d);
   }
 
 

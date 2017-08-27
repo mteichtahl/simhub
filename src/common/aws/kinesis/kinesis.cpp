@@ -15,7 +15,8 @@ Kinesis::Kinesis(std::string streamName, std::string partition, std::string regi
     Aws::Client::ClientConfiguration config;
     config.region = Aws::String(_region.c_str());
     _kinesisClient = Aws::MakeShared<KinesisClient>(ALLOCATION_TAG, config);
-
+    _recordCounter = 0;
+      
     std::shared_ptr<std::thread> kinesisThread = std::make_shared<std::thread>([=] {
         _threadManager.setThreadRunning(true);
         logger.log(LOG_INFO, " - Starting AWS Kinesis Service...");
@@ -26,6 +27,7 @@ Kinesis::Kinesis(std::string streamName, std::string partition, std::string regi
                 request->SetStreamName(Aws::String(_streamName.c_str()));
                 request->WithData(data).WithPartitionKey(Aws::String(_partition.c_str()));
                 _kinesisClient->PutRecord(*request);
+                _recordCounter++;
             }
             catch (ConcurrentQueueInterrupted &except) {
             }

@@ -1,0 +1,11 @@
+{ "messageVersion": "1.0",
+"invocationSource": "FulfillmentCodeHook",
+"userId": "i6ydjn9cxbc5njowjy4mzqb7efj99bjr",
+"sessionAttributes": null,
+"bot": { "name": "TestBot", "alias": null, "version": "$LATEST" },
+"outputDialogMode": "Voice",
+"currentIntent":
+{ "name": "WhatsMyAirspeed",
+"slots": { "keyname": "air speed" },
+"confirmationStatus": "None" },
+"inputTranscript": "what is my air speed" }

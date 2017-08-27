@@ -1,11 +1,13 @@
 #ifndef __SIMHUB_H
 #define __SIMHUB_H
 
+#include <atomic>
 #include <list>
 #include <string>
 #include <thread>
 #include <atomic>
 #include <mutex>
+
 
 #include "appsupport.h"
 #include "elements/attributes/attribute.h"
@@ -86,13 +88,13 @@ public:
 
     void ceaseEventLoop(void);
 
-    #if defined(_AWS_SDK)
+#if defined(_AWS_SDK)
     AWS _awsHelper;
 
     void enablePolly(void);
     void enableKinesis(void);
     void deliverKinesisValue(std::shared_ptr<Attribute> value);
-    #endif
+#endif
 
 public:
     static void LoggerWrapper(const int category, const char *msg, ...);
@@ -115,7 +117,6 @@ template <class F> void SimHubEventController::runEventLoop(F &&eventProcessorFu
     while (!breakLoop) {
         try {
             std::shared_ptr<Attribute> data = _eventQueue.pop();
-            // logger.log(LOG_INFO, "popped (%s: %s) off the concurrent event queue", data->_name.c_str(), data->valueToString().c_str());
             breakLoop = !eventProcessorFunctor(data);
         }
         catch (ConcurrentQueueInterrupted &queueException) {

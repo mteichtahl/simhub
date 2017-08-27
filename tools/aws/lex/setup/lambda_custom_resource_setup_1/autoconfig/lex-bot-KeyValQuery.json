@@ -1,0 +1,42 @@
+{
+  "name": "KeyValQuery",
+  "locale": "en-US",
+  "abortStatement": {
+      "messages": [
+          {
+              "content": "Sorry, I could not understand. Goodbye.",
+              "contentType": "PlainText"
+          }
+      ]
+  },
+  "clarificationPrompt": {
+      "maxAttempts": 5,
+      "messages": [
+          {
+              "content": "Sorry, but what do you mean?",
+              "contentType": "PlainText"
+          },
+          {
+              "content": "Sorry, can you please repeat that?",
+              "contentType": "PlainText"
+          },
+          {
+              "content": "Hmm, what are you trying to say?",
+              "contentType": "PlainText"
+          },
+          {
+              "content": "I'm not quite sure what you mean?",
+              "contentType": "PlainText"
+          }
+      ]
+  },
+  "voiceId": "Joanna",
+  "childDirected": false,
+  "idleSessionTTLInSeconds": 300,
+  "description": "Conversational Bot for KeyValQuery",
+  "intents":
+  [
+  ],
+  "processBehavior": "BUILD",
+  "voiceId": "Joanna"
+}

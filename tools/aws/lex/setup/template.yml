@@ -1,0 +1,196 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+  ReadCapacityUnits:
+    Description: "Throughtput for DDB tables"
+    Type: Number
+    Default: 5
+
+  WriteCapacityUnits:
+    Description: "Throughtput for DDB tables"
+    Type: Number
+    Default: 5
+
+Resources:
+
+  RestAPI:
+    Type: 'AWS::Serverless::Api'
+    Properties:
+      StageName: Prod
+      DefinitionUri: swagger.yml
+      Variables:
+        SomeStageVariable: "SomeValue"
+        CleverLambdaFunction_Lambda: !Ref CleverLambdaFunction
+
+
+  CleverLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri:
+        Bucket: !Sub simhub-keyvalquery-${AWS::Region}
+        Key: KeyValQuery/master-artefacts/lambda/CleverFunction_latest.zip
+      Handler: index.handler
+      Runtime: nodejs6.10
+      Description: Does something awesome
+      Role: !GetAtt LambdaExecRole.Arn
+      Timeout: 30
+      MemorySize: 1024
+      Tracing: Active
+      Environment:
+        Variables:
+          SomeEnvironmentVariable: "Some Clever Value"
+      Events:
+        GetEvent:
+          Type: Api
+          Properties:
+            Path: /cleverfunction
+            Method: get
+            RestApiId: !Ref RestAPI
+
+  LexBotHandler:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri:
+        Bucket: !Sub simhub-keyvalquery-${AWS::Region}
+        Key: KeyValQuery/master-artefacts/lambda/LexBotHandler_latest.zip
+      Handler: index.handler
+      Runtime: nodejs4.3
+      Description: Handles the Lex requests
+      Role: !GetAtt LambdaExecRole.Arn
+      Timeout: 30
+      MemorySize: 1024
+      Tracing: Active
+      Environment:
+        Variables:
+          dynamoDBPrefix: !Sub '${AWS::StackName}'
+
+  LambdaExecRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Path: "/"
+      Policies:
+        -
+          PolicyName: "LambdaFunctionsAccess"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              -
+                Effect: "Allow"
+                Action: "dynamodb:*"
+                Resource: "*"
+              -
+                Effect: "Allow"
+                Action: "lex:*"
+                Resource: "*"
+              -
+                Effect: "Allow"
+                Action:
+                  - "xray:PutTraceSegments"
+                  - "xray:PutTelemetryRecords"
+                Resource: "*"
+
+  DDBTableKeyVal:
+    Type: "AWS::DynamoDB::Table"
+    Properties:
+      ProvisionedThroughput:
+        ReadCapacityUnits:
+          Ref: "ReadCapacityUnits"
+        WriteCapacityUnits:
+          Ref: "WriteCapacityUnits"
+      TableName: !Sub '${AWS::StackName}-KeyVal'
+
+      AttributeDefinitions:
+        -
+          AttributeName: "source"
+          AttributeType: "S"
+        -
+          AttributeName: "title"
+          AttributeType: "S"
+      KeySchema:
+        -
+          AttributeName: "source"
+          KeyType: "HASH"
+
+      GlobalSecondaryIndexes:
+        -
+          IndexName: "title-index"
+          KeySchema:
+            -
+              AttributeName: "title"
+              KeyType: "HASH"
+          Projection:
+            ProjectionType: "ALL"
+          ProvisionedThroughput:
+            ReadCapacityUnits:
+              Ref: "ReadCapacityUnits"
+            WriteCapacityUnits:
+              Ref: "WriteCapacityUnits"
+
+  SetupEnvironmentPhase1:
+    Type: 'Custom::SetupEnvironmentPhase1'
+    Properties:
+      ServiceToken: !GetAtt LambdaCustomResourceSetupEnvironmentPhase1.Arn
+      # These properties are custom to the Lambda function
+      Region: !Ref "AWS::Region"
+      StackName : !Ref "AWS::StackName"
+      AWSAccountId : !Ref "AWS::AccountId"
+      LexBotHandlerARN: !GetAtt LexBotHandler.Arn
+
+  LambdaCustomResourceSetupEnvironmentPhase1:
+    Type: 'AWS::Lambda::Function'
+    DependsOn: LambdaLexPermissions
+    Properties:
+      Code:
+        S3Bucket: !Sub simhub-keyvalquery-${AWS::Region}
+        S3Key: KeyValQuery/master-artefacts/lambda/SetupPhase1-CustomResource_latest.zip
+      FunctionName: !Sub '${AWS::StackName}-CustomResourceSetupEnvironmentPhase1'
+      Description: Lambda function Custom Resource for KeyValQuery setup phase 1
+      Handler: index.handler
+      Runtime: nodejs6.10
+      MemorySize: 512
+      Timeout: 300
+      Role: !GetAtt KeyValQueryIAMRoleLambdaCustomResource.Arn
+
+  KeyValQueryIAMRoleLambdaCustomResource:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Path: "/"
+      Policies:
+        -
+          PolicyName: "AdminAccess"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              -
+                Effect: "Allow"
+                Action: "*"
+                Resource: "*"
+
+  LambdaLexPermissions:
+    Type: "AWS::Lambda::Permission"
+    Properties:
+      FunctionName: !GetAtt LexBotHandler.Arn
+      Action: "lambda:InvokeFunction"
+      Principal: "lex.amazonaws.com"
+      SourceArn: !Sub arn:aws:lex:${AWS::Region}:${AWS::AccountId}:intent:${AWS::StackName}_KeyValQuery_WhatsMyParameterIntent:*

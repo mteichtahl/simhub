@@ -1,0 +1,37 @@
+{
+    "name": "WhatsMyParameterIntent",
+    "sampleUtterances": [
+        "Whats my {keyname}",
+        "What is my {keyname}"
+    ],
+    "slots": [
+        {
+            "slotType": "KeyNames",
+            "slotTypeVersion": "1",
+            "name": "keyname",
+            "slotConstraint": "Required",
+            "valueElicitationPrompt": {
+                "maxAttempts": 2,
+                "messages": [
+                    {
+                        "content": "What parameter do you want?",
+                        "contentType": "PlainText"
+                    }
+                ],
+                "responseCard": "{\"version\":1,\"contentType\":\"application/vnd.amazonaws.card.generic\"}"
+            },
+            "priority": 1,
+            "sampleUtterances": [
+                "Whats my {keyname}",
+                "What is my {keyname}"
+            ]
+        }
+    ],
+    "fulfillmentActivity": {
+        "type": "CodeHook",
+        "codeHook": {
+            "uri": "REPLACE_WITH_LEXTBOTHANDLER_ARN",
+            "messageVersion": "1.0"
+        }
+    }
+}

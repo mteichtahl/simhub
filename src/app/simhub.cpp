@@ -29,7 +29,7 @@ SimHubEventController::SimHubEventController()
     _configManager = NULL;
     _running = false;
 
-#if defined (_AWS_SDK)
+#if defined(_AWS_SDK)
     _awsHelper.init();
 #endif
 
@@ -56,10 +56,10 @@ SimHubEventController::~SimHubEventController(void)
 
 void SimHubEventController::startSustainThread(void)
 {
-#if defined (_AWS_SDK)
+#if defined(_AWS_SDK)
     _awsHelper.polly()->say("Simulator is ready.");
 #endif
-    
+   
     std::shared_ptr<std::thread> sustainThread = std::make_shared<std::thread>([=] {
         _sustainThreadManager.setThreadRunning(true);
         while (!_sustainThreadManager.threadCanceled()) {
@@ -99,11 +99,13 @@ void SimHubEventController::deliverKinesisValue(std::shared_ptr<Attribute> value
     std::string name = value->name();
     std::string val = value->valueToString();
     std::string ts = value->timestampAsString();
+    std::string description = value->description();
+    std::string units = value->units();
 
     // {s:"a",t:"b",v:"123", ts:121}
     std::stringstream ss;
 
-    ss << "{ \"s\" : \"" << name << "\", \"val\":\"" << val << "\", \"ts\":" << ts << "}";
+    ss << "{ \"s\" : \"" << name << "\", \"val\" : \"" << val << "\", \"ts\" : \"" << ts << "\", \"d\" : \"" << description << "\", \"u\":\"" << units << "\"}";
     std::string dataString = ss.str();
 
     Aws::Utils::ByteBuffer data(dataString.length());
@@ -118,7 +120,6 @@ void SimHubEventController::deliverKinesisValue(std::shared_ptr<Attribute> value
 void SimHubEventController::enablePolly(void)
 {
     _awsHelper.initPolly();
-    _awsHelper.polly()->say("Loading plug in sub system");
 }
 
 void SimHubEventController::enableKinesis(void)
@@ -173,6 +174,12 @@ bool SimHubEventController::deliverValue(std::shared_ptr<Attribute> value)
         retVal = !_prepare3dMethods.simplug_deliver_value(_prepare3dMethods.plugin_instance, c_value);
     }
     else if (value->ownerPlugin() == _prepare3dMethods.plugin_instance) {
+
+        if (value->name() == "N_ELEC_PANEL_LOWER_LEFT") {
+            if (c_value >= 0)
+                _awsHelper.polly()->say("dc volts %i", c_value->value);
+        }
+
         retVal = !_pokeyMethods.simplug_deliver_value(_pokeyMethods.plugin_instance, c_value);
     }
 
