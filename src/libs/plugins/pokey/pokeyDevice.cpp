@@ -150,6 +150,31 @@ void PokeyDevice::addPin(std::string pinName, int pinNumber, std::string pinType
     _pins[portNumber].value = defaultValue;
     _pins[portNumber].description = description;
 }
+void PokeyDevice::addPWM(uint8_t channel, std::string name, std::string description, std::string units, uint32_t dutyCycle, uint32_t period)
+{
+
+    _pwmChannels[channel] = true;
+    float ms = _pokey->info.PWMinternalFrequency / 1000;
+
+    PK_PWMConfigurationGet(_pokey);
+
+    _pokey->PWM.PWMperiod = (ms * period);
+    _pokey->PWM.PWMduty[channel] = (ms * dutyCycle);
+    _pokey->PWM.PWMenabledChannels[channel] = true;
+
+    int ret = PK_PWMConfigurationSet(_pokey);
+
+    printf("---> ret %i\n", ret);
+
+    PK_PWMUpdate(_pokey);
+
+    mapNameToPWM(name.c_str(), channel);
+    _pwm[channel].name = name;
+    _pwm[channel].description = description;
+    _pwm[channel].units = units;
+    _pwm[channel].dutyCycle = dutyCycle;
+    _pwm[channel].period = period;
+}
 
 void PokeyDevice::startPolling()
 {
@@ -356,6 +381,24 @@ uint32_t PokeyDevice::targetValue(std::string targetName, int value)
     return 0;
 }
 
+uint32_t PokeyDevice::targetValue(std::string targetName, float value)
+{
+    uint8_t channel = PWMFromName(targetName);
+    uint32_t ms = _pokey->info.PWMinternalFrequency / 1000;
+
+    uint32_t duty = 0.0056 * value;
+
+    _pokey->PWM.PWMduty[channel] = duty;
+    _pokey->PWM.PWMenabledChannels[channel] = true;
+
+    int ret = PK_PWMConfigurationSet(_pokey);
+
+    printf("---> ret %0.00f \n", value);
+
+    PK_PWMUpdate(_pokey);
+    return 0;
+}
+
 uint32_t PokeyDevice::targetValue(std::string targetName, bool value)
 {
     uint32_t retValue = -1;
@@ -478,9 +521,26 @@ int PokeyDevice::pinFromName(std::string targetName)
         return -1;
 }
 
+uint8_t PokeyDevice::PWMFromName(std::string targetName)
+{
+    std::map<std::string, int>::iterator it;
+    it = _pwmMap.find(targetName);
+
+    if (it != _pwmMap.end()) {
+        return it->second;
+    }
+    else
+        return -1;
+}
+
 void PokeyDevice::mapNameToPin(std::string name, int pin)
 {
     _pinMap.emplace(name, pin);
+}
+
+void PokeyDevice::mapNameToPWM(std::string name, int pin)
+{
+    _pwmMap.emplace(name, pin);
 }
 
 void PokeyDevice::mapNameToEncoder(std::string name, int encoderNumber)

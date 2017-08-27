@@ -28,6 +28,7 @@
 #define MAX_MATRIX_LEDS 2
 #define MAX_MATRIX_LED_GROUPS 8
 #define MAX_DIGITS 10
+#define MAX_PWM_CHANNELS 6
 
 typedef struct {
     std::string pinName;
@@ -68,6 +69,16 @@ typedef struct {
     device_matrixLED_group_t group[MAX_MATRIX_LED_GROUPS];
 } device_matrixLED_t;
 
+typedef struct {
+    uint8_t id;
+    std::string units;
+    std::string name;
+    std::string description;
+    uint8_t pin;
+    float dutyCycle;
+    uint32_t period;
+} device_pwm_t;
+
 class PokeyDevice
 {
 private:
@@ -88,13 +99,18 @@ protected:
     std::map<std::string, int> _pinMap;
     std::map<std::string, int> _encoderMap;
     std::map<std::string, int> _displayMap;
+    std::map<std::string, int> _pwmMap;
 
     sPoKeysDevice *_pokey;
     void *_callbackArg;
     SPHANDLE _pluginInstance;
+
     device_port_t _pins[MAX_PINS];
     device_encoder_t _encoders[MAX_ENCODERS];
     device_matrixLED_t _matrixLED[MAX_MATRIX_LEDS];
+    device_pwm_t _pwm[MAX_PWM_CHANNELS];
+    uint8_t _pwmChannels[6];
+
     uint8_t _intToDisplayRow[MAX_DIGITS];
     EnqueueEventHandler _enqueueCallback;
 
@@ -103,6 +119,7 @@ protected:
     uv_timer_t _pollTimer;
 
     int pinFromName(std::string targetName);
+    uint8_t PWMFromName(std::string targetName);
     uint8_t displayFromName(std::string targetName);
     uint8_t displayNumber(uint8_t displayNumwber, std::string targetName, int value);
 
@@ -114,12 +131,15 @@ public:
 
     bool validatePinCapability(int, std::string);
     bool validateEncoder(int encoderNumber);
+
     void mapNameToPin(std::string name, int pin);
     void mapNameToEncoder(std::string name, int encoderNumber);
     void mapNameToMatrixLED(std::string name, int id);
+    void mapNameToPWM(std::string name, int pin);
 
     uint32_t targetValue(std::string targetName, bool value);
     uint32_t targetValue(std::string targetName, int value);
+    uint32_t targetValue(std::string targetName, float value);
     uint32_t inputPin(uint8_t pin);
     uint32_t outputPin(uint8_t pin);
     int32_t name(std::string name);
@@ -155,6 +175,7 @@ public:
     bool isPinDigitalInput(uint8_t pin);
     bool isEncoderCapable(int pin);
     void addPin(std::string name, int pinNumber, std::string pinType, int defaultValue = 0, std::string description = "None");
+    void addPWM(uint8_t pinNumber, std::string name, std::string description, std::string units, uint32_t dutyCycle, uint32_t period);
     void addEncoder(int encoderNumber, uint32_t defaultValue, std::string name = DEFAULT_ENCODER_NAME, std::string description = DEFAULT_ENCODER_DESCRIPTION,
         int min = DEFAULT_ENCODER_MIN, int max = DEFAULT_ENCODER_MAX, int step = DEFAULT_ENCODER_STEP, int invertDirection = DEFAULT_ENCODER_DIRECTION, std::string units = "");
 

@@ -19,8 +19,10 @@
 #include "aws/aws.h"
 #endif
 
+#include "common/support/threadmanager.h"
 #include "log/clog.h"
 #include "mappingConfigManager/mappingConfigManager.h"
+
 #include "simhub.h"
 
 #ifndef RETURN_OK

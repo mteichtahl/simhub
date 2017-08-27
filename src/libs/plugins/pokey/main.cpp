@@ -95,6 +95,9 @@ int PokeyDevicePluginStateManager::deliverValue(GenericTLV *data)
         else if (data->type == ConfigType::CONFIG_INT) {
             device->targetValue(data->name, (int)data->value);
         }
+        else if (data->type == ConfigType::CONFIG_FLOAT) {
+            device->targetValue(data->name, (float)data->value);
+        }
     }
 
     return 0;
@@ -207,6 +210,45 @@ bool PokeyDevicePluginStateManager::deviceConfiguration(libconfig::SettingIterat
         retVal = false;
     }
 
+    return retVal;
+}
+
+bool PokeyDevicePluginStateManager::devicePWMConfiguration(libconfig::Setting *pwm, std::shared_ptr<PokeyDevice> pokeyDevice)
+{
+    bool retVal = true;
+
+    int PWMLength = pwm->getLength();
+
+    if (PWMLength > 0) {
+
+        _logger(LOG_INFO, "    [%s]  - Found %i PWM Channels", pokeyDevice->name().c_str(), PWMLength);
+
+        for (libconfig::SettingIterator iter = pwm->begin(); iter != pwm->end(); iter++) {
+            int channel = 0;
+            std::string name = "";
+            std::string description = "";
+            std::string units = "";
+            float dutyCycle = 1.5; // percent
+            uint32_t period = 20; // milliseconds
+
+            try {
+                iter->lookupValue("channel", channel);
+                iter->lookupValue("name", name);
+                iter->lookupValue("description", description);
+                iter->lookupValue("units", units);
+                iter->lookupValue("dutyCycle", dutyCycle);
+                iter->lookupValue("period", period);
+            }
+            catch (const libconfig::SettingNotFoundException &nfex) {
+                _logger(LOG_ERROR, "Config file parse error at %s. Skipping....", nfex.getPath());
+            }
+
+            if (addTargetToDeviceTargetList(name, pokeyDevice)) {
+                pokeyDevice->addPWM(channel, name, description, units, dutyCycle, period);
+                _logger(LOG_INFO, "        - Added PWM channel %i - %s", channel, name.c_str());
+            }
+        }
+    }
     return retVal;
 }
 
@@ -445,7 +487,8 @@ int PokeyDevicePluginStateManager::preflightComplete(void)
             continue;
         }
 
-        devicePinsConfiguration(&iter->lookup("pins"), pokeyDevice);
+        if (iter->exists("pins"))
+            devicePinsConfiguration(&iter->lookup("pins"), pokeyDevice);
 
         // check if there is an encoder section in the config
         if (iter->exists("encoders"))
@@ -454,6 +497,9 @@ int PokeyDevicePluginStateManager::preflightComplete(void)
         // check if there is an displays section in the config
         if (iter->exists("displays"))
             deviceDisplaysConfiguration(&iter->lookup("displays"), pokeyDevice);
+
+        if (iter->exists("pwm"))
+            devicePWMConfiguration(&iter->lookup("pwm"), pokeyDevice);
 
         pokeyDevice->startPolling();
     }
