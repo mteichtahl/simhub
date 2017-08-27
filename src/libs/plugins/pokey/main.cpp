@@ -277,6 +277,21 @@ bool PokeyDevicePluginStateManager::devicePinsConfiguration(libconfig::Setting *
 
     return retVal;
 }
+bool PokeyDevicePluginStateManager::devicePWMConfiguration(libconfig::Setting *pwm, std::shared_ptr<PokeyDevice> pokeyDevice)
+{
+    bool retVal = true;
+    int pwmCount = pwm->getLength();
+
+    if (pwmCount > 0) {
+        _logger(LOG_INFO, "    [%s]  - Found %i PWM Channels", pokeyDevice->name().c_str(), pwmCount);
+        int encoderIndex = 0;
+
+        for (libconfig::SettingIterator iter = pwm->begin(); iter != pwm->end(); iter++) {
+        }
+    }
+
+    return retVal;
+}
 
 bool PokeyDevicePluginStateManager::deviceEncodersConfiguration(libconfig::Setting *encoders, std::shared_ptr<PokeyDevice> pokeyDevice)
 {
@@ -445,7 +460,8 @@ int PokeyDevicePluginStateManager::preflightComplete(void)
             continue;
         }
 
-        devicePinsConfiguration(&iter->lookup("pins"), pokeyDevice);
+        if (iter->exists("pins"))
+            devicePinsConfiguration(&iter->lookup("pins"), pokeyDevice);
 
         // check if there is an encoder section in the config
         if (iter->exists("encoders"))
@@ -454,6 +470,9 @@ int PokeyDevicePluginStateManager::preflightComplete(void)
         // check if there is an displays section in the config
         if (iter->exists("displays"))
             deviceDisplaysConfiguration(&iter->lookup("displays"), pokeyDevice);
+
+        if (iter->exists("pwm"))
+            devicePWMConfiguration(&iter->lookup("displays"), pokeyDevice);
 
         pokeyDevice->startPolling();
     }

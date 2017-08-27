@@ -28,6 +28,7 @@
 #define MAX_MATRIX_LEDS 2
 #define MAX_MATRIX_LED_GROUPS 8
 #define MAX_DIGITS 10
+#define MAX_PWM_CHANNELS 6
 
 typedef struct {
     std::string pinName;
@@ -68,6 +69,14 @@ typedef struct {
     device_matrixLED_group_t group[MAX_MATRIX_LED_GROUPS];
 } device_matrixLED_t;
 
+typedef struct {
+    uint8_t id;
+    std::string name;
+    std::string description;
+    uint32_t period;
+    uint32_t duty;
+} device_pwm_t;
+
 class PokeyDevice
 {
 private:
@@ -88,11 +97,13 @@ protected:
     std::map<std::string, int> _pinMap;
     std::map<std::string, int> _encoderMap;
     std::map<std::string, int> _displayMap;
+    std::map<std::string, int> _pwmMap;
 
     sPoKeysDevice *_pokey;
     void *_callbackArg;
     SPHANDLE _pluginInstance;
     device_port_t _pins[MAX_PINS];
+    device_pwm_t _pwm[MAX_PWM_CHANNELS];
     device_encoder_t _encoders[MAX_ENCODERS];
     device_matrixLED_t _matrixLED[MAX_MATRIX_LEDS];
     uint8_t _intToDisplayRow[MAX_DIGITS];
