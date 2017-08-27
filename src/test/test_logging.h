@@ -5,7 +5,6 @@
 #include <vector>
 
 #include "../common/configmanager/configmanager.h"
-#include "../common/elements/sources/source.h"
 #include "libs/commandLine.h" // https://github.com/tanakh/cmdline
 #include "log/clog.h"
 
