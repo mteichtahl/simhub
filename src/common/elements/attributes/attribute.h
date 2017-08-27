@@ -18,6 +18,7 @@ protected:
 
     std::string _name;
     std::string _description;
+    std::string _units;
     std::chrono::milliseconds _timestamp;
     eAttribute_t _type;
     SPHANDLE _ownerPlugin;
@@ -31,6 +32,7 @@ public:
     SPHANDLE ownerPlugin(void) { return _ownerPlugin; };
 
     std::string description(void) { return _description; };
+    std::string units(void) { return _units; }
     void setDescription(std::string description) { _description = description; };
 
     eAttribute_t type(void) { return _type; };

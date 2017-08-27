@@ -11,7 +11,6 @@
 #endif
 
 #include "common/configmanager/configmanager.h"
-#include "common/elements/sources/source.h"
 #include "libs/commandLine.h" // https://github.com/tanakh/cmdline
 #include "log/clog.h"
 #include "plugins/common/simhubdeviceplugin.h"
@@ -69,8 +68,8 @@ int main(int argc, char *argv[])
     }
 
 #if defined(_AWS_SDK)
-        simhubController->enablePolly();
-        simhubController->enableKinesis();
+    simhubController->enablePolly();
+    simhubController->enableKinesis();
 #endif
 
     if (simhubController->loadPokeyPlugin()) {
