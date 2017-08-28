@@ -1,4 +1,6 @@
+#include <chrono>
 #include <string.h>
+#include <thread>
 
 #include "elements/attributes/attribute.h"
 #include "pokeyDevice.h"
@@ -381,21 +383,23 @@ uint32_t PokeyDevice::targetValue(std::string targetName, int value)
     return 0;
 }
 
+using namespace std::chrono_literals;
+
 uint32_t PokeyDevice::targetValue(std::string targetName, float value)
 {
     uint8_t channel = PWMFromName(targetName);
     uint32_t ms = _pokey->info.PWMinternalFrequency / 1000;
 
-    uint32_t duty = 0.0056 * value;
+    uint32_t duty = (3 * value) / 700;
+    duty *= ms;
 
-    _pokey->PWM.PWMduty[channel] = duty;
     _pokey->PWM.PWMenabledChannels[channel] = true;
+    // int ret = PK_PWMConfigurationSet(_pokey);
 
-    int ret = PK_PWMConfigurationSet(_pokey);
-
-    printf("---> ret %0.00f \n", value);
+    printf("---> duty %d, ret %.3f \n", duty, value);
 
     PK_PWMUpdate(_pokey);
+
     return 0;
 }
 

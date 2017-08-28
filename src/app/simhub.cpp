@@ -1,6 +1,6 @@
 #include <assert.h>
-#include <utility>
 #include <chrono>
+#include <utility>
 
 #include "common/configmanager/configmanager.h"
 #include "log/clog.h"
@@ -45,7 +45,7 @@ SimHubEventController::~SimHubEventController(void)
     if (_awsHelper.polly()) {
         _awsHelper.polly()->shutdown();
     }
-    
+
     if (_awsHelper.kinesis()) {
         _awsHelper.kinesis()->shutdown();
     }
@@ -54,12 +54,9 @@ SimHubEventController::~SimHubEventController(void)
 #endif
 }
 
+#if defined(_AWS_SDK)
 void SimHubEventController::startSustainThread(void)
 {
-#if defined(_AWS_SDK)
-    _awsHelper.polly()->say("Simulator is ready.");
-#endif
-   
     std::shared_ptr<std::thread> sustainThread = std::make_shared<std::thread>([=] {
         _sustainThreadManager.setThreadRunning(true);
         while (!_sustainThreadManager.threadCanceled()) {
@@ -71,7 +68,7 @@ void SimHubEventController::startSustainThread(void)
 
             std::chrono::milliseconds now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
 
-            for (std::pair<std::string, SustainMapEntry> entry: _sustainValues) {
+            for (std::pair<std::string, SustainMapEntry> entry : _sustainValues) {
                 std::chrono::milliseconds sustain = entry.second.first;
                 std::chrono::milliseconds ts = entry.second.second->timestamp();
 
@@ -93,7 +90,6 @@ void SimHubEventController::ceaseSustainThread(void)
     _sustainThreadManager.shutdownThread();
 }
 
-#if defined(_AWS_SDK)
 void SimHubEventController::deliverKinesisValue(std::shared_ptr<Attribute> value)
 {
     std::string name = value->name();
@@ -159,12 +155,14 @@ bool SimHubEventController::deliverValue(std::shared_ptr<Attribute> value)
 
     bool retVal = false;
 
+#if defined(_AWS_SDK)
     if (mapContains(_configManager->mapManager()->sustainMap(), value->name())) {
         // update the sustain value map entry
         std::lock_guard<std::mutex> sustainGuard(_sustainValuesMutex);
         _sustainValues[value->name()].second = value;
         _sustainValues[value->name()].first = std::chrono::milliseconds(_configManager->mapManager()->sustainMap()[value->name()]);
     }
+#endif
 
     // determine value destination from the source - very simple at the moment
     // (just deliver to whatever instance is not the source) - may want more
@@ -175,10 +173,12 @@ bool SimHubEventController::deliverValue(std::shared_ptr<Attribute> value)
     }
     else if (value->ownerPlugin() == _prepare3dMethods.plugin_instance) {
 
+#if defined(_AWS_SDK)
         if (value->name() == "N_ELEC_PANEL_LOWER_LEFT") {
             if (c_value >= 0)
                 _awsHelper.polly()->say("dc volts %i", c_value->value);
         }
+#endif
 
         retVal = !_pokeyMethods.simplug_deliver_value(_pokeyMethods.plugin_instance, c_value);
     }
@@ -308,7 +308,10 @@ void SimHubEventController::terminate(void)
 {
     assert(_running);
 
+#if defined(_AWS_SDK)
     ceaseSustainThread();
+#endif
+
     shutdownPlugin(_prepare3dMethods);
     shutdownPlugin(_pokeyMethods);
     _running = false;

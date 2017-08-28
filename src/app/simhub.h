@@ -3,11 +3,9 @@
 
 #include <atomic>
 #include <list>
+#include <mutex>
 #include <string>
 #include <thread>
-#include <atomic>
-#include <mutex>
-
 
 #include "appsupport.h"
 #include "elements/attributes/attribute.h"
@@ -16,6 +14,7 @@
 
 #if defined(_AWS_SDK)
 #include "aws/aws.h"
+#include "common/support/threadmanager.h"
 #endif
 
 class ConfigManager; // forward reference
@@ -30,8 +29,8 @@ class ConfigManager; // forward reference
  *   void * to 'this' that was passed to the plugin when it registered
  *   the callback stub, to call into the proper 'eventCallback' member
  */
- 
- typedef std::pair<std::chrono::milliseconds, std::shared_ptr<Attribute>> SustainMapEntry;
+
+typedef std::pair<std::chrono::milliseconds, std::shared_ptr<Attribute>> SustainMapEntry;
 
 class SimHubEventController
 {
@@ -46,17 +45,21 @@ protected:
     simplug_vtable loadPlugin(std::string dylibName, libconfig::Config *pluginConfigs, EnqueueEventHandler eventCallback);
     void terminate(void);
     void shutdownPlugin(simplug_vtable &pluginMethods);
+#if defined(_AWS_SDK)
     void startSustainThread(void);
     void ceaseSustainThread(void);
+#endif
 
     ConcurrentQueue<std::shared_ptr<Attribute>> _eventQueue;
     simplug_vtable _prepare3dMethods;
     simplug_vtable _pokeyMethods;
     ConfigManager *_configManager;
 
+#if defined(_AWS_SDK)
     CancelableThreadManager _sustainThreadManager;
     std::map<std::string, SustainMapEntry> _sustainValues;
     std::mutex _sustainValuesMutex;
+#endif
 
     bool _running;
 
@@ -77,7 +80,7 @@ public:
         assert(prepare3dConfig != NULL);
         _prepare3dDeviceConfig = prepare3dConfig;
     };
-    
+
     void setPokeyConfig(libconfig::Config *pokeyConfig)
     {
         assert(pokeyConfig != NULL);
@@ -112,7 +115,9 @@ template <class F> void SimHubEventController::runEventLoop(F &&eventProcessorFu
 
     _running = true;
 
+#if defined(_AWS_SDK)
     startSustainThread();
+#endif
 
     while (!breakLoop) {
         try {
