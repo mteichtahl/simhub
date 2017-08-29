@@ -18,6 +18,15 @@
       "Default": "simhubStream",
       "AllowedPattern": "[a-zA-Z0-9]*",
       "ConstraintDescription": "Environment names must be 3-16 characters and contain only a-z and 0-9."
+    },
+    "DynamoTable": {
+      "Description": "DynamoDB",
+      "Type": "String",
+      "MinLength": "3",
+      "MaxLength": "16",
+      "Default": "simhub",
+      "AllowedPattern": "[a-zA-Z0-9]*",
+      "ConstraintDescription": "dynamo db names must be 3-16 characters and contain only a-z and 0-9."
     }
   },
   "Resources": {
@@ -29,6 +38,34 @@
         },
         "RetentionPeriodHours": 24,
         "ShardCount": 1
+      }
+    },
+    "DynamoTable": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "AttributeDefinitions": [{
+            "AttributeName": "source",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "description",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "units",
+            "AttributeType": "S"
+          }, {
+            "AttributeName": "value",
+            "AttributeType": "S"
+          }
+        ],
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits": "10",
+          "WriteCapacityUnits": "10"
+        },
+        "TableName": {
+          "Ref": "DynamoTable"
+        }
       }
     }
   },

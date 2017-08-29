@@ -1,0 +1,58 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Parameters": {
+    "EnvironmentName": {
+      "Description": "The string that will be prefixed to each instance name",
+      "Type": "String",
+      "MinLength": "3",
+      "MaxLength": "16",
+      "Default": "simhub",
+      "AllowedPattern": "[a-zA-Z0-9]*",
+      "ConstraintDescription": "Environment names must be 3-16 characters and contain only a-z and 0-9."
+    },
+    "DynamoTableName": {
+      "Description": "DynamoDB",
+      "Type": "String",
+      "MinLength": "3",
+      "MaxLength": "16",
+      "Default": "simhub",
+      "AllowedPattern": "[a-zA-Z0-9]*",
+      "ConstraintDescription": "dynamo db names must be 3-16 characters and contain only a-z and 0-9."
+    }
+  },
+  "Resources": {
+    "DynamoTable": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "AttributeDefinitions": [{
+          "AttributeName": "source",
+          "AttributeType": "S"
+        }],
+        "KeySchema": [{
+          "AttributeName": "source",
+          "KeyType": "HASH"
+        }],
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits": "10",
+          "WriteCapacityUnits": "10"
+        },
+        "TableName": {
+          "Ref": "DynamoTableName"
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "DynamoARN": {
+      "Value": {
+        "Fn::GetAtt": ["DynamoTable", "Arn"]
+      },
+      "Description": "DynamoTable ARN",
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}-DynamoTable-ARN"
+        }
+      }
+    }
+  }
+}
