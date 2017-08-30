@@ -224,7 +224,18 @@ void PokeyDevicePluginStateManager::loadTransform(std::string pinName, libconfig
     }
 }
 
-void PokeyDevicePluginStateManager::loadMapTo(std::string pinName, libconfig::Setting *mapTo) {}
+void PokeyDevicePluginStateManager::loadMapTo(std::string pinName, libconfig::Setting *mapTo)
+{
+    for (libconfig::Setting const &entry : *mapTo) {
+        entry.lookupValue("name", name);
+
+        _logger(LOG_INFO, " - transform %s", transformName.c_str());
+
+        if (entry.exists("transform")) {
+            loadTransform(pinName, entry);
+        }
+    }
+}
 
 bool PokeyDevicePluginStateManager::devicePinsConfiguration(libconfig::Setting *pins, std::shared_ptr<PokeyDevice> pokeyDevice)
 {
@@ -259,7 +270,7 @@ bool PokeyDevicePluginStateManager::devicePinsConfiguration(libconfig::Setting *
                 iter->lookupValue("description", description);
                 iter->lookupValue("units", units);
                 if (iter->exists("transform")) {
-                    loadTransform(&iter->lookup("transform"));
+                    loadTransform(pinName, &iter->lookup("transform"));
                 }
             }
             catch (const libconfig::SettingNotFoundException &nfex) {
