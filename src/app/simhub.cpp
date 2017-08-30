@@ -1,6 +1,6 @@
 #include <assert.h>
-#include <utility>
 #include <chrono>
+#include <utility>
 
 #include "common/configmanager/configmanager.h"
 #include "log/clog.h"
@@ -45,7 +45,7 @@ SimHubEventController::~SimHubEventController(void)
     if (_awsHelper.polly()) {
         _awsHelper.polly()->shutdown();
     }
-    
+
     if (_awsHelper.kinesis()) {
         _awsHelper.kinesis()->shutdown();
     }
@@ -59,7 +59,7 @@ void SimHubEventController::startSustainThread(void)
 #if defined(_AWS_SDK)
     _awsHelper.polly()->say("Simulator is ready.");
 #endif
-   
+
     std::shared_ptr<std::thread> sustainThread = std::make_shared<std::thread>([=] {
         _sustainThreadManager.setThreadRunning(true);
         while (!_sustainThreadManager.threadCanceled()) {
@@ -71,7 +71,7 @@ void SimHubEventController::startSustainThread(void)
 
             std::chrono::milliseconds now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
 
-            for (std::pair<std::string, SustainMapEntry> entry: _sustainValues) {
+            for (std::pair<std::string, SustainMapEntry> entry : _sustainValues) {
                 std::chrono::milliseconds sustain = entry.second.first;
                 std::chrono::milliseconds ts = entry.second.second->timestamp();
 
@@ -188,6 +188,17 @@ bool SimHubEventController::deliverValue(std::shared_ptr<Attribute> value)
     }
 
     free(c_value->name);
+
+    if (c_value->description) {
+        value->setDescription(c_value->description);
+        free(c_value->description);
+    }
+
+    if (c_value->units) {
+        value->setUnits(c_value->units);
+        free(c_value->units);
+    }
+
     free(c_value);
 
     return retVal;

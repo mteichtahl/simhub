@@ -35,7 +35,7 @@ public:
     std::string units(void) { return _units.empty() ? "none" : _units; }
 
     void setDescription(std::string description) { _description = description; };
-    // void setUnits(std::string units) { _units = units; };
+    void setUnits(std::string units) { _units = units; };
 
     eAttribute_t type(void) { return _type; };
     void setType(eAttribute_t type) { _type = type; };
@@ -49,10 +49,7 @@ public:
         resetTimestamp();
     };
 
-    void resetTimestamp(void)
-    {
-        _timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
-    };
+    void resetTimestamp(void) { _timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()); };
 
     template <typename T> T value(void) { return mpark::get<T>(_value); };
 

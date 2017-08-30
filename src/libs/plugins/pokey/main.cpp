@@ -86,7 +86,14 @@ int PokeyDevicePluginStateManager::deliverValue(GenericTLV *data)
 {
     assert(data);
 
+    std::cout << "data->name: " << data->name << std::endl;
+
     std::shared_ptr<PokeyDevice> device = targetFromDeviceTargetList(data->name);
+
+    std::string name = data->name;
+
+    if (name == "V_OH_FLTALT")
+        printf("break\n");
 
     if (device) {
         if (data->type == ConfigType::CONFIG_BOOL) {
@@ -95,6 +102,8 @@ int PokeyDevicePluginStateManager::deliverValue(GenericTLV *data)
         else if (data->type == ConfigType::CONFIG_INT) {
             device->targetValue(data->name, (int)data->value);
         }
+
+        device->UpdateGenericMetadata(data, data->name);
     }
 
     return 0;
@@ -239,6 +248,8 @@ bool PokeyDevicePluginStateManager::devicePinsConfiguration(libconfig::Setting *
                 iter->lookupValue("name", pinName);
                 iter->lookupValue("type", pinType);
                 iter->lookupValue("description", description);
+
+                std::cout << "dev desc: " << description << std::endl;
                 iter->lookupValue("units", units);
             }
             catch (const libconfig::SettingNotFoundException &nfex) {

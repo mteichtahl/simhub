@@ -3,6 +3,11 @@
 #include "elements/attributes/attribute.h"
 #include "pokeyDevice.h"
 
+template <typename T, typename E> bool mapContains(const std::map<T, E> &mapInstance, T key)
+{
+    return mapInstance.find(key) != mapInstance.end();
+}
+
 PokeyDevice::PokeyDevice(sPoKeysNetworkDeviceSummary deviceSummary, uint8_t index)
 {
     _callbackArg = NULL;
@@ -347,6 +352,40 @@ void PokeyDevice::configMatrixLED(int id, int rows, int cols, int enabled)
 
     int32_t ret = PK_MatrixLEDConfigurationSet(_pokey);
     PK_MatrixLEDUpdate(_pokey);
+}
+
+void PokeyDevice::UpdateGenericMetadata(GenericTLV *generic, std::string targetName)
+{
+    std::string description;
+    std::string units;
+
+    if (mapContains(_pinMap, targetName)) {
+        description = _pins[_pinMap[targetName]].description;
+        units = _pins[_pinMap[targetName]].units;
+    }
+    else if (mapContains(_encoderMap, targetName)) {
+        description = _encoders[_encoderMap[targetName]].description;
+        units = _encoders[_encoderMap[targetName]].units;
+    }
+
+    // if (mapContains(_displayMap, targetName)) {
+    //     description = _matrixLED[_displayMap[targetName]].description;
+    //     units = _matrixLED[_displayMap[targetName]].units;
+    // }
+
+    else if (mapContains(_pwmMap, targetName)) {
+        description = _pwm[_pwmMap[targetName]].description;
+    }
+
+    if (description.size() > 0) {
+        generic->description = (char *)calloc(description.size() + 1, 1);
+        strncpy(generic->description, description.c_str(), description.size());
+    }
+
+    if (units.size() > 0) {
+        generic->units = (char *)calloc(units.size() + 1, 1);
+        strncpy(generic->units, units.c_str(), units.size());
+    }
 }
 
 uint32_t PokeyDevice::targetValue(std::string targetName, int value)

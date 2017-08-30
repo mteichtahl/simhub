@@ -12,7 +12,24 @@ GenericTLV *AttributeToCGeneric(std::shared_ptr<Attribute> value)
     retVal->ownerPlugin = value->ownerPlugin();
 
     strncpy(retVal->name, value->name().c_str(), value->name().size());
-    // strncpy(retVal->description, value->description().c_str(), value->description().size());
+
+    if (value->description().size() > 0) {
+        retVal->description = (char *)calloc(value->description().size() + 1, 1);
+        strncpy(retVal->description, value->description().c_str(), value->description().size());
+    }
+    else {
+        retVal->description = NULL;
+    }
+
+    if (value->units().size() > 0) {
+        retVal->units = (char *)calloc(value->units().size() + 1, 1);
+        strncpy(retVal->units, value->units().c_str(), value->units().size());
+    }
+    else {
+        retVal->units = NULL;
+    }
+
+    // strncpy(retVal->units, value->units().c_str(), value->units().size());
     // strncpy(retVal->units, value->units().c_str(), value->units().size());
 
     switch (value->type()) {
@@ -83,6 +100,15 @@ std::shared_ptr<Attribute> AttributeFromCGeneric(GenericTLV *generic)
     }
 
     retVal->setName(generic->name);
+
+    if (generic->description) {
+        retVal->setDescription(generic->description);
+    }
+
+    if (generic->units) {
+        retVal->setDescription(generic->units);
+    }
+
     // retVal->setDescription(generic->description);
     // retVal->setUnits(generic->units);
 

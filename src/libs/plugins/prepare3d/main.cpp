@@ -302,9 +302,12 @@ void SimSourcePluginStateManager::processElement(char *element)
 
     if (type != NULL) {
         GenericTLV el;
+        memset(&el, 1, sizeof(GenericTLV));
 
         el.name = name;
         el.ownerPlugin = this;
+        el.description = NULL;
+        el.units = NULL;
 
         if (strncmp(type, "float", sizeof(&type)) == 0) {
             el.type = CONFIG_FLOAT;

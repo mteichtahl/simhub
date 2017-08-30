@@ -40,7 +40,7 @@ void configureCli(cmdline::parser *cli)
 // TODO: handle SIGHUP for settings reload
 void sigint_handler(int sigid)
 {
-    if (sigid == SIGINT) {        
+    if (sigid == SIGINT) {
         // tell app event loop to end on control+c
         logger.log(LOG_INFO, "Shutting down simhub, this may take a couple seconds...");
         SimHubEventController::EventControllerInstance()->ceaseEventLoop();
@@ -87,6 +87,7 @@ int main(int argc, char *argv[])
                 bool deliveryResult = simhubController->deliverValue(value);
 
 #if defined(_AWS_SDK)
+                std::cout << "desc: " << value->description() << ", units: " << value->units() << std::endl;
                 simhubController->deliverKinesisValue(value);
 #endif
                 return deliveryResult;

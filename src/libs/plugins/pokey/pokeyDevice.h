@@ -129,6 +129,8 @@ public:
     void mapNameToEncoder(std::string name, int encoderNumber);
     void mapNameToMatrixLED(std::string name, int id);
 
+    void UpdateGenericMetadata(GenericTLV *generic, std::string targetName);
+
     uint32_t targetValue(std::string targetName, bool value);
     uint32_t targetValue(std::string targetName, int value);
     uint32_t inputPin(uint8_t pin);
