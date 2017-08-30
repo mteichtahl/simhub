@@ -39,40 +39,15 @@
         "RetentionPeriodHours": 24,
         "ShardCount": 1
       }
-    },
-    "DynamoTable": {
-      "Type": "AWS::DynamoDB::Table",
-      "Properties": {
-        "AttributeDefinitions": [{
-            "AttributeName": "source",
-            "AttributeType": "S"
-          },
-          {
-            "AttributeName": "description",
-            "AttributeType": "S"
-          },
-          {
-            "AttributeName": "units",
-            "AttributeType": "S"
-          }, {
-            "AttributeName": "value",
-            "AttributeType": "S"
-          }
-        ],
-        "ProvisionedThroughput": {
-          "ReadCapacityUnits": "10",
-          "WriteCapacityUnits": "10"
-        },
-        "TableName": {
-          "Ref": "DynamoTable"
-        }
-      }
     }
   },
   "Outputs": {
     "KinesisStreamARN": {
       "Value": {
-        "Fn::GetAtt": ["KinesisStream", "Arn"]
+        "Fn::GetAtt": [
+          "KinesisStream",
+          "Arn"
+        ]
       },
       "Description": "Kinesis Stream",
       "Export": {

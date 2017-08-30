@@ -5,8 +5,8 @@ var AWS = require('aws-sdk');
 var s3 = new AWS.S3();
 
 var cloudwatch = new AWS.CloudWatch();
-var dynamodb = new AWS.DynamoDB();
-
+var dynamodb = new AWS.DynamoDB({region: process.env.dynamoRegion});
+var dynamoTable = process.env.dynamoRegion
 /**
  * cleanJSONString
  *
@@ -36,7 +36,7 @@ function writeToDynamo(name, value, units, description) {
       'description': {S: description}
     },
     ReturnConsumedCapacity: 'TOTAL',
-    TableName: 'simhub'
+    TableName: dynamoTable
   };
 
   dynamodb.putItem(params, function(err, data) {
