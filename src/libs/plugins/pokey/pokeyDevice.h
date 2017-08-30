@@ -131,7 +131,7 @@ public:
 
     uint32_t targetValue(std::string targetName, bool value);
     uint32_t targetValue(std::string targetName, int value);
-    uint32_t inputPin(uint8_t pin);
+    uint32_t inputPin(uint8_t pin, bool invert = false);
     uint32_t outputPin(uint8_t pin);
     int32_t name(std::string name);
 
@@ -165,7 +165,7 @@ public:
     bool isPinDigitalOutput(uint8_t pin);
     bool isPinDigitalInput(uint8_t pin);
     bool isEncoderCapable(int pin);
-    void addPin(std::string name, int pinNumber, std::string pinType, int defaultValue = 0, std::string description = "None");
+    void addPin(std::string name, int pinNumber, std::string pinType, int defaultValue = 0, std::string description = "None", bool invert = false);
     void addEncoder(int encoderNumber, uint32_t defaultValue, std::string name = DEFAULT_ENCODER_NAME, std::string description = DEFAULT_ENCODER_DESCRIPTION,
         int min = DEFAULT_ENCODER_MIN, int max = DEFAULT_ENCODER_MAX, int step = DEFAULT_ENCODER_STEP, int invertDirection = DEFAULT_ENCODER_DIRECTION, std::string units = "");
 
