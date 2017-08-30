@@ -108,32 +108,66 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
         }
     }
 
+    int prev = self->_pokey->Pins[26].DigitalValueGet;
     int ret = PK_DigitalIOGet(self->_pokey);
+    int curr = self->_pokey->Pins[26].DigitalValueGet;
+
+    if (prev != curr)
+        printf("break\n");
+
     if (ret == PK_OK) {
         GenericTLV el;
 
         for (int i = 0; i < self->_pokey->info.iPinCount; i++) {
-
             if (self->_pins[i].type == "DIGITAL_INPUT") {
-                if (self->_pins[i].value != self->_pokey->Pins[i].DigitalValueGet) {
-                    // data has changed so send it ofr for processing
-                    self->_pins[i].previousValue = self->_pins[i].value;
-                    self->_pins[i].value = self->_pokey->Pins[i].DigitalValueGet;
+                int sourcePinNumber = self->_pins[i].pinNumber;
+
+                printf("DIN pin-index %i - %i\n", sourcePinNumber - 1, self->_pokey->Pins[sourcePinNumber - 1].DigitalValueGet);
+
+                if (self->_pins[i].value != self->_pokey->Pins[sourcePinNumber - 1].DigitalValueGet) {
+                    // data has changed so send it off for processing
+
                     el.ownerPlugin = self->_pluginInstance;
                     el.type = CONFIG_BOOL;
-                    el.value.bool_value = self->_pins[i].value;
+
                     el.length = sizeof(uint8_t);
-                    el.name = (char *)self->_pins[i].pinName.c_str();
+
+                    if (self->_pins[i].remapTo.size() > 1) {
+                        std::string remappedPinName = self->_pins[i].remapTo;
+                        int remappedPinIndex = self->pinIndexFromName(remappedPinName);
+
+                        self->_pins[remappedPinIndex].previousValue = self->_pins[self->_pins[i].pinNumber - 1].value;
+                        self->_pins[i].previousValue = self->_pins[self->_pins[i].pinNumber - 1].value;
+
+                        self->_pins[remappedPinIndex].value = self->_pokey->Pins[sourcePinNumber - 1].DigitalValueGet;
+                        self->_pins[i].value = self->_pokey->Pins[sourcePinNumber - 1].DigitalValueGet;
+
+                        el.value.bool_value = self->_pokey->Pins[sourcePinNumber - 1].DigitalValueGet;
+
+                        printf("--> remapping %s to  %s\n", self->_pins[i].pinName.c_str(), self->_pins[remappedPinIndex].pinName.c_str());
+                    }
+                    else {
+                        el.name = (char *)self->_pins[i].pinName.c_str();
+                        el.value.bool_value = self->_pins[i].value;
+                        self->_pins[i].previousValue = self->_pins[i].value;
+                        self->_pins[i].value = self->_pokey->Pins[self->_pins[i].pinNumber - 1].DigitalValueGet;
+                    }
+
                     el.description = (char *)self->_pins[i].description.c_str();
-                    el.units = (char *)self->_encoders[i].units.c_str();
+                    el.units = (char *)self->_pins[i].units.c_str();
+
+                    printf("---> %s --> %s\n", (char *)self->_pins[i].pinName.c_str(), self->_pins[i].remapTo.c_str());
                     self->_enqueueCallback(self, (void *)&el, self->_callbackArg);
                 }
             }
         }
     }
+    else {
+        printf("TRANSFER ERROR\n");
+    }
 }
 
-void PokeyDevice::addPin(std::string pinName, int pinNumber, std::string pinType, int defaultValue, std::string description)
+void PokeyDevice::addPin(int pinIndex, std::string pinName, int pinNumber, std::string pinType, int defaultValue, std::string description, std::string remapTo)
 {
     if (pinType == "DIGITAL_OUTPUT")
         outputPin(pinNumber);
@@ -141,14 +175,15 @@ void PokeyDevice::addPin(std::string pinName, int pinNumber, std::string pinType
         inputPin(pinNumber);
 
     mapNameToPin(pinName.c_str(), pinNumber);
-    int portNumber = pinNumber - 1;
 
-    _pins[portNumber].pinName = pinName;
-    _pins[portNumber].type = pinType.c_str();
-    _pins[portNumber].pinNumber = pinNumber;
-    _pins[portNumber].defaultValue = defaultValue;
-    _pins[portNumber].value = defaultValue;
-    _pins[portNumber].description = description;
+    _pins[pinIndex].pinName = pinName;
+    _pins[pinIndex].pinIndex = pinIndex;
+    _pins[pinIndex].type = pinType.c_str();
+    _pins[pinIndex].pinNumber = pinNumber;
+    _pins[pinIndex].defaultValue = defaultValue;
+    _pins[pinIndex].value = defaultValue;
+    _pins[pinIndex].description = description;
+    _pins[pinIndex].remapTo = remapTo;
 }
 
 void PokeyDevice::startPolling()
@@ -464,6 +499,17 @@ uint8_t PokeyDevice::displayFromName(std::string targetName)
         printf("---> cant find display\n");
         return -1;
     }
+}
+
+int PokeyDevice::pinIndexFromName(std::string targetName)
+{
+    for (size_t i = 0; i < MAX_PINS; i++) {
+        if (_pins[i].pinName == targetName) {
+            return _pins[i].pinIndex;
+        }
+    }
+
+    return -1;
 }
 
 int PokeyDevice::pinFromName(std::string targetName)

@@ -33,9 +33,11 @@
 typedef struct {
     std::string pinName;
     int pinNumber;
+    int pinIndex;
     std::string type;
     std::string description;
     std::string units;
+    std::string remapTo;
     uint8_t defaultValue;
     uint8_t value;
     uint8_t previousValue;
@@ -114,6 +116,7 @@ protected:
     uv_timer_t _pollTimer;
 
     int pinFromName(std::string targetName);
+    int pinIndexFromName(std::string targetName);
     uint8_t displayFromName(std::string targetName);
     uint8_t displayNumber(uint8_t displayNumwber, std::string targetName, int value);
 
@@ -165,7 +168,7 @@ public:
     bool isPinDigitalOutput(uint8_t pin);
     bool isPinDigitalInput(uint8_t pin);
     bool isEncoderCapable(int pin);
-    void addPin(std::string name, int pinNumber, std::string pinType, int defaultValue = 0, std::string description = "None");
+    void addPin(int pindex, std::string name, int pinNumber, std::string pinType, int defaultValue = 0, std::string description = "None", std::string remapTo = "");
     void addEncoder(int encoderNumber, uint32_t defaultValue, std::string name = DEFAULT_ENCODER_NAME, std::string description = DEFAULT_ENCODER_DESCRIPTION,
         int min = DEFAULT_ENCODER_MIN, int max = DEFAULT_ENCODER_MAX, int step = DEFAULT_ENCODER_STEP, int invertDirection = DEFAULT_ENCODER_DIRECTION, std::string units = "");
 

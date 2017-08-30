@@ -210,6 +210,22 @@ bool PokeyDevicePluginStateManager::deviceConfiguration(libconfig::SettingIterat
     return retVal;
 }
 
+void PokeyDevicePluginStateManager::loadTransform(std::string pinName, libconfig::Setting *transform)
+{
+    _logger(LOG_INFO, " - transform %s", pinName.c_str());
+
+    if (transform.exists("On") && transform.exists("Off")) {
+        std::string transformResultOn;
+        std::string transformResultOff;
+
+        transform.lookupValue("On", transformResultOn);
+        transform.lookupValue("Off", transformResultOff);
+        _pinValueTransforms.emplace(pinName, std::bind(&SimSourcePluginStateManager::transformBoolToString, this, std::placeholders::_1, transformResultOff, transformResultOn));
+    }
+}
+
+void PokeyDevicePluginStateManager::loadMapTo(std::string pinName, libconfig::Setting *mapTo) {}
+
 bool PokeyDevicePluginStateManager::devicePinsConfiguration(libconfig::Setting *pins, std::shared_ptr<PokeyDevice> pokeyDevice)
 {
     /** pin = 4,
@@ -232,7 +248,9 @@ bool PokeyDevicePluginStateManager::devicePinsConfiguration(libconfig::Setting *
             std::string pinType = "";
             std::string description = "";
             std::string units = "";
+            std::string mapTo = "";
             bool pinDefault = false;
+            int defaultValue = 0;
 
             try {
                 iter->lookupValue("pin", pinNumber);
@@ -240,6 +258,9 @@ bool PokeyDevicePluginStateManager::devicePinsConfiguration(libconfig::Setting *
                 iter->lookupValue("type", pinType);
                 iter->lookupValue("description", description);
                 iter->lookupValue("units", units);
+                if (iter->exists("transform")) {
+                    loadTransform(&iter->lookup("transform"));
+                }
             }
             catch (const libconfig::SettingNotFoundException &nfex) {
                 _logger(LOG_ERROR, "Config file parse error at %s. Skipping....", nfex.getPath());
@@ -247,20 +268,26 @@ bool PokeyDevicePluginStateManager::devicePinsConfiguration(libconfig::Setting *
 
             if (pokeyDevice->validatePinCapability(pinNumber, pinType)) {
 
+                if (iter->exists("mapTo"))
+                    loadMapTo(&iter->lookup("mapTo"));
+
                 if (pinType == "DIGITAL_OUTPUT") {
-                    int defaultValue = 0;
 
                     if (addTargetToDeviceTargetList(pinName, pokeyDevice)) {
 
                         if (iter->exists("default"))
                             iter->lookupValue("default", defaultValue);
 
-                        pokeyDevice->addPin(pinName, pinNumber, pinType, defaultValue, description);
+                        pokeyDevice->addPin(pinIndex, pinName, pinNumber, pinType, defaultValue, description, mapTo);
                         _logger(LOG_INFO, "        - [%d] Added target %s on pin %d", pinIndex, pinName.c_str(), pinNumber);
                     }
                 }
                 else if (pinType == "DIGITAL_INPUT") {
-                    pokeyDevice->addPin(pinName, pinNumber, pinType, 0, description);
+
+                    if (iter->exists("default"))
+                        iter->lookupValue("default", defaultValue);
+
+                    pokeyDevice->addPin(pinIndex, pinName, pinNumber, pinType, defaultValue, description, mapTo);
                     _logger(LOG_INFO, "        - [%d] Added source %s on pin %d", pinIndex, pinName.c_str(), pinNumber);
                 }
                 pinIndex++;
@@ -277,6 +304,23 @@ bool PokeyDevicePluginStateManager::devicePinsConfiguration(libconfig::Setting *
 
     return retVal;
 }
+
+/**
+ *   @brief  Default  find a transform by element name
+ *
+ *   @return TransformFunction or NULL if not found
+ */
+TransformFunction PokeyDevicePluginStateManager::transformForPinName(std::string name)
+{
+    TransformMap::iterator it = _pinValueTransforms.find(name);
+
+    if (it != _pinValueTransforms.end()) {
+        return (*it).second;
+    }
+
+    return NULL;
+}
+
 bool PokeyDevicePluginStateManager::devicePWMConfiguration(libconfig::Setting *pwm, std::shared_ptr<PokeyDevice> pokeyDevice)
 {
     bool retVal = true;

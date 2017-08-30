@@ -159,10 +159,10 @@ std::string SimSourcePluginStateManager::transformBoolToString(std::string orgin
     if (orginalValue == "0") {
         return transformResultOff;
     }
-    else {
+    else if (orginalValue == "1") {
         return transformResultOn;
     }
-    return "";
+    return orginalValue;
 }
 
 void SimSourcePluginStateManager::loadTransforms(libconfig::Setting *transforms)
@@ -177,6 +177,7 @@ void SimSourcePluginStateManager::loadTransforms(libconfig::Setting *transforms)
         if (transform.exists("On") && transform.exists("Off")) {
             std::string transformResultOn;
             std::string transformResultOff;
+
             transform.lookupValue("On", transformResultOn);
             transform.lookupValue("Off", transformResultOff);
             _transformMap.emplace(
@@ -395,6 +396,7 @@ std::string SimSourcePluginStateManager::prosimValueString(std::shared_ptr<Attri
 
     switch (attribute->name().c_str()[0]) {
     case SWITCH_IDENTIFIER:
+        printf("SimSourcePluginStateManager\n");
         retVal = attribute->value<bool>() ? 0 : 1;
         break;
 
@@ -421,6 +423,8 @@ int SimSourcePluginStateManager::deliverValue(GenericTLV *value)
     else {
         oss << attribute->name() << "=" << prosimValueString(attribute) << "\n";
     }
+
+    printf("SimSourcePluginStateManager::deliverValue %s %s\n", oss.str().c_str(), val.c_str());
 
     _sendSocketClient.sendData(oss.str());
 

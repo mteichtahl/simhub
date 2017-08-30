@@ -19,6 +19,9 @@ typedef std::pair<std::string, std::shared_ptr<PokeyDevice>> pokeyDevicePair;
 typedef std::map<std::string, std::shared_ptr<PokeyDevice>> PokeyDeviceMap; ///< a list of unique device pointers
 typedef PokeyDeviceMap::iterator deviceTargetIterator; ///< iterator for deviceTargers
 
+typedef std::function<std::string(std::string, std::string, std::string)> TransformFunction;
+typedef std::map<std::string, TransformFunction> TransformMap;
+
 //! barest specialisation of the internal plugin management support base class
 class PokeyDevicePluginStateManager : public PluginStateManager
 {
@@ -39,10 +42,13 @@ protected:
     bool addTargetToDeviceTargetList(std::string, std::shared_ptr<PokeyDevice> device);
     std::shared_ptr<PokeyDevice> targetFromDeviceTargetList(std::string);
     void enumerateDevices(void);
+    void loadTransform(std::string pinName, libconfig::Setting *transform);
+    void loadMapTo(std::string pinName, libconfig::Setting *mapTo);
 
     int _numberOfDevices;
     PokeyDeviceMap _deviceMap;
     sPoKeysNetworkDeviceSummary *_devices;
+    TransformMap _pinValueTransforms;
 
 public:
     PokeyDevicePluginStateManager(LoggingFunctionCB logger);
@@ -52,6 +58,7 @@ public:
     virtual int deliverValue(GenericTLV *value);
     virtual void ceaseEventing(void);
     std::shared_ptr<PokeyDevice> device(std::string);
+    TransformFunction transformForPinName(std::string name);
 };
 
 #endif
