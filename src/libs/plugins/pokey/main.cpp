@@ -82,6 +82,11 @@ void PokeyDevicePluginStateManager::ceaseEventing(void)
     }
 }
 
+int PokeyDevicePluginStateManager::processPokeyDeviceUpdate(std::shared_ptr<PokeyDevice> device)
+{
+    return 0;    
+}
+
 int PokeyDevicePluginStateManager::deliverValue(GenericTLV *data)
 {
     assert(data);
@@ -281,9 +286,9 @@ bool PokeyDevicePluginStateManager::devicePinsConfiguration(libconfig::Setting *
             }
 
             if (pokeyDevice->validatePinCapability(pinNumber, pinType)) {
-
-                if (iter->exists("mapTo"))
-                    loadMapTo(pinName, &iter->lookup("mapTo"));
+                if (iter->exists("mapTo")) {
+                    iter->lookupValue("mapTo", mapTo);
+                }
 
                 if (pinType == "DIGITAL_OUTPUT") {
 

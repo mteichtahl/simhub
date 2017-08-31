@@ -56,7 +56,7 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
 {
     PokeyDevice *self = static_cast<PokeyDevice *>(timer->data);
 
-    int encoderRetValue = PK_EncoderValuesGet(self->_pokey);
+    int encoderRetValue = PK_EncoderValuesGet(self->_pokey);    
     if (encoderRetValue == PK_OK) {
         GenericTLV el;
         for (int i = 0; i < self->_encoderMap.size(); i++) {

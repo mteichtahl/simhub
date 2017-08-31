@@ -58,6 +58,7 @@ public:
     virtual int deliverValue(GenericTLV *value);
     virtual void ceaseEventing(void);
     std::shared_ptr<PokeyDevice> device(std::string);
+    virtual int processPokeyDeviceUpdate(std::shared_ptr<PokeyDevice> device);
     TransformFunction transformForPinName(std::string name);
 };
 
