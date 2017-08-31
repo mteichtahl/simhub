@@ -294,11 +294,11 @@ bool PokeyDevicePluginStateManager::devicePinsConfiguration(libconfig::Setting *
                     }
                 }
                 else if (pinType == "DIGITAL_INPUT") {
+                    bool invert = false;
+                    if (iter->exists("invert"))
+                        iter->lookupValue("invert", invert);
 
-                    if (iter->exists("default"))
-                        iter->lookupValue("default", defaultValue);
-
-                    pokeyDevice->addPin(pinIndex, pinName, pinNumber, pinType, defaultValue, description, mapTo);
+                    pokeyDevice->addPin(pinName, pinNumber, pinType, 0, description, invert);
                     _logger(LOG_INFO, "        - [%d] Added source %s on pin %d", pinIndex, pinName.c_str(), pinNumber);
                 }
                 pinIndex++;
