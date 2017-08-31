@@ -329,7 +329,6 @@ void SimSourcePluginStateManager::processElement(char *element)
         else if (strncmp(type, "bool", sizeof(&type)) == 0) {
             el.type = CONFIG_BOOL;
             el.length = sizeof(uint8_t);
-
             if (strncmp(value, "0", sizeof(el.value)) == 0) {
                 el.value.bool_value = 0;
             }
@@ -352,6 +351,7 @@ void SimSourcePluginStateManager::processElement(char *element)
 
 char *SimSourcePluginStateManager::getElementDataType(char identifier)
 {
+
     switch (identifier) {
     case GAUGE_IDENTIFIER:
         return (char *)"float";
@@ -395,6 +395,9 @@ std::string SimSourcePluginStateManager::prosimValueString(std::shared_ptr<Attri
 
     switch (attribute->name().c_str()[0]) {
     case SWITCH_IDENTIFIER:
+        retVal = attribute->value<bool>() ? 0 : 1;
+        break;
+    case BOOLEAN_IDENTIFIER:
         retVal = attribute->value<bool>() ? 0 : 1;
         break;
 
