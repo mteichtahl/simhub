@@ -167,7 +167,7 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
     }
 }
 
-void PokeyDevice::addPin(std::string pinName, int pinNumber, std::string pinType, int defaultValue, std::string description, bool invert)
+void PokeyDevice::addPin(int pinIndex, std::string pinName, int pinNumber, std::string pinType, int defaultValue, std::string description, bool invert, std::string remapTo)
 {
     if (pinType == "DIGITAL_OUTPUT")
         outputPin(pinNumber);

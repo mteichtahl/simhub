@@ -214,25 +214,28 @@ void PokeyDevicePluginStateManager::loadTransform(std::string pinName, libconfig
 {
     _logger(LOG_INFO, " - transform %s", pinName.c_str());
 
-    if (transform.exists("On") && transform.exists("Off")) {
+    if (transform->exists("On") && transform->exists("Off")) {
         std::string transformResultOn;
         std::string transformResultOff;
 
-        transform.lookupValue("On", transformResultOn);
-        transform.lookupValue("Off", transformResultOff);
-        _pinValueTransforms.emplace(pinName, std::bind(&SimSourcePluginStateManager::transformBoolToString, this, std::placeholders::_1, transformResultOff, transformResultOn));
+        transform->lookupValue("On", transformResultOn);
+        transform->lookupValue("Off", transformResultOff);
+        //_pinValueTransforms.emplace(pinName, std::bind(&PokeyDevicePluginStateManager::transformBoolToString, this, std::placeholders::_1, transformResultOff,
+        // transformResultOn));
     }
 }
 
 void PokeyDevicePluginStateManager::loadMapTo(std::string pinName, libconfig::Setting *mapTo)
 {
-    for (libconfig::Setting const &entry : *mapTo) {
+    for (libconfig::Setting &entry : *mapTo) {
+        std::string name;
+
         entry.lookupValue("name", name);
 
-        _logger(LOG_INFO, " - transform %s", transformName.c_str());
+        _logger(LOG_INFO, " - transform %s", name.c_str());
 
         if (entry.exists("transform")) {
-            loadTransform(pinName, entry);
+            loadTransform(pinName, &entry);
         }
     }
 }
@@ -280,7 +283,7 @@ bool PokeyDevicePluginStateManager::devicePinsConfiguration(libconfig::Setting *
             if (pokeyDevice->validatePinCapability(pinNumber, pinType)) {
 
                 if (iter->exists("mapTo"))
-                    loadMapTo(&iter->lookup("mapTo"));
+                    loadMapTo(pinName, &iter->lookup("mapTo"));
 
                 if (pinType == "DIGITAL_OUTPUT") {
 
@@ -289,16 +292,20 @@ bool PokeyDevicePluginStateManager::devicePinsConfiguration(libconfig::Setting *
                         if (iter->exists("default"))
                             iter->lookupValue("default", defaultValue);
 
-                        pokeyDevice->addPin(pinIndex, pinName, pinNumber, pinType, defaultValue, description, mapTo);
+                        pokeyDevice->addPin(pinIndex, pinName, pinNumber, pinType, defaultValue, description, false, mapTo);
                         _logger(LOG_INFO, "        - [%d] Added target %s on pin %d", pinIndex, pinName.c_str(), pinNumber);
                     }
                 }
                 else if (pinType == "DIGITAL_INPUT") {
+                    if (iter->exists("default"))
+                        iter->lookupValue("default", defaultValue);
+
                     bool invert = false;
                     if (iter->exists("invert"))
                         iter->lookupValue("invert", invert);
 
-                    pokeyDevice->addPin(pinName, pinNumber, pinType, 0, description, invert);
+                    pokeyDevice->addPin(pinIndex, pinName, pinNumber, pinType, defaultValue, description, invert, mapTo);
+
                     _logger(LOG_INFO, "        - [%d] Added source %s on pin %d", pinIndex, pinName.c_str(), pinNumber);
                 }
                 pinIndex++;
