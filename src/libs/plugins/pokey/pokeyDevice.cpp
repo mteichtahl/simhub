@@ -4,6 +4,8 @@
 #include "main.h"
 #include "pokeyDevice.h"
 
+using namespace std::chrono_literals;
+
 //#define FAKE_POKEY
 
 #if defined(FAKE_POKEY)
@@ -180,20 +182,11 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
         }
     }
 
-    int prev = self->_pokey->Pins[26].DigitalValueGet;
     int ret = PK_DigitalIOGet(self->_pokey);
-    int curr = self->_pokey->Pins[26].DigitalValueGet;
-
-    if (prev != curr)
-        printf("break\n");
-
-    // TODO: refactor this into the the pokey main class for the remap stuff
-    //       - I think I can get rid of all the remap stuff here and pass through
-    //         value to the main plugin class (who owns remapping), it will re-write
-    //         the name of the pin and will call the value transform function
 
     if (ret == PK_OK) {
-        std::lock_guard<std::mutex> remapGuard(self->_owner->pinRemappingMutex());
+        //std::lock_guard<std::mutex> remapGuard(self->_owner->pinRemappingMutex());
+        self->_owner->pinRemappingMutex().lock();
 
         GenericTLV el;
 
@@ -220,8 +213,8 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
                         // remappedPinInfo.first->pins()[remappedPinIndex].previousValue = self->_pins[self->_pins[i].pinNumber - 1].value;
                         self->_pins[i].previousValue = self->_pins[self->_pins[i].pinNumber - 1].value;
 
-                        // remappedPinInfo.first->_pins[remappedPinIndex].previousValue = self->_pokey->Pins[sourcePinNumber - 1].DigitalValueGet; // self->_pins[i].previousValue;
-                        remappedPinInfo.first->_pins[remappedPinIndex].previousValue = self->_pins[i].previousValue;
+                        remappedPinInfo.first->_pins[remappedPinIndex].previousValue = self->_pokey->Pins[sourcePinNumber - 1].DigitalValueGet; // self->_pins[i].previousValue;
+                        //remappedPinInfo.first->_pins[remappedPinIndex].previousValue = self->_pins[i].previousValue;
 
                         remappedPinInfo.first->_pins[remappedPinIndex].value = self->_pokey->Pins[sourcePinNumber - 1].DigitalValueGet;
                         self->_pins[i].value = self->_pokey->Pins[sourcePinNumber - 1].DigitalValueGet;
@@ -233,8 +226,17 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
                             remappedPinInfo.first->_pins[remappedPinIndex].skipNext = true;
                         }
                         else {
-                            if (!remappedPinInfo.first->_pins[remappedPinIndex].skipNext)
-                                hackSkip = true;
+                            if (!remappedPinInfo.first->_pins[remappedPinIndex].skipNext) {
+                                self->_owner->pinRemappingMutex().unlock();
+
+                                std::this_thread::sleep_for(250ms);
+
+                                // give any other remapped polling threads a chance to send a state change
+
+                                if (remappedPinInfo.first->_pins[remappedPinIndex].skipNext) {
+                                    hackSkip = true;
+                                }
+                            }
 
                             remappedPinInfo.first->_pins[remappedPinIndex].skipNext = false;
                         }
@@ -248,8 +250,11 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
                         self->_pins[i].value = self->_pokey->Pins[self->_pins[i].pinNumber - 1].DigitalValueGet;
                     }
 
-                    if (hackSkip)
+                    if (hackSkip) {
+                        printf("HACKSKIP, %s, %i\n", self->_pins[i].pinName.c_str(), self->_pins[i].value);
+                        self->_owner->pinRemappingMutex().unlock();
                         return;
+                    }
 
                     el.description = (char *)self->_pins[i].description.c_str();
                     el.units = (char *)self->_pins[i].units.c_str();
@@ -276,6 +281,7 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
                 }
             }
         }
+        self->_owner->pinRemappingMutex().unlock();
     }
     else {
         printf("TRANSFER ERROR\n");
