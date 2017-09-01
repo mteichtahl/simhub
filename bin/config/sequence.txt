@@ -1,0 +1,50 @@
+DIN pin-index 41 - 1
+--> remapping S_OH_ENG_START_L_CONT to  S_OH_ENG_START_L
+DIN pin-index 40 - 0
+---> S_OH_ENG_START_L: GRD
+SimSourcePluginStateManager::deliverValue S_OH_ENG_START_L=GRD
+
+DIN pin-index 40 - 1
+---> S_OH_ENG_START_L: Off
+SimSourcePluginStateManager::deliverValue S_OH_ENG_START_L=Off
+
+DIN pin-index 41 - 0
+--> remapping S_OH_ENG_START_L_CONT to  S_OH_ENG_START_L
+---> S_OH_ENG_START_L_CONT: CONT
+SimSourcePluginStateManager::deliverValue S_OH_ENG_START_L=CONT
+
+DIN pin-index 41 - 1
+--> remapping S_OH_ENG_START_L_CONT to  S_OH_ENG_START_L
+
+
+So close - now tracking to final position
+---> S_OH_ENG_START_L_CONT: Off
+DIN pin-index 42 - 0
+--> remapping S_OH_ENG_START_L_FLT to  S_OH_ENG_START_L
+---> S_OH_ENG_START_L_FLT: FLT
+SimSourcePluginStateManager::deliverValue S_OH_ENG_START_L=Off
+
+SimSourcePluginStateManager::deliverValue S_OH_ENG_START_L=FLT
+
+DIN pin-index 42 - 1
+--> remapping S_OH_ENG_START_L_FLT to  S_OH_ENG_START_L
+---> S_OH_ENG_START_L_FLT: Off
+SimSourcePluginStateManager::deliverValue S_OH_ENG_START_L=Off
+
+DIN pin-index 41 - 0
+--> remapping S_OH_ENG_START_L_CONT to  S_OH_ENG_START_L
+---> S_OH_ENG_START_L_CONT: CONT
+SimSourcePluginStateManager::deliverValue S_OH_ENG_START_L=CONT
+
+DIN pin-index 41 - 1
+--> remapping S_OH_ENG_START_L_CONT to  S_OH_ENG_START_L
+---> S_OH_ENG_START_L_CONT: Off
+SimSourcePluginStateManager::deliverValue S_OH_ENG_START_L=Off
+
+DIN pin-index 40 - 0
+---> S_OH_ENG_START_L: GRD
+SimSourcePluginStateManager::deliverValue S_OH_ENG_START_L=GRD
+
+DIN pin-index 40 - 1
+---> S_OH_ENG_START_L: Off
+SimSourcePluginStateManager::deliverValue S_OH_ENG_START_L=Off
