@@ -37,7 +37,6 @@ typedef struct {
     std::string type;
     std::string description;
     std::string units;
-    std::string remapTo;
     uint8_t defaultValue;
     uint8_t value;
     uint8_t previousValue;
@@ -79,6 +78,8 @@ typedef struct {
     uint32_t duty;
 } device_pwm_t;
 
+class PokeyDevicePluginStateManager;
+
 class PokeyDevice
 {
 private:
@@ -100,6 +101,8 @@ protected:
     std::map<std::string, int> _encoderMap;
     std::map<std::string, int> _displayMap;
     std::map<std::string, int> _pwmMap;
+
+    PokeyDevicePluginStateManager *_owner;
 
     sPoKeysDevice *_pokey;
     void *_callbackArg;
@@ -123,9 +126,10 @@ protected:
     void pollCallback(uv_timer_t *timer, int status);
 
 public:
-    PokeyDevice(sPoKeysNetworkDeviceSummary, uint8_t);
+    PokeyDevice(PokeyDevicePluginStateManager *owner, sPoKeysNetworkDeviceSummary, uint8_t);
     virtual ~PokeyDevice(void);
 
+    bool ownsPin(std::string pinName);
     bool validatePinCapability(int, std::string);
     bool validateEncoder(int encoderNumber);
     void mapNameToPin(std::string name, int pin);
@@ -141,6 +145,7 @@ public:
     void setCallbackInfo(EnqueueEventHandler enqueueCallback, void *callbackArg, SPHANDLE pluginInstance);
 
     std::string serialNumber() { return _serialNumber; };
+    void setSerialNumber(std::string serialNumber) { _serialNumber = serialNumber; };
     uint8_t userId() { return _userId; };
     uint8_t firmwareMajorMajorVersion() { return _firwareVersionMajorMajor; };
     uint8_t firmwareMajorVersion() { return _firwareVersionMajor; };
@@ -168,7 +173,7 @@ public:
     bool isPinDigitalOutput(uint8_t pin);
     bool isPinDigitalInput(uint8_t pin);
     bool isEncoderCapable(int pin);
-    void addPin(int pindex, std::string name, int pinNumber, std::string pinType, int defaultValue, std::string description, bool invert, std::string remapTo);
+    void addPin(int pindex, std::string name, int pinNumber, std::string pinType, int defaultValue, std::string description, bool invert);
     void addEncoder(int encoderNumber, uint32_t defaultValue, std::string name = DEFAULT_ENCODER_NAME, std::string description = DEFAULT_ENCODER_DESCRIPTION,
         int min = DEFAULT_ENCODER_MIN, int max = DEFAULT_ENCODER_MAX, int step = DEFAULT_ENCODER_STEP, int invertDirection = DEFAULT_ENCODER_DIRECTION, std::string units = "");
 
@@ -177,11 +182,7 @@ public:
     void addGroupToMatrixLED(int id, int displayId, std::string name, int digits, int position);
     void startPolling();
     void stopPolling();
-    std::string name()
-    {
-        std::string tmp((char *)deviceData().DeviceName);
-        return tmp;
-    }
+    std::string name();
 };
 
 #endif

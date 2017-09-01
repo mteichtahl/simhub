@@ -2,15 +2,69 @@
 
 #include "elements/attributes/attribute.h"
 #include "pokeyDevice.h"
+#include "main.h"
 
-PokeyDevice::PokeyDevice(sPoKeysNetworkDeviceSummary deviceSummary, uint8_t index)
+#define FAKE_POKEY
+
+#if defined(FAKE_POKEY)
+
+#define PK_EncoderValuesGet FAKE_PK_EncoderValuesGet
+#define PK_DigitalIOGet FAKE_PK_DigitalIOGet
+#define PK_ConnectToNetworkDevice FAKE_PK_ConnectToNetworkDevice
+#define PK_DisconnectDevice FAKE_PK_DisconnectDevice
+#define PK_CheckPinCapability FAKE_PK_CheckPinCapability
+
+int FAKE_PK_EncoderValuesGet(sPoKeysDevice *pokey)
+{
+    return PK_ERR_GENERIC;
+}
+
+int FAKE_PK_DigitalIOGet(sPoKeysDevice *pokey)
+{
+    static int CallCounter = 0;
+    
+    if ((CallCounter % 5) == 0) {
+        //pokey->Pins[25] = !pokey->Pins[25];
+        pokey->Pins[26].DigitalValueGet = !pokey->Pins[26].DigitalValueGet;
+    }
+    
+    CallCounter++;
+    return PK_OK;
+}
+
+sPoKeysDevice *FAKE_PK_ConnectToNetworkDevice(sPoKeysNetworkDeviceSummary *deviceSummary)
+{
+    sPoKeysDevice *retVal = (sPoKeysDevice *)calloc(1, sizeof(sPoKeysDevice));
+    retVal->Pins = (sPoKeysPinData *)calloc(55, sizeof(sPoKeysPinData));
+    retVal->info.iPinCount = 55;
+
+    return retVal;
+}
+
+void FAKE_PK_DisconnectDevice(sPoKeysDevice *device)
+{
+    assert(device);
+    free(device);
+}
+
+int32_t FAKE_PK_CheckPinCapability(sPoKeysDevice *device, unsigned int pin, ePK_AllPinCap cap)
+{
+    return true;
+}
+
+#endif
+
+PokeyDevice::PokeyDevice(PokeyDevicePluginStateManager *owner, sPoKeysNetworkDeviceSummary deviceSummary, uint8_t index)
 {
     _callbackArg = NULL;
     _enqueueCallback = NULL;
+    _owner = owner;
+
     _pokey = PK_ConnectToNetworkDevice(&deviceSummary);
 
-    if (!_pokey)
+    if (!_pokey) {
         throw std::exception();
+    }
 
     _index = index;
     _userId = deviceSummary.UserID;
@@ -41,8 +95,19 @@ PokeyDevice::PokeyDevice(sPoKeysNetworkDeviceSummary deviceSummary, uint8_t inde
     int ret = uv_timer_start(&_pollTimer, (uv_timer_cb)&PokeyDevice::DigitalIOTimerCallback, DEVICE_START_DELAY, DEVICE_READ_INTERVAL);
 
     if (ret == 0) {
-        _pollThread.reset(new std::thread([=] { uv_run(_pollLoop, UV_RUN_DEFAULT); }));
+        _pollThread = std::make_shared<std::thread>([=] { uv_run(_pollLoop, UV_RUN_DEFAULT); });
     }
+}
+
+bool PokeyDevice::ownsPin(std::string pinName)
+{
+    for (int i = 0; i < _pokey->info.iPinCount; i++) {
+        if (_pins[i].pinName == pinName) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 void PokeyDevice::setCallbackInfo(EnqueueEventHandler enqueueCallback, void *callbackArg, SPHANDLE pluginInstance)
@@ -57,6 +122,7 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
     PokeyDevice *self = static_cast<PokeyDevice *>(timer->data);
 
     int encoderRetValue = PK_EncoderValuesGet(self->_pokey);    
+
     if (encoderRetValue == PK_OK) {
         GenericTLV el;
         for (int i = 0; i < self->_encoderMap.size(); i++) {
@@ -115,7 +181,14 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
     if (prev != curr)
         printf("break\n");
 
+    // TODO: refactor this into the the pokey main class for the remap stuff
+    //       - I think I can get rid of all the remap stuff here and pass through
+    //         value to the main plugin class (who owns remapping), it will re-write
+    //         the name of the pin and will call the value transform function
+
     if (ret == PK_OK) {
+        std::lock_guard<std::mutex> remapGuard(self->_owner->pinRemappingMutex());
+
         GenericTLV el;
 
         for (int i = 0; i < self->_pokey->info.iPinCount; i++) {
@@ -132,19 +205,23 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
 
                     el.length = sizeof(uint8_t);
 
-                    if (self->_pins[i].remapTo.size() > 1) {
-                        std::string remappedPinName = self->_pins[i].remapTo;
-                        int remappedPinIndex = self->pinIndexFromName(remappedPinName);
+                    if (self->_owner->pinRemapped(self->_pins[i].pinName)) {
+                        // KLUDGE: as each device has its own polling thread, the logic below is a critical
+                        //         section because it can touch the state of multiple device pins
 
-                        self->_pins[remappedPinIndex].previousValue = self->_pins[self->_pins[i].pinNumber - 1].value;
+                        std::pair<std::shared_ptr<PokeyDevice>, std::string> remappedPinInfo = self->_owner->remappedPinDetails(self->_pins[i].pinName);
+                        int remappedPinIndex = remappedPinInfo.first->pinIndexFromName(remappedPinInfo.second);
+
+                        remappedPinInfo.first->pins()[remappedPinIndex].previousValue = self->_pins[self->_pins[i].pinNumber - 1].value;
                         self->_pins[i].previousValue = self->_pins[self->_pins[i].pinNumber - 1].value;
 
-                        self->_pins[remappedPinIndex].value = self->_pokey->Pins[sourcePinNumber - 1].DigitalValueGet;
+                        remappedPinInfo.first->_pins[remappedPinIndex].value = self->_pokey->Pins[sourcePinNumber - 1].DigitalValueGet;
                         self->_pins[i].value = self->_pokey->Pins[sourcePinNumber - 1].DigitalValueGet;
 
+                        el.name = (char *)remappedPinInfo.second.c_str();
                         el.value.bool_value = self->_pokey->Pins[sourcePinNumber - 1].DigitalValueGet;
 
-                        printf("--> remapping %s to  %s\n", self->_pins[i].pinName.c_str(), self->_pins[remappedPinIndex].pinName.c_str());
+                        printf("--> remapping %s to  %s\n", self->_pins[i].pinName.c_str(), remappedPinInfo.first->pins()[remappedPinIndex].pinName.c_str());
                     }
                     else {
                         el.name = (char *)self->_pins[i].pinName.c_str();
@@ -156,8 +233,25 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
                     el.description = (char *)self->_pins[i].description.c_str();
                     el.units = (char *)self->_pins[i].units.c_str();
 
-                    printf("---> %s --> %s\n", (char *)self->_pins[i].pinName.c_str(), self->_pins[i].remapTo.c_str());
-                    self->_enqueueCallback(self, (void *)&el, self->_callbackArg);
+                    std::shared_ptr<Attribute> attribute = AttributeFromCGeneric(&el);
+                    TransformFunction transformer = self->_owner->transformForPinName(self->_pins[i].pinName);
+
+                    if (transformer) {
+                        std::string transformedValue = transformer(attribute->valueToString(), "NULL", "NULL");
+
+                        attribute->setType(STRING_ATTRIBUTE);
+                        attribute->setValue(transformedValue);
+                        GenericTLV *transformedGeneric = AttributeToCGeneric(attribute);
+
+                        printf("---> %s\n", (char *)self->_pins[i].pinName.c_str());
+                        self->_enqueueCallback(self, (void *)transformedGeneric, self->_callbackArg);
+
+                        free(transformedGeneric);
+                    }
+                    else {
+                        printf("---> %s\n", (char *)self->_pins[i].pinName.c_str());
+                        self->_enqueueCallback(self, (void *)&el, self->_callbackArg);
+                    }
                 }
             }
         }
@@ -167,7 +261,7 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
     }
 }
 
-void PokeyDevice::addPin(int pinIndex, std::string pinName, int pinNumber, std::string pinType, int defaultValue, std::string description, bool invert, std::string remapTo)
+void PokeyDevice::addPin(int pinIndex, std::string pinName, int pinNumber, std::string pinType, int defaultValue, std::string description, bool invert)
 {
     if (pinType == "DIGITAL_OUTPUT")
         outputPin(pinNumber);
@@ -183,7 +277,6 @@ void PokeyDevice::addPin(int pinIndex, std::string pinName, int pinNumber, std::
     _pins[pinIndex].defaultValue = defaultValue;
     _pins[pinIndex].value = defaultValue;
     _pins[pinIndex].description = description;
-    _pins[pinIndex].remapTo = remapTo;
 }
 
 void PokeyDevice::startPolling()
@@ -217,6 +310,17 @@ PokeyDevice::~PokeyDevice()
 
     PK_DisconnectDevice(_pokey);
 }
+
+std::string PokeyDevice::name()
+{
+#if defined(FAKE_POKEY)
+    return "test" + _serialNumber;
+#endif
+
+    std::string tmp((char *)deviceData().DeviceName);
+    return tmp;
+}
+
 
 std::string PokeyDevice::hardwareTypeString()
 {
@@ -339,6 +443,7 @@ void PokeyDevice::addEncoder(
     _encoders[encoderIndex].description = description;
 
     int val = PK_EncoderConfigurationSet(_pokey);
+
     if (val == PK_OK) {
         PK_EncoderValuesSet(_pokey);
         mapNameToEncoder(name.c_str(), encoderNumber);

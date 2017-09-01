@@ -154,17 +154,6 @@ int SimSourcePluginStateManager::preflightComplete(void)
     return retVal;
 }
 
-std::string SimSourcePluginStateManager::transformBoolToString(std::string orginalValue, std::string transformResultOff, std::string transformResultOn)
-{
-    if (orginalValue == "0") {
-        return transformResultOff;
-    }
-    else if (orginalValue == "1") {
-        return transformResultOn;
-    }
-    return orginalValue;
-}
-
 void SimSourcePluginStateManager::loadTransforms(libconfig::Setting *transforms)
 {
     _logger(LOG_INFO, "Loading %i transforms ", transforms->getLength());
@@ -396,9 +385,9 @@ std::string SimSourcePluginStateManager::prosimValueString(std::shared_ptr<Attri
 
     switch (attribute->name().c_str()[0]) {
     case SWITCH_IDENTIFIER:
-        printf("SimSourcePluginStateManager\n");
-        retVal = attribute->value<bool>() ? 0 : 1;
-        break;
+        // printf("SimSourcePluginStateManager\n");
+        // retVal = attribute->value<bool>() ? 0 : 1;
+        // break;
 
     default:
         retVal = attribute->valueToString();

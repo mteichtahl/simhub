@@ -49,6 +49,8 @@ protected:
     PokeyDeviceMap _deviceMap;
     sPoKeysNetworkDeviceSummary *_devices;
     TransformMap _pinValueTransforms;
+    std::map<std::string, std::pair<std::shared_ptr<PokeyDevice>, std::string>> _remappedPins;
+    std::mutex _pinRemappingMutex;
 
 public:
     PokeyDevicePluginStateManager(LoggingFunctionCB logger);
@@ -59,7 +61,20 @@ public:
     virtual void ceaseEventing(void);
     std::shared_ptr<PokeyDevice> device(std::string);
     virtual int processPokeyDeviceUpdate(std::shared_ptr<PokeyDevice> device);
+
+    //! returns the value transformation for the given pin name
     TransformFunction transformForPinName(std::string name);
+    
+    //! allows callers to check if a given pin has a remapping
+    bool pinRemapped(std::string pinName);
+
+    //! returns the final target device and ping from the give original source pin
+    std::pair<std::shared_ptr<PokeyDevice>, std::string> remappedPinDetails(std::string pinName);
+
+    //! KLUDGE: will refactor
+    std::mutex &pinRemappingMutex(void) { return _pinRemappingMutex; };
+
+    std::shared_ptr<PokeyDevice> deviceForPin(std::string pinName);
 };
 
 #endif
