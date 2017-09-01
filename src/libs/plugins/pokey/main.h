@@ -30,6 +30,7 @@ private:
     static PokeyDevicePluginStateManager *_StateManagerInstance;
     static PokeyDevicePluginStateManager *StateManagerInstance(void);
     PokeyDeviceMap _deviceTargetList;
+    bool _preflightComplete;
 
 protected:
     bool validateConfig(libconfig::SettingIterator);
@@ -64,7 +65,7 @@ public:
 
     //! returns the value transformation for the given pin name
     TransformFunction transformForPinName(std::string name);
-    
+
     //! allows callers to check if a given pin has a remapping
     bool pinRemapped(std::string pinName);
 
@@ -75,6 +76,8 @@ public:
     std::mutex &pinRemappingMutex(void) { return _pinRemappingMutex; };
 
     std::shared_ptr<PokeyDevice> deviceForPin(std::string pinName);
+
+    bool successfulPreflightCompleted(void) { return _preflightComplete; };
 };
 
 #endif

@@ -1,6 +1,6 @@
 #include <assert.h>
-#include <utility>
 #include <chrono>
+#include <utility>
 
 #include "common/configmanager/configmanager.h"
 #include "log/clog.h"
@@ -45,7 +45,7 @@ SimHubEventController::~SimHubEventController(void)
     if (_awsHelper.polly()) {
         _awsHelper.polly()->shutdown();
     }
-    
+
     if (_awsHelper.kinesis()) {
         _awsHelper.kinesis()->shutdown();
     }
@@ -59,7 +59,7 @@ void SimHubEventController::startSustainThread(void)
 #if defined(_AWS_SDK)
     _awsHelper.polly()->say("Simulator is ready.");
 #endif
-   
+
     std::shared_ptr<std::thread> sustainThread = std::make_shared<std::thread>([=] {
         _sustainThreadManager.setThreadRunning(true);
         while (!_sustainThreadManager.threadCanceled()) {
@@ -71,13 +71,13 @@ void SimHubEventController::startSustainThread(void)
 
             std::chrono::milliseconds now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
 
-            for (std::pair<std::string, SustainMapEntry> entry: _sustainValues) {
+            for (std::pair<std::string, SustainMapEntry> entry : _sustainValues) {
                 std::chrono::milliseconds sustain = entry.second.first;
                 std::chrono::milliseconds ts = entry.second.second->timestamp();
 
                 if ((ts + sustain) <= now) {
                     entry.second.second->resetTimestamp();
-                    logger.log(LOG_INFO, "sustaining value: %s", entry.second.second->name().c_str());
+// logger.log(LOG_INFO, "sustaining value: %s", entry.second.second->name().c_str());
 #if defined(_AWS_SDK)
                     deliverKinesisValue(entry.second.second);
 #endif
@@ -183,7 +183,7 @@ bool SimHubEventController::deliverValue(std::shared_ptr<Attribute> value)
                 _awsHelper.polly()->say("dc volts %i", c_value->value);
         }
 #endif
-        
+
         retVal = !_pokeyMethods.simplug_deliver_value(_pokeyMethods.plugin_instance, c_value);
     }
 

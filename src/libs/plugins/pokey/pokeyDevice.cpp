@@ -1,10 +1,10 @@
 #include <string.h>
 
 #include "elements/attributes/attribute.h"
-#include "pokeyDevice.h"
 #include "main.h"
+#include "pokeyDevice.h"
 
-#define FAKE_POKEY
+//#define FAKE_POKEY
 
 #if defined(FAKE_POKEY)
 
@@ -22,12 +22,12 @@ int FAKE_PK_EncoderValuesGet(sPoKeysDevice *pokey)
 int FAKE_PK_DigitalIOGet(sPoKeysDevice *pokey)
 {
     static int CallCounter = 0;
-    
+
     if ((CallCounter % 5) == 0) {
-        //pokey->Pins[25] = !pokey->Pins[25];
+        // pokey->Pins[25] = !pokey->Pins[25];
         pokey->Pins[26].DigitalValueGet = !pokey->Pins[26].DigitalValueGet;
     }
-    
+
     CallCounter++;
     return PK_OK;
 }
@@ -121,7 +121,13 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
 {
     PokeyDevice *self = static_cast<PokeyDevice *>(timer->data);
 
-    int encoderRetValue = PK_EncoderValuesGet(self->_pokey);    
+    assert(self);
+
+    if (!self->_owner->successfulPreflightCompleted()) {
+        return;
+    }
+
+    int encoderRetValue = PK_EncoderValuesGet(self->_pokey);
 
     if (encoderRetValue == PK_OK) {
         GenericTLV el;
@@ -158,7 +164,7 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
                     }
                 }
 
-                el.ownerPlugin = self->_pluginInstance;
+                el.ownerPlugin = self->_owner;
                 el.type = CONFIG_INT;
                 el.value.int_value = (int)self->_encoders[i].value;
                 el.length = sizeof(uint32_t);
@@ -195,14 +201,13 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
             if (self->_pins[i].type == "DIGITAL_INPUT") {
                 int sourcePinNumber = self->_pins[i].pinNumber;
 
-                printf("DIN pin-index %i - %i\n", sourcePinNumber - 1, self->_pokey->Pins[sourcePinNumber - 1].DigitalValueGet);
-
-                if (self->_pins[i].value != self->_pokey->Pins[sourcePinNumber - 1].DigitalValueGet) {
+                if (self->_pins[i].value != self->_pokey->Pins[sourcePinNumber - 1].DigitalValueGet && !self->_pins[i].skipNext) {
                     // data has changed so send it off for processing
+                    printf("DIN pin-index %i - %i\n", sourcePinNumber - 1, self->_pokey->Pins[sourcePinNumber - 1].DigitalValueGet);
 
-                    el.ownerPlugin = self->_pluginInstance;
+                    el.ownerPlugin = self->_owner;
                     el.type = CONFIG_BOOL;
-
+                    bool hackSkip = false;
                     el.length = sizeof(uint8_t);
 
                     if (self->_owner->pinRemapped(self->_pins[i].pinName)) {
@@ -212,14 +217,27 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
                         std::pair<std::shared_ptr<PokeyDevice>, std::string> remappedPinInfo = self->_owner->remappedPinDetails(self->_pins[i].pinName);
                         int remappedPinIndex = remappedPinInfo.first->pinIndexFromName(remappedPinInfo.second);
 
-                        remappedPinInfo.first->pins()[remappedPinIndex].previousValue = self->_pins[self->_pins[i].pinNumber - 1].value;
+                        // remappedPinInfo.first->pins()[remappedPinIndex].previousValue = self->_pins[self->_pins[i].pinNumber - 1].value;
                         self->_pins[i].previousValue = self->_pins[self->_pins[i].pinNumber - 1].value;
+
+                        // remappedPinInfo.first->_pins[remappedPinIndex].previousValue = self->_pokey->Pins[sourcePinNumber - 1].DigitalValueGet; // self->_pins[i].previousValue;
+                        remappedPinInfo.first->_pins[remappedPinIndex].previousValue = self->_pins[i].previousValue;
 
                         remappedPinInfo.first->_pins[remappedPinIndex].value = self->_pokey->Pins[sourcePinNumber - 1].DigitalValueGet;
                         self->_pins[i].value = self->_pokey->Pins[sourcePinNumber - 1].DigitalValueGet;
 
                         el.name = (char *)remappedPinInfo.second.c_str();
                         el.value.bool_value = self->_pokey->Pins[sourcePinNumber - 1].DigitalValueGet;
+
+                        if (el.value.bool_value == 0) {
+                            remappedPinInfo.first->_pins[remappedPinIndex].skipNext = true;
+                        }
+                        else {
+                            if (!remappedPinInfo.first->_pins[remappedPinIndex].skipNext)
+                                hackSkip = true;
+
+                            remappedPinInfo.first->_pins[remappedPinIndex].skipNext = false;
+                        }
 
                         printf("--> remapping %s to  %s\n", self->_pins[i].pinName.c_str(), remappedPinInfo.first->pins()[remappedPinIndex].pinName.c_str());
                     }
@@ -229,6 +247,9 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
                         self->_pins[i].previousValue = self->_pins[i].value;
                         self->_pins[i].value = self->_pokey->Pins[self->_pins[i].pinNumber - 1].DigitalValueGet;
                     }
+
+                    if (hackSkip)
+                        return;
 
                     el.description = (char *)self->_pins[i].description.c_str();
                     el.units = (char *)self->_pins[i].units.c_str();
@@ -243,7 +264,7 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
                         attribute->setValue(transformedValue);
                         GenericTLV *transformedGeneric = AttributeToCGeneric(attribute);
 
-                        printf("---> %s\n", (char *)self->_pins[i].pinName.c_str());
+                        printf("---> %s: %s\n", (char *)self->_pins[i].pinName.c_str(), transformedValue.c_str());
                         self->_enqueueCallback(self, (void *)transformedGeneric, self->_callbackArg);
 
                         free(transformedGeneric);
@@ -320,7 +341,6 @@ std::string PokeyDevice::name()
     std::string tmp((char *)deviceData().DeviceName);
     return tmp;
 }
-
 
 std::string PokeyDevice::hardwareTypeString()
 {

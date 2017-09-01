@@ -40,6 +40,7 @@ typedef struct {
     uint8_t defaultValue;
     uint8_t value;
     uint8_t previousValue;
+    bool skipNext;
 } device_port_t;
 
 typedef struct {
