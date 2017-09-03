@@ -185,7 +185,7 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
     int ret = PK_DigitalIOGet(self->_pokey);
 
     if (ret == PK_OK) {
-        //std::lock_guard<std::mutex> remapGuard(self->_owner->pinRemappingMutex());
+        // std::lock_guard<std::mutex> remapGuard(self->_owner->pinRemappingMutex());
         self->_owner->pinRemappingMutex().lock();
 
         GenericTLV el;
@@ -214,7 +214,7 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
                         self->_pins[i].previousValue = self->_pins[self->_pins[i].pinNumber - 1].value;
 
                         remappedPinInfo.first->_pins[remappedPinIndex].previousValue = self->_pokey->Pins[sourcePinNumber - 1].DigitalValueGet; // self->_pins[i].previousValue;
-                        //remappedPinInfo.first->_pins[remappedPinIndex].previousValue = self->_pins[i].previousValue;
+                        // remappedPinInfo.first->_pins[remappedPinIndex].previousValue = self->_pins[i].previousValue;
 
                         remappedPinInfo.first->_pins[remappedPinIndex].value = self->_pokey->Pins[sourcePinNumber - 1].DigitalValueGet;
                         self->_pins[i].value = self->_pokey->Pins[sourcePinNumber - 1].DigitalValueGet;
@@ -228,17 +228,17 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
                         else {
                             if (!remappedPinInfo.first->_pins[remappedPinIndex].skipNext) {
                                 self->_owner->pinRemappingMutex().unlock();
-
-                                std::this_thread::sleep_for(250ms);
-
-                                // give any other remapped polling threads a chance to send a state change
-
-                                if (remappedPinInfo.first->_pins[remappedPinIndex].skipNext) {
-                                    hackSkip = true;
-                                }
                             }
 
                             remappedPinInfo.first->_pins[remappedPinIndex].skipNext = false;
+                            printf("---> sleeping for other poll thread\n");
+
+                            // give any other remapped polling threads a chance to send a state change
+                            std::this_thread::sleep_for(1000ms);
+                            if (remappedPinInfo.first->_pins[remappedPinIndex].skipNext) {
+                                printf("---> other poll thread changed skip value\n");
+                                hackSkip = true;
+                            }
                         }
 
                         printf("--> remapping %s to  %s\n", self->_pins[i].pinName.c_str(), remappedPinInfo.first->pins()[remappedPinIndex].pinName.c_str());
