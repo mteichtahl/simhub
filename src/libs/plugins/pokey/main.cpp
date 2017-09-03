@@ -100,9 +100,6 @@ int PokeyDevicePluginStateManager::deliverValue(GenericTLV *data)
 
     std::string name = data->name;
 
-    if (name == "V_OH_FLTALT")
-        printf("break\n");
-
     if (device) {
         if (data->type == ConfigType::CONFIG_BOOL) {
             device->targetValue(data->name, (bool)data->value);
@@ -302,8 +299,6 @@ bool PokeyDevicePluginStateManager::devicePinsConfiguration(libconfig::Setting *
                 iter->lookupValue("name", pinName);
                 iter->lookupValue("type", pinType);
                 iter->lookupValue("description", description);
-
-                std::cout << "dev desc: " << description << std::endl;
                 iter->lookupValue("units", units);
                 if (iter->exists("transform")) {
                     loadTransform(pinName, &iter->lookup("transform"));

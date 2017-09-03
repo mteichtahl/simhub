@@ -106,11 +106,8 @@ std::shared_ptr<Attribute> AttributeFromCGeneric(GenericTLV *generic)
     }
 
     if (generic->units) {
-        retVal->setDescription(generic->units);
+        retVal->setUnits(generic->units);
     }
-
-    // retVal->setDescription(generic->description);
-    // retVal->setUnits(generic->units);
 
     return retVal;
 }

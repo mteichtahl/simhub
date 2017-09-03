@@ -178,6 +178,7 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
                 el.units = (char *)self->_encoders[i].units.c_str();
 
                 // enqueue the element
+                self->updateGenericMetadata(&el, el.name);
                 self->_enqueueCallback(self, (void *)&el, self->_callbackArg);
                 // set previous to equal new
                 self->_encoders[i].previousEncoderValue = newEncoderValue;
@@ -288,6 +289,7 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
                     }
                     else {
                         printf("---> %s\n", (char *)self->_pins[i].pinName.c_str());
+                        self->updateGenericMetadata(&el, el.name);
                         self->_enqueueCallback(self, (void *)&el, self->_callbackArg);
                     }
                 }
@@ -306,6 +308,7 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
         self->_owner->pinRemappingMutex().lock();
         if (self->_owner->coalescedDeliveryValue().second) {
             printf("coalescing on: %s", self->_owner->coalescedDeliveryValue().first.c_str());
+            self->updateGenericMetadata(self->_owner->coalescedDeliveryValue().second, self->_owner->coalescedDeliveryValue().first);
             self->_enqueueCallback(self, (void *)self->_owner->coalescedDeliveryValue().second, self->_callbackArg);
             free(self->_owner->coalescedDeliveryValue().second);
             self->_owner->coalescedDeliveryValue().second = NULL;

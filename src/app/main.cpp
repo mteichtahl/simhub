@@ -84,10 +84,10 @@ int main(int argc, char *argv[])
             // kick off the simhub envent loop
 
             simhubController->runEventLoop([=](std::shared_ptr<Attribute> value) {
+                std::cout << "desc: " << value->description() << ", units: " << value->units() << std::endl;
                 bool deliveryResult = simhubController->deliverValue(value);
 
 #if defined(_AWS_SDK)
-                std::cout << "desc: " << value->description() << ", units: " << value->units() << std::endl;
                 simhubController->deliverKinesisValue(value);
 #endif
                 return deliveryResult;
