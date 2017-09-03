@@ -8,10 +8,10 @@
 #include <atomic>
 #include <mutex>
 
-
-#include "appsupport.h"
+#include "plugins/common/utils.h"
 #include "elements/attributes/attribute.h"
 #include "plugins/common/simhubdeviceplugin.h"
+#include "common/support/threadmanager.h"
 #include "queue/concurrent_queue.h"
 
 #if defined(_AWS_SDK)

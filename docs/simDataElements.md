@@ -489,7 +489,7 @@ This is table is extracted from the ProSim AR XML interface. This is available o
 | 472|I_OH_ELEC_HYD_PUMP_1| Hyd ELEC1 LP | INDICATOR | |bool|
 | 473|I_OH_ELEC_HYD_PUMP_2| Hyd ELEC2 LP | INDICATOR | |bool|
 | 474|I_OH_ELEC_HYD_PUMP_OVHT_1| Hyd ELEC1 OVHT | INDICATOR | |bool|
-| 475|I_OH_ELEC_HYD_PUMP_OVHT_2| Hyd ELEC2 OVHT | INDICATOR | |bool|
+| 475|I_OH_ELEC_APU_HYD_PUMP_OVHT_2| Hyd ELEC2 OVHT | INDICATOR | |bool|
 | 476|I_OH_ELEV_PITOT1| Elev pitot Heat L | INDICATOR | |bool|
 | 477|I_OH_ELEV_PITOT2| Elev pitot Heat R | INDICATOR | |bool|
 | 478|I_OH_ELT| ELT | INDICATOR | |bool|

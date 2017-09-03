@@ -77,8 +77,10 @@ void SimHubEventController::startSustainThread(void)
 
                 if ((ts + sustain) <= now) {
                     entry.second.second->resetTimestamp();
-                    logger.log(LOG_INFO, "sustaining value: %s", entry.second.second->name().c_str());
+// logger.log(LOG_INFO, "sustaining value: %s", entry.second.second->name().c_str());
+#if defined(_AWS_SDK)
                     deliverKinesisValue(entry.second.second);
+#endif
                 }
             }
         }
@@ -175,10 +177,12 @@ bool SimHubEventController::deliverValue(std::shared_ptr<Attribute> value)
     }
     else if (value->ownerPlugin() == _prepare3dMethods.plugin_instance) {
 
+#if defined(_AWS_SDK)
         if (value->name() == "N_ELEC_PANEL_LOWER_LEFT") {
             if (c_value >= 0)
                 _awsHelper.polly()->say("dc volts %i", c_value->value);
         }
+#endif
 
         retVal = !_pokeyMethods.simplug_deliver_value(_pokeyMethods.plugin_instance, c_value);
     }

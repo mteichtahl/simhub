@@ -16,7 +16,7 @@
 #include <sys/stat.h>
 #include <vector>
 
-#include "appsupport.h"
+#include "plugins/common/utils.h"
 
 #define RETURN_OK 1
 #define RETURN_ERROR 0
