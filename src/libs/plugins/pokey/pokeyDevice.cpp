@@ -250,9 +250,9 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
                     }
                     else {
                         el.name = (char *)self->_pins[i].pinName.c_str();
-                        el.value.bool_value = self->_pins[i].value;
                         self->_pins[i].previousValue = self->_pins[i].value;
                         self->_pins[i].value = self->_pokey->Pins[self->_pins[i].pinNumber - 1].DigitalValueGet;
+                        el.value.bool_value = self->_pins[i].value;
                     }
 
                     if (hackSkip) {
