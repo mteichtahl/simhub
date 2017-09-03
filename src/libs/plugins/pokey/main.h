@@ -53,6 +53,9 @@ protected:
     std::map<std::string, std::pair<std::shared_ptr<PokeyDevice>, std::string>> _remappedPins;
     std::mutex _pinRemappingMutex;
 
+    std::pair<std::string, GenericTLV *> _coalescedDeliveryValue;
+    std::atomic<bool> _pendingCoalescedDelivery;
+
 public:
     PokeyDevicePluginStateManager(LoggingFunctionCB logger);
     virtual ~PokeyDevicePluginStateManager(void);
@@ -78,6 +81,9 @@ public:
     std::shared_ptr<PokeyDevice> deviceForPin(std::string pinName);
 
     bool successfulPreflightCompleted(void) { return _preflightComplete; };
+
+    std::pair<std::string, GenericTLV *> &coalescedDeliveryValue(void) { return _coalescedDeliveryValue; };
+    std::atomic<bool> &pendingCoalescedDelivery(void) { return _pendingCoalescedDelivery; };
 };
 
 #endif

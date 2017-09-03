@@ -133,6 +133,7 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
 
     if (encoderRetValue == PK_OK) {
         GenericTLV el;
+
         for (int i = 0; i < self->_encoderMap.size(); i++) {
 
             uint32_t step = self->_encoders[i].step;
@@ -185,16 +186,15 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
     int ret = PK_DigitalIOGet(self->_pokey);
 
     if (ret == PK_OK) {
-        // std::lock_guard<std::mutex> remapGuard(self->_owner->pinRemappingMutex());
         self->_owner->pinRemappingMutex().lock();
-
-        GenericTLV el;
 
         for (int i = 0; i < self->_pokey->info.iPinCount; i++) {
             if (self->_pins[i].type == "DIGITAL_INPUT") {
                 int sourcePinNumber = self->_pins[i].pinNumber;
 
                 if (self->_pins[i].value != self->_pokey->Pins[sourcePinNumber - 1].DigitalValueGet && !self->_pins[i].skipNext) {
+                    GenericTLV el;
+
                     // data has changed so send it off for processing
                     printf("DIN pin-index %i - %i\n", sourcePinNumber - 1, self->_pokey->Pins[sourcePinNumber - 1].DigitalValueGet);
 
@@ -204,17 +204,21 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
                     el.length = sizeof(uint8_t);
 
                     if (self->_owner->pinRemapped(self->_pins[i].pinName)) {
-                        // KLUDGE: as each device has its own polling thread, the logic below is a critical
-                        //         section because it can touch the state of multiple device pins
+                        // KLUDGE: as each device has its own polling thread, the logic
+                        // below is a critical
+                        //         section because it can touch the state of multiple device
+                        //         pins
 
                         std::pair<std::shared_ptr<PokeyDevice>, std::string> remappedPinInfo = self->_owner->remappedPinDetails(self->_pins[i].pinName);
                         int remappedPinIndex = remappedPinInfo.first->pinIndexFromName(remappedPinInfo.second);
 
-                        // remappedPinInfo.first->pins()[remappedPinIndex].previousValue = self->_pins[self->_pins[i].pinNumber - 1].value;
+                        // remappedPinInfo.first->pins()[remappedPinIndex].previousValue =
+                        // self->_pins[self->_pins[i].pinNumber - 1].value;
                         self->_pins[i].previousValue = self->_pins[self->_pins[i].pinNumber - 1].value;
 
                         remappedPinInfo.first->_pins[remappedPinIndex].previousValue = self->_pokey->Pins[sourcePinNumber - 1].DigitalValueGet; // self->_pins[i].previousValue;
-                        // remappedPinInfo.first->_pins[remappedPinIndex].previousValue = self->_pins[i].previousValue;
+                        // remappedPinInfo.first->_pins[remappedPinIndex].previousValue =
+                        // self->_pins[i].previousValue;
 
                         remappedPinInfo.first->_pins[remappedPinIndex].value = self->_pokey->Pins[sourcePinNumber - 1].DigitalValueGet;
                         self->_pins[i].value = self->_pokey->Pins[sourcePinNumber - 1].DigitalValueGet;
@@ -233,8 +237,9 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
                             remappedPinInfo.first->_pins[remappedPinIndex].skipNext = false;
                             printf("---> sleeping for other poll thread\n");
 
-                            // give any other remapped polling threads a chance to send a state change
-                            std::this_thread::sleep_for(1000ms);
+                            // give any other remapped polling threads a chance to send a
+                            // state change
+                            std::this_thread::sleep_for(150ms);
                             if (remappedPinInfo.first->_pins[remappedPinIndex].skipNext) {
                                 printf("---> other poll thread changed skip value\n");
                                 hackSkip = true;
@@ -269,10 +274,15 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
                         attribute->setValue(transformedValue);
                         GenericTLV *transformedGeneric = AttributeToCGeneric(attribute);
 
-                        printf("---> %s: %s\n", (char *)self->_pins[i].pinName.c_str(), transformedValue.c_str());
-                        self->_enqueueCallback(self, (void *)transformedGeneric, self->_callbackArg);
+                        if (el.value.bool_value == 0 || !self->_owner->coalescedDeliveryValue().second) {
+                            self->_owner->coalescedDeliveryValue().first = el.name;
 
-                        free(transformedGeneric);
+                            if (self->_owner->coalescedDeliveryValue().second) {
+                                free(self->_owner->coalescedDeliveryValue().second);
+                            }
+                            self->_owner->coalescedDeliveryValue().second = transformedGeneric;
+                            self->_owner->pendingCoalescedDelivery() = true;
+                        }
                     }
                     else {
                         printf("---> %s\n", (char *)self->_pins[i].pinName.c_str());
@@ -285,6 +295,20 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
     }
     else {
         printf("TRANSFER ERROR\n");
+    }
+
+    // KLUDGE KLUDGE KLUDGE
+    if (self->_owner->pendingCoalescedDelivery()) {
+        self->_owner->pendingCoalescedDelivery() = false;
+        std::this_thread::sleep_for(150ms);
+        self->_owner->pinRemappingMutex().lock();
+        if (self->_owner->coalescedDeliveryValue().second) {
+            printf("coalescing on: %s", self->_owner->coalescedDeliveryValue().first.c_str());
+            self->_enqueueCallback(self, (void *)self->_owner->coalescedDeliveryValue().second, self->_callbackArg);
+            free(self->_owner->coalescedDeliveryValue().second);
+            self->_owner->coalescedDeliveryValue().second = NULL;
+        }
+        self->_owner->pinRemappingMutex().unlock();
     }
 }
 

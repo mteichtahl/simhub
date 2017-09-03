@@ -60,6 +60,8 @@ PokeyDevicePluginStateManager::PokeyDevicePluginStateManager(LoggingFunctionCB l
 {
     _numberOfDevices = 0; ///< 0 devices discovered
     _name = "pokey";
+    _pendingCoalescedDelivery = false;
+    _coalescedDeliveryValue.second = NULL;
     _devices = (sPoKeysNetworkDeviceSummary *)calloc(sizeof(sPoKeysNetworkDeviceSummary), 16); ///< 0 initialise the network device summary
 }
 
