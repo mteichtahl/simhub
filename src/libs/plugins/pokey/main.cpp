@@ -295,6 +295,8 @@ bool PokeyDevicePluginStateManager::devicePinsConfiguration(libconfig::Setting *
             int defaultValue = 0;
 
             try {
+                assert(iter->exists("type"));
+
                 iter->lookupValue("pin", pinNumber);
                 iter->lookupValue("name", pinName);
                 iter->lookupValue("type", pinType);

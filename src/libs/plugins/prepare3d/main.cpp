@@ -215,7 +215,8 @@ void SimSourcePluginStateManager::OnRead(uv_stream_t *server, ssize_t nread, con
 void SimSourcePluginStateManager::OnClose(uv_handle_t *handle)
 {
     assert(SimSourcePluginStateManager::StateManagerInstance());
-    SimSourcePluginStateManager::StateManagerInstance()->instanceCloseHandler(handle);
+    // SimSourcePluginStateManager::StateManagerInstance()->instanceCloseHandler(handle);
+    SimSourcePluginStateManager::StateManagerInstance()->stopUVLoop();
 }
 
 void SimSourcePluginStateManager::instanceConnectionHandler(uv_connect_t *req, int status)
@@ -322,7 +323,6 @@ void SimSourcePluginStateManager::processElement(char *element)
         else if (strncmp(type, "bool", sizeof(&type)) == 0) {
             el.type = CONFIG_BOOL;
             el.length = sizeof(uint8_t);
-
             if (strncmp(value, "0", sizeof(el.value)) == 0) {
                 el.value.bool_value = 0;
             }
@@ -345,6 +345,7 @@ void SimSourcePluginStateManager::processElement(char *element)
 
 char *SimSourcePluginStateManager::getElementDataType(char identifier)
 {
+
     switch (identifier) {
     case GAUGE_IDENTIFIER:
         return (char *)"float";
@@ -388,9 +389,11 @@ std::string SimSourcePluginStateManager::prosimValueString(std::shared_ptr<Attri
 
     switch (attribute->name().c_str()[0]) {
     case SWITCH_IDENTIFIER:
-        // printf("SimSourcePluginStateManager\n");
-        // retVal = attribute->value<bool>() ? 0 : 1;
-        // break;
+    // retVal = attribute->value<bool>() ? "0" : "1";
+    // break;
+    case BOOLEAN_IDENTIFIER:
+    // retVal = attribute->value<bool>() ? "0" : "1";
+    // break;
 
     default:
         retVal = attribute->valueToString();
@@ -443,7 +446,6 @@ void SimSourcePluginStateManager::ceaseEventing(void)
 {
     if (_pluginThread) {
         stopUVLoop();
-
         if (_pluginThread->joinable()) {
             _pluginThread->join();
         }
@@ -454,7 +456,9 @@ void SimSourcePluginStateManager::commenceEventing(EnqueueEventHandler enqueueCa
 {
     _enqueueCallback = enqueueCallback;
     _callbackArg = arg;
-    _pluginThread = std::make_shared<std::thread>([=] { check_uv(uv_run(_eventLoop, UV_RUN_DEFAULT)); });
+    if (_eventLoop) {
+        _pluginThread = std::make_shared<std::thread>([=] { check_uv(uv_run(_eventLoop, UV_RUN_DEFAULT)); });
+    }
 }
 
 // -- simple socket send/receive wrapper

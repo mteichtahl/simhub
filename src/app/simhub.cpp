@@ -179,8 +179,12 @@ bool SimHubEventController::deliverValue(std::shared_ptr<Attribute> value)
 
 #if defined(_AWS_SDK)
         if (value->name() == "N_ELEC_PANEL_LOWER_LEFT") {
-            if (c_value >= 0)
-                _awsHelper.polly()->say("dc volts %i", c_value->value);
+            if (c_value->value.int_value >= 0) {
+                _awsHelper.polly()->say("dc volts %i", c_value->value.int_value);
+            }
+            else {
+                _awsHelper.polly()->say("dc volts none");
+            }
         }
 #endif
 
