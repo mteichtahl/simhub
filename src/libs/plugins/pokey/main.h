@@ -4,7 +4,9 @@
 #include <assert.h>
 #include <iostream>
 #include <iterator>
+#include <atomic>
 #include <thread>
+#include <mutex>
 #include <unistd.h>
 
 #include "PoKeysLib.h"
