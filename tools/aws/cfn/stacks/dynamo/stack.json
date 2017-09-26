@@ -15,8 +15,8 @@
       "Type": "String",
       "MinLength": "3",
       "MaxLength": "16",
-      "Default": "simhub",
-      "AllowedPattern": "[a-zA-Z0-9]*",
+      "Default": "simhub-KeyVal",
+      "AllowedPattern": "[a-zA-Z0-9-]*",
       "ConstraintDescription": "dynamo db names must be 3-16 characters and contain only a-z and 0-9."
     }
   },

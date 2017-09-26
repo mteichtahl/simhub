@@ -27,7 +27,7 @@
     },
     "DynamoTable": {
       "Type": "String",
-      "Default": "simhub",
+      "Default": "simhub-KeyVal",
       "Description": "Name of the dynamoDB table"
     }
   },
@@ -35,8 +35,7 @@
     "ProcessKinesisFunction": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
-        "Tags": [
-          {
+        "Tags": [{
             "Key": "Environment",
             "Value": {
               "Ref": "EnvironmentName"
@@ -108,8 +107,7 @@
         "Principal": "apigateway.amazonaws.com",
         "SourceArn": {
           "Fn::Join": [
-            "",
-            [
+            "", [
               "arn:aws:execute-api:",
               {
                 "Ref": "AWS::Region"
