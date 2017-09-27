@@ -5,6 +5,7 @@
 #include <iostream>
 #include <iterator>
 #include <thread>
+#include <mutex>
 #include <unistd.h>
 
 #include "PoKeysLib.h"
