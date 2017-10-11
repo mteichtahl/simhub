@@ -2,8 +2,11 @@ var color = require('cli-color');
 var cli = require('commander');
 var net = require('net');
 var _ = require('lodash');
+var faker = require('faker')
+var randomFloat = require('random-float');
 
 var DATA_INTERVAL_MS = 500;
+var TRAINING_DATA_INTERVAL_MS = 100;
 
 var indicators = [
   // values are only 0 or 1
@@ -27,14 +30,19 @@ var gauges = [
 var switches = ['S_OH_STANDBY_POWER', 'S_OH_CROSSFEED'];
 
 cli.version('1.0.0')
-    .usage('[options]')
-    .option('-p --port [8091]', 'TCP Port', '8091')
-    .parse(process.argv);
+  .usage('[options]')
+  .option('-p --port [8091]', 'TCP Port', '8091')
+  .option('-t --training_port [8080]', 'Training TCP port', '8080')
+  .parse(process.argv);
 
 console.log(color.green(`Starting emulator on port ${cli.port}`));
+console.log(color.green(`Starting training data emulator on port ${cli.training_port}`));
 
 var server = net.createServer();
+var trainingServer = net.createServer()
+
 server.on('connection', handleConnection);
+trainingServer.on('connection', handleTrainingConnection);
 
 var connections = {}
 
@@ -44,17 +52,90 @@ function getBytes(string) {
 
 function formatBytes(a, b) {
   if (0 == a) return '0 Bytes';
-  var c = 1e3, d = b || 2,
-      e = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'],
-      f = Math.floor(Math.log(a) / Math.log(c));
+  var c = 1e3,
+    d = b || 2,
+    e = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'],
+    f = Math.floor(Math.log(a) / Math.log(c));
   return parseFloat((a / Math.pow(c, f)).toFixed(d)) + ' ' + e[f]
 }
 
 server.listen(cli.port, () => {
   var address = server.address().address;
   var port = server.address().port;
-
 });
+
+trainingServer.listen(cli.training_port, () => {
+  var address = server.address().address;
+  var port = server.address().port;
+});
+
+function handleTrainingConnection(conn) {
+  var self = this;
+  var address = conn.remoteAddress;
+  var port = conn.remotePort;
+  var portString = port.toString();
+  var intervalTimer;
+
+  connections[portString] = {
+    startTime: _.now()
+  };
+
+  console.log(color.yellow(`Training client connected - ${address}:${port}`));
+  conn.once('close', onConnClose);
+  conn.once('error', onConnError);
+
+  function onConnError(err) {
+    console.log('Connection %s error: %s', remoteAddress, err.message);
+  };
+
+  function onConnClose() {
+    clearInterval(intervalTimer);
+    connections[portString].endTime = _.now();
+    duration =
+      (connections[portString].endTime - connections[portString].startTime) /
+      1000;
+
+    console.log(color.yellow(`Client disconnect - ${address}:${port}`));
+
+    if (connections.portString) {
+      totalBytes = connections.portString.totalBytes;
+      speed = (totalBytes / duration).toFixed(2);
+      console.log(
+        color.yellow(`Sent: ${
+                                formatBytes(totalBytes)
+                              } for ${duration} seconds / ${speed} B/s`));
+    }
+    delete(connections.portString);
+  }
+
+  connections.portString = {
+    'totalBytes': 0,
+    startTime: _.now(),
+    endTime: 0
+  };
+
+
+  intervalTimer = setInterval(
+    function (a) {
+
+      var data = {
+        "data": {
+          "latitude": faker.address.latitude(),
+          "longitude": faker.address.longitude(),
+          "airspeed": randomFloat(350),
+          "altitude": faker.random.number
+        },
+        "weather": {
+
+        }
+      }
+
+      console.log(JSON.stringify(data))
+      conn.write(JSON.stringify(data) + '\n');
+    }, TRAINING_DATA_INTERVAL_MS)
+
+}
+
 
 function handleConnection(conn) {
   var self = this;
@@ -63,7 +144,9 @@ function handleConnection(conn) {
   var portString = port.toString();
   var intervalTimer;
 
-  connections[portString] = {startTime: _.now()};
+  connections[portString] = {
+    startTime: _.now()
+  };
 
   console.log(color.yellow(`Client connected - ${address}:${port}`));
 
@@ -78,8 +161,8 @@ function handleConnection(conn) {
     clearInterval(intervalTimer);
     connections[portString].endTime = _.now();
     duration =
-        (connections[portString].endTime - connections[portString].startTime) /
-        1000;
+      (connections[portString].endTime - connections[portString].startTime) /
+      1000;
 
     console.log(color.yellow(`Client disconnect - ${address}:${port}`));
 
@@ -87,28 +170,32 @@ function handleConnection(conn) {
       totalBytes = connections.portString.totalBytes;
       speed = (totalBytes / duration).toFixed(2);
       console.log(
-          color.yellow(`Sent: ${
+        color.yellow(`Sent: ${
                                 formatBytes(totalBytes)
                               } for ${duration} seconds / ${speed} B/s`));
     }
-    delete (connections.portString);
+    delete(connections.portString);
   }
 
-  connections.portString = {'totalBytes': 0, startTime: _.now(), endTime: 0};
+  connections.portString = {
+    'totalBytes': 0,
+    startTime: _.now(),
+    endTime: 0
+  };
 
   intervalTimer = setInterval(
 
-      (a) => {
-        if (connections.portString)
-          connections.portString.totalBytes += getData(a, conn);
-      },
-      DATA_INTERVAL_MS, {
-        'indicators': indicators,
-        'analog': analogs,
-        'gauges': gauges,
-        'switches': switches
-      },
-      conn.totalBytes);
+    (a) => {
+      if (connections.portString)
+        connections.portString.totalBytes += getData(a, conn);
+    },
+    DATA_INTERVAL_MS, {
+      'indicators': indicators,
+      'analog': analogs,
+      'gauges': gauges,
+      'switches': switches
+    },
+    conn.totalBytes);
 
 
   function getData(data, conn) {
