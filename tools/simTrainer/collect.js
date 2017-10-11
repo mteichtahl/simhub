@@ -8,7 +8,7 @@ var _ = require('lodash')
 cli.version('1.0.0')
   .usage('[options]')
   .option('-h, --host [type]', 'IP or name of the server', 'localhost')
-  .option('-p --port [8091]', 'TCP Port', '8091')
+  .option('-p --port [8080]', 'TCP Port', '8080')
   .parse(process.argv)
 
 console.log(color.green(`Starting training data collection for ${cli.host} port ${cli.port}`))
@@ -23,5 +23,6 @@ dataStream
     console.log(color.green(`Connected to ${cli.host}:${cli.port}`))
   })
   .on('data', function (data) {
-    console.log(data)
+    var jsonData = JSON.parse(data.toString());
+    console.log(jsonData)
   })

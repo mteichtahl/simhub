@@ -7,7 +7,8 @@
     "aws-sdk": "^2.131.0",
     "cli-color": "^1.2.0",
     "commander": "^2.11.0",
-    "lodash": "^4.17.4"
+    "lodash": "^4.17.4",
+    "random-float": "^1.0.0"
   },
   "scripts": {
     "run": "node ./collect.js"
