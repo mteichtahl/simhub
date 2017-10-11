@@ -4,6 +4,11 @@ var color = require('cli-color')
 var cli = require('commander')
 var net = require('net')
 var _ = require('lodash')
+var aws = require('aws-sdk')
+
+var totalRecordCount = 0;
+var intervalRecordCount = 0;
+var firstRecord = true;
 
 cli.version('1.0.0')
   .usage('[options]')
@@ -21,8 +26,19 @@ dataStream
   })
   .on('connect', function () {
     console.log(color.green(`Connected to ${cli.host}:${cli.port}`))
+
+    setInterval(function (a) {
+      console.log(color.yellow(`Processing: ${intervalRecordCount}/${totalRecordCount}`))
+      intervalRecordCount = 0;
+    }, 5000)
   })
   .on('data', function (data) {
+    if (firstRecord)
+      console.log(color.yellow(`Receiving data`))
+
     var jsonData = JSON.parse(data.toString());
-    console.log(jsonData)
+    totalRecordCount++
+    intervalRecordCount++
+    firstRecord = false
+
   })
