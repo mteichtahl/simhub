@@ -8,7 +8,9 @@
     "cli-color": "^1.2.0",
     "commander": "^2.11.0",
     "lodash": "^4.17.4",
-    "random-float": "^1.0.0"
+    "moment": "^2.19.1",
+    "random-float": "^1.0.0",
+    "uuid": "^3.1.0"
   },
   "scripts": {
     "run": "node ./collect.js"
