@@ -1,0 +1,8 @@
+{
+    "command": "approachJump",
+    "parameters": {
+        "translation": "5 miles final",
+        "airport": "KJFK",
+        "runway": "04R"
+    }
+}

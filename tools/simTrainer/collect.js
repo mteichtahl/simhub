@@ -67,11 +67,14 @@ dataStream
           }, 5000);
         })
     .on('data', function(data) {
-      if (firstRecord) console.log(color.yellow(`Receiving data`));
-
       var jsonData = JSON.parse(data.toString());
 
-      if (jsonData.data.eady == false || jsonData.data.paused == true) {
+      if (firstRecord) {
+        console.log(color.yellow(`Receiving data`));
+      }
+
+
+      if (jsonData.data.ready == false || jsonData.data.paused == true) {
         console.log(color.red(`Skipped`));
         return;
       }
