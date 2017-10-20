@@ -5,21 +5,27 @@ var client = new net.Socket();
 
 var approach = {
   command: 'approachJump',
-  parameters: {translation: '5 miles final', airport: 'KJFK', runway: '04R'}
+  parameters: {translation: '10 miles final', airport: 'KJFK', runway: '04R'}
 };
 
 var pause = {'command': 'pause', 'parameters': {'set': 'true'}};
+var unpauseJSON = {'command': 'pause', 'parameters': {'set': 'false'}};
+
 
 var autopilot = {
   'command': 'autopilot',
   'parameters': {
-    'altitude': '2000',
-    'speed': '200',
-    'modes': 'SPEED,VS,HDG_SEL,APP,AT,CMD_A'
+    'altitude': '5000',
+    'speed': '180',
+    'modes': 'AT,CMD_A,SPEED,VS,HDG_SEL,APP'
   }
 };
 
 var autoland = {'command': 'autoland', 'parameters': {'mode': 'start'}};
+
+var flightState = {'ready': false, 'paused': false};
+
+
 
 // var command = {
 //   'command': 'weather',
@@ -50,24 +56,44 @@ var autoland = {'command': 'autoland', 'parameters': {'mode': 'start'}};
 //   }
 // }
 
-var approachBuffer = new Buffer.from(JSON.stringify(approach) + '\n');
+var approachJump = new Buffer.from(JSON.stringify(approach) + '\n');
 var pauseBuffer = new Buffer.from(JSON.stringify(pause) + '\n');
+var unpause = new Buffer.from(JSON.stringify(unpauseJSON) + '\n');
 var autopilotBuffer = new Buffer.from(JSON.stringify(autopilot) + '\n');
 var autolandBuffer = new Buffer.from(JSON.stringify(autoland) + '\n');
 
 client.connect(8081, '192.168.2.2', function() {
-  console.log('Connected');
-  client.write(approachBuffer);
+  console.log('\nConnected');
 
-  console.log('pause');
+  //   if (!flightState.paused) {
+  //     setTimeout(function() {
+  //       client.write(pauseBuffer);
+  //       console.log('\nPaused');
+  //     }, 3000);
+  //   }
 
   setTimeout(function() {
-    // client.write(pauseBuffer);
-    // sleep.sleep(5);
-    client.write(autopilotBuffer);
-    sleep.sleep(5);
-    client.write(autolandBuffer);
-  }, 1000)
+    console.log('\nApproach');
+    client.write(approachJump);
+
+
+    var readyInterval = setInterval(function() {
+      console.log(flightState);
+      client.write(unpause);
+
+      if (flightState.ready) {
+        console.log('\nAutopilot');
+        client.write(autopilotBuffer);
+
+        console.log('\nAuto land');
+        client.write(autolandBuffer);
+
+        client.write(unpause);
+        clearInterval(readyInterval);
+      }
+    }, 1000)
+
+  }, 500)
 
 
 })
@@ -79,12 +105,35 @@ client.on('close', function() {
   console.log('Connection closed');
 });
 client.on('data', function(data) {
-  var json = JSON.parse(data.toString());
+  var json;
+  try {
+    json = JSON.parse(data.toString());
+    // process.stdout.write('d');
+
+  } catch (e) {
+    process.stdout.write('e');
+    // var str = '';
+    // for (var ii = 0; ii < data.length; ii++) {
+    //   str += data[ii].toString(16) + ' ';
+    // };
+    // console.log('--\n');
+    // console.log(e)
+    // // console.log(str + '\n--\n');
+    // console.log(data.toString());
+    // console.log('\n------------\n');
+    return;
+  }
+  //   console.log(json.data.readay ? "rr");
+
   if (json.result != undefined) {
-    console.log(json);
     if (json.result == 'fail' || json.result == 'success') {
-      // client.destroy();
+      console.log('\n', json);
     }
+  }
+
+  if (json.data !== undefined) {
+    flightState.paused = json.data.paused;
+    flightState.ready = json.data.ready;
   }
 
 })

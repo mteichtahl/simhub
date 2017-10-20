@@ -11,6 +11,8 @@
     "lodash": "^4.17.4",
     "moment": "^2.19.1",
     "random-float": "^1.0.0",
+    "rxjs": "^5.5.0",
+    "sleep": "^5.1.1",
     "uuid": "^3.1.0"
   },
   "scripts": {
