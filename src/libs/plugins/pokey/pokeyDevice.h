@@ -4,9 +4,11 @@
 #include "PoKeysLib.h"
 #include "common/simhubdeviceplugin.h"
 #include <assert.h>
+#include <chrono>
 #include <cmath>
 #include <iostream>
 #include <map>
+#include <mutex>
 #include <stdlib.h>
 #include <thread>
 #include <unistd.h>
@@ -29,6 +31,10 @@
 #define MAX_MATRIX_LED_GROUPS 8
 #define MAX_DIGITS 10
 #define MAX_PWM_CHANNELS 6
+
+#define PWM_SERVO_LEFT 50000
+#define PWM_SERVO_RIGHT 25000
+#define PWM_SERVO_CENTER 37500
 
 typedef struct {
     std::string pinName;
@@ -100,6 +106,7 @@ protected:
     std::map<std::string, int> _encoderMap;
     std::map<std::string, int> _displayMap;
     std::map<std::string, int> _pwmMap;
+    static std::mutex _BigPokeyLock;
 
     sPoKeysDevice *_pokey;
     void *_callbackArg;
