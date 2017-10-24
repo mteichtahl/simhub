@@ -18,8 +18,9 @@ PokeyDevice::PokeyDevice(sPoKeysNetworkDeviceSummary deviceSummary, uint8_t inde
 
     _pokey = PK_ConnectToNetworkDevice(&deviceSummary);
 
-    if (!_pokey)
+    if (!_pokey) {
         throw std::exception();
+    }
 
     _index = index;
     _userId = deviceSummary.UserID;
@@ -146,12 +147,15 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
 
 void PokeyDevice::addPin(std::string pinName, int pinNumber, std::string pinType, int defaultValue, std::string description)
 {
-    if (pinType == "DIGITAL_OUTPUT")
+    if (pinType == "DIGITAL_OUTPUT") {
         outputPin(pinNumber);
-    if (pinType == "DIGITAL_INPUT")
+    }
+    else if (pinType == "DIGITAL_INPUT") {
         inputPin(pinNumber);
+    }
 
     mapNameToPin(pinName.c_str(), pinNumber);
+
     int portNumber = pinNumber - 1;
 
     _pins[portNumber].pinName = pinName;
@@ -166,11 +170,20 @@ uint32_t msToTicks(uint32_t ms)
 {
     return (ms * 1000000) / 40;
 }
-void PokeyDevice::addPWM(uint8_t channel, std::string name, std::string description, std::string units, uint32_t dutyCycle, uint32_t period)
+
+void PokeyDevice::addPWM(
+    uint8_t channel, 
+    std::string name, 
+    std::string description, 
+    std::string units, 
+    uint32_t leftDutyCycle, 
+    uint32_t rightDutyCycle, 
+    uint32_t period)
 {
+    _pwmChannels[channel] = true;
+    /*
     std::lock_guard<std::mutex> pokeyLock(_BigPokeyLock);
 
-    _pwmChannels[channel] = true;
     float ms = _pokey->info.PWMinternalFrequency / 1000;
 
     PK_PWMConfigurationGet(_pokey);
@@ -181,14 +194,18 @@ void PokeyDevice::addPWM(uint8_t channel, std::string name, std::string descript
 
     int ret = PK_PWMConfigurationSet(_pokey);
 
-    //_pokey->PWM.PWMduty[channel] = PWM_SERVO_LEFT;
-    PK_SL_PWM_SetDuty(_pokey, channel, PWM_SERVO_LEFT);
-    int t = PK_PWMUpdate(_pokey);
-    std::this_thread::sleep_for(20ms);
+    int left_duty = 62000;
+    int centre_duty = 42000;
+    int right_duty = 22000;
 
-    printf(". %i\n", t);
-    _pokey->PWM.PWMenabledChannels[channel] = false;
-    PK_PWMConfigurationSet(_pokey);
+    //PK_SL_PWM_SetDuty(_pokey, channel, centre_duty);
+    //PK_SL_PWM_SetDuty(_pokey, channel, left_duty);
+    //PK_SL_PWM_SetDuty(_pokey, channel, right_duty);
+    int t = PK_PWMUpdate(_pokey);
+    
+    //printf(". %i\n", t);
+    //_pokey->PWM.PWMenabledChannels[channel] = false;
+    //PK_PWMConfigurationSet(_pokey);
 
     // // std::this_thread::sleep_for(100ms);
     // t = PK_PWMUpdate(_pokey);
@@ -214,7 +231,10 @@ void PokeyDevice::addPWM(uint8_t channel, std::string name, std::string descript
     // printf(". %i\n", t);
 
     std::this_thread::sleep_for(1000ms);
-
+    // PK_SL_PWM_SetDuty(_pokey, channel, left_duty);
+    // PK_PWMUpdate(_pokey);
+    // std::this_thread::sleep_for(1000ms);
+    
     _pokey->PWM.PWMenabledChannels[channel] = true;
     PK_PWMConfigurationSet(_pokey);
     t = PK_SL_PWM_SetDuty(_pokey, channel, PWM_SERVO_RIGHT);
@@ -239,13 +259,19 @@ void PokeyDevice::addPWM(uint8_t channel, std::string name, std::string descript
     // std::this_thread::sleep_for(10ms);
     // t = PK_PWMUpdate(_pokey);
     // printf(". %i\n", t);
-
+    */
     mapNameToPWM(name.c_str(), channel);
     _pwm[channel].name = name;
     _pwm[channel].description = description;
     _pwm[channel].units = units;
-    _pwm[channel].dutyCycle = dutyCycle;
+    _pwm[channel].leftDutyCycle = leftDutyCycle;
+    _pwm[channel].rightDutyCycle = rightDutyCycle;
     _pwm[channel].period = period;
+
+    PK_PWMConfigurationGet(_pokey);
+    _pokey->PWM.PWMperiod = _pwm[channel].period;
+    _pokey->PWM.PWMenabledChannels[channel] = true;
+    int ret = PK_PWMConfigurationSet(_pokey);
 }
 
 void PokeyDevice::startPolling()
@@ -285,6 +311,7 @@ std::string PokeyDevice::hardwareTypeString()
     if (_hardwareType == 31) {
         return "Pokey 57E";
     }
+
     return "Unknown";
 }
 
@@ -348,7 +375,15 @@ bool PokeyDevice::isEncoderCapable(int pin)
 }
 
 void PokeyDevice::addEncoder(
-    int encoderNumber, uint32_t defaultValue, std::string name, std::string description, int min, int max, int step, int invertDirection, std::string units)
+    int encoderNumber, 
+    uint32_t defaultValue, 
+    std::string name, 
+    std::string description, 
+    int min, 
+    int max, 
+    int step, 
+    int invertDirection, 
+    std::string units)
 {
     assert(encoderNumber >= 1);
 
@@ -464,21 +499,22 @@ using namespace std::chrono_literals;
 
 uint32_t PokeyDevice::targetValue(std::string targetName, float value)
 {
-    std::lock_guard<std::mutex> pokeyLock(_BigPokeyLock);
+    //std::lock_guard<std::mutex> pokeyLock(_BigPokeyLock);
 
     uint8_t channel = PWMFromName(targetName);
-    uint32_t ms = _pokey->info.PWMinternalFrequency / 1000;
 
-    // value goes between 0 and about 710.
-    uint32_t duty = (3 * value) / 700;
-    duty *= ms;
-
-    _pokey->PWM.PWMenabledChannels[channel] = true;
-    // int ret = PK_PWMConfigurationSet(_pokey);
-
-    printf("---> duty %d, ret %.3f \n", duty, value);
-
+    // value is percent, so calculate cycles back from left cycle count
+    uint32_t duty = _pwm[channel].leftDutyCycle - ((_pwm[channel].leftDutyCycle - _pwm[channel].rightDutyCycle) * value);
+    //_pokey->PWM.PWMenabledChannels[channel] = true;
+    PK_SL_PWM_SetDuty(_pokey, channel, duty);
     PK_PWMUpdate(_pokey);
+    std::this_thread::sleep_for(1000ms);
+    //_pokey->PWM.PWMperiod = 0;
+    //_pokey->PWM.PWMenabledChannels[channel] = false;
+    //PK_PWMConfigurationSet(_pokey);
+    PK_SL_PWM_SetDuty(_pokey, channel, 0);
+    PK_PWMUpdate(_pokey);
+    std::this_thread::sleep_for(100ms);
 
     return 0;
 }
@@ -537,7 +573,6 @@ uint8_t PokeyDevice::displayNumber(uint8_t displayNumber, std::string targetName
     }
 
     if (numberOfChars <= groupLength) {
-
         for (int i = 0; i < numberOfChars; i++) {
             int displayOffset = (int)charString.at(i) - 48;
             int convertedValue = _intToDisplayRow[displayOffset];
@@ -614,8 +649,7 @@ int PokeyDevice::pinFromName(std::string targetName)
 
 uint8_t PokeyDevice::PWMFromName(std::string targetName)
 {
-    std::map<std::string, int>::iterator it;
-    it = _pwmMap.find(targetName);
+    std::map<std::string, int>::iterator it = _pwmMap.find(targetName);
 
     if (it != _pwmMap.end()) {
         return it->second;

@@ -220,7 +220,6 @@ bool PokeyDevicePluginStateManager::devicePWMConfiguration(libconfig::Setting *p
     int PWMLength = pwm->getLength();
 
     if (PWMLength > 0) {
-
         _logger(LOG_INFO, "    [%s]  - Found %i PWM Channels", pokeyDevice->name().c_str(), PWMLength);
 
         for (libconfig::SettingIterator iter = pwm->begin(); iter != pwm->end(); iter++) {
@@ -228,15 +227,17 @@ bool PokeyDevicePluginStateManager::devicePWMConfiguration(libconfig::Setting *p
             std::string name = "";
             std::string description = "";
             std::string units = "";
-            float dutyCycle = 1.5; // percent
-            uint32_t period = 20; // milliseconds
+            uint32_t leftDutyCycle = 0;
+            uint32_t rightDutyCycle = 0;
+            uint32_t period = 250000; // pokey clock cycles
 
             try {
                 iter->lookupValue("channel", channel);
                 iter->lookupValue("name", name);
                 iter->lookupValue("description", description);
                 iter->lookupValue("units", units);
-                iter->lookupValue("dutyCycle", dutyCycle);
+                iter->lookupValue("leftDutyCycle", leftDutyCycle);
+                iter->lookupValue("rightDutyCycle", rightDutyCycle);
                 iter->lookupValue("period", period);
             }
             catch (const libconfig::SettingNotFoundException &nfex) {
@@ -244,8 +245,13 @@ bool PokeyDevicePluginStateManager::devicePWMConfiguration(libconfig::Setting *p
             }
 
             if (addTargetToDeviceTargetList(name, pokeyDevice)) {
-                pokeyDevice->addPWM(channel, name, description, units, dutyCycle, period);
+                pokeyDevice->addPWM(channel, name, description, units, leftDutyCycle, rightDutyCycle, period);
                 _logger(LOG_INFO, "        - Added PWM channel %i - %s", channel, name.c_str());
+
+                pokeyDevice->targetValue(name, 0.0f);
+                
+                pokeyDevice->targetValue(name, 0.5f);
+                pokeyDevice->targetValue(name, 1.0f);
             }
         }
     }
