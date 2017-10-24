@@ -22,7 +22,7 @@ std::shared_ptr<SimHubEventController> SimHubEventController::EventControllerIns
     return SimHubEventController::_EventControllerInstance;
 }
 
-SimHubEventController::SimHubEventController()
+SimHubEventController::SimHubEventController() : _configurationHTTPListener(U("http://localhost:9000/configuration"))
 {
     _prepare3dMethods.plugin_instance = NULL;
     _pokeyMethods.plugin_instance = NULL;
@@ -36,11 +36,35 @@ SimHubEventController::SimHubEventController()
     logger.log(LOG_INFO, "Starting event controller");
 }
 
+void SimHubEventController::httpGETHandler(web::http::http_request request)
+{
+    auto http_get_vars = web::uri::split_query(request.request_uri().query());
+    
+    auto found_name = http_get_vars.find(U("request"));
+
+    if (found_name == end(http_get_vars)) {
+        auto err = U("Request received with get var \"request\" omitted from query.");
+        std::clog << err << std::endl;
+        request.reply(web::http::status_codes::BadRequest, web::json::value::string(err));
+        return;
+    }
+    auto request_name = found_name->second;
+
+    web::json::value resp;
+    request.reply(web::http::status_codes::OK, web::json::value::string(U("Request received for: ") + request_name));
+    
+    std::clog << U("Received request: ") << request_name << std::endl;
+    //http_respond(req, web::http::status_codes::OK, web::json::value::string(U("Request received for: ") + request_name));
+}
+
 SimHubEventController::~SimHubEventController(void)
 {
+    _configurationHTTPListener.close();
+    
     if (_running) {
         terminate();
     }
+
 #if defined(_AWS_SDK)
     if (_awsHelper.polly()) {
         _awsHelper.polly()->shutdown();
@@ -54,11 +78,10 @@ SimHubEventController::~SimHubEventController(void)
 #endif
 }
 
+#if defined(_AWS_SDK)
 void SimHubEventController::startSustainThread(void)
 {
-#if defined(_AWS_SDK)
     _awsHelper.polly()->say("Simulator is ready.");
-#endif
    
     std::shared_ptr<std::thread> sustainThread = std::make_shared<std::thread>([=] {
         _sustainThreadManager.setThreadRunning(true);
@@ -93,7 +116,6 @@ void SimHubEventController::ceaseSustainThread(void)
     _sustainThreadManager.shutdownThread();
 }
 
-#if defined(_AWS_SDK)
 void SimHubEventController::deliverKinesisValue(std::shared_ptr<Attribute> value)
 {
     std::string name = value->name();
@@ -159,12 +181,14 @@ bool SimHubEventController::deliverValue(std::shared_ptr<Attribute> value)
 
     bool retVal = false;
 
+#if defined(_AWS_SDK)
     if (mapContains(_configManager->mapManager()->sustainMap(), value->name())) {
         // update the sustain value map entry
         std::lock_guard<std::mutex> sustainGuard(_sustainValuesMutex);
         _sustainValues[value->name()].second = value;
         _sustainValues[value->name()].first = std::chrono::milliseconds(_configManager->mapManager()->sustainMap()[value->name()]);
     }
+#endif
 
     // determine value destination from the source - very simple at the moment
     // (just deliver to whatever instance is not the source) - may want more
@@ -175,11 +199,12 @@ bool SimHubEventController::deliverValue(std::shared_ptr<Attribute> value)
     }
     else if (value->ownerPlugin() == _prepare3dMethods.plugin_instance) {
 
+#if defined(_AWS_SDK)
         if (value->name() == "N_ELEC_PANEL_LOWER_LEFT") {
             if (c_value >= 0)
                 _awsHelper.polly()->say("dc volts %i", c_value->value);
         }
-
+#endif
         retVal = !_pokeyMethods.simplug_deliver_value(_pokeyMethods.plugin_instance, c_value);
     }
 
@@ -308,7 +333,9 @@ void SimHubEventController::terminate(void)
 {
     assert(_running);
 
+#if defined(_AWS_SDK)
     ceaseSustainThread();
+#endif
     shutdownPlugin(_prepare3dMethods);
     shutdownPlugin(_pokeyMethods);
     _running = false;

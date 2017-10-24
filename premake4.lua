@@ -57,14 +57,24 @@ solution "simhub"
 
         includedirs { "src",
                       "src/app",
+		              "/usr/local/opt/openssl/include",
 					  "src/common",
 					  "src/libs",
 					  "src/libs/variant/include",
 					  "src/libs/variant/include/mpark",
 					  "src/libs/queue" }
 
+	    libdirs { "/usr/local/opt/openssl/lib" }
+
         links { "zlog", 
-                "pthread", 
+                "pthread",
+		        "cpprest",
+		        "ssl",
+		        "boost_system",
+                "crypto",
+                "boost_thread-mt",
+                "boost_timer",
+                "boost_chrono",
                 "config++" }
 
         targetdir ("bin")
@@ -93,6 +103,8 @@ solution "simhub"
             excludes {"src/common/aws/**"}
         configuration {}
 
+        libdirs { "/usr/local/opt/openssl/lib" }
+
         includedirs { "src/libs/googletest/include", 
                       "src/libs/googletest", 
                       "src",
@@ -101,10 +113,18 @@ solution "simhub"
                       "src/libs/variant/include", 
                       "src/libs",
                       "src/libs/variant/include/mpark",
+                      "/usr/local/opt/openssl/include",
 					  "src/libs/queue" }
         links { "dl", 
                 "zlog", 
-                "pthread", 
+                "pthread",
+		        "cpprest",
+		        "ssl",
+		        "boost_system",
+                "crypto",
+                "boost_thread-mt",
+                "boost_timer",
+                "boost_chrono",
                 "config++"}
 
         targetdir ("bin")
