@@ -65,6 +65,7 @@ public:
     std::string loadPokeyConfiguration(void);
     std::string version(void);
     std::string name(void);
+    std::string pokeyConfigurationFilename(void) { return _pokeyConfigurationFilename; };
     std::shared_ptr<MappingConfigManager> mapManager(void);
     libconfig::Config *config() { return &_config; }
 };

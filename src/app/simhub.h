@@ -69,7 +69,7 @@ protected:
 
     //! implements configuration server
     web::http::experimental::listener::http_listener _configurationHTTPListener;
-    virtual void httpGETHandler(web::http::http_request request);
+    virtual void httpGETConfigurationHandler(web::http::http_request request);
 
 public:
     virtual ~SimHubEventController(void);
@@ -122,8 +122,9 @@ template <class F> void SimHubEventController::runEventLoop(F &&eventProcessorFu
 #if defined(_AWS_SDK)
     startSustainThread();
 #endif
+    // start http listener for json config read
     _configurationHTTPListener.open().wait();
-    _configurationHTTPListener.support(web::http::methods::GET, std::bind(&SimHubEventController::httpGETHandler, this, std::placeholders::_1));
+    _configurationHTTPListener.support(web::http::methods::GET, std::bind(&SimHubEventController::httpGETConfigurationHandler, this, std::placeholders::_1));
     
     while (!breakLoop) {
         try {

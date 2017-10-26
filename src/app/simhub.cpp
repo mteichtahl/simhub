@@ -22,7 +22,7 @@ std::shared_ptr<SimHubEventController> SimHubEventController::EventControllerIns
     return SimHubEventController::_EventControllerInstance;
 }
 
-SimHubEventController::SimHubEventController() : _configurationHTTPListener(U("http://localhost:9000/configuration"))
+SimHubEventController::SimHubEventController() : _configurationHTTPListener(U("http://127.0.0.1:3000"))
 {
     _prepare3dMethods.plugin_instance = NULL;
     _pokeyMethods.plugin_instance = NULL;
@@ -36,31 +36,106 @@ SimHubEventController::SimHubEventController() : _configurationHTTPListener(U("h
     logger.log(LOG_INFO, "Starting event controller");
 }
 
-void SimHubEventController::httpGETHandler(web::http::http_request request)
+/**
+ * like strtok but not evil
+ */
+void split(const std::string &sequence, std::string &delims, std::vector<std::string> &tokens)
 {
-    auto http_get_vars = web::uri::split_query(request.request_uri().query());
-    
-    auto found_name = http_get_vars.find(U("request"));
+    size_t i = 0;
+    size_t pos = sequence.find(delims);
 
-    if (found_name == end(http_get_vars)) {
-        auto err = U("Request received with get var \"request\" omitted from query.");
-        std::clog << err << std::endl;
-        request.reply(web::http::status_codes::BadRequest, web::json::value::string(err));
+    if (pos == std::string::npos){
+        tokens.push_back(sequence);
         return;
     }
-    auto request_name = found_name->second;
 
-    web::json::value resp;
-    request.reply(web::http::status_codes::OK, web::json::value::string(U("Request received for: ") + request_name));
+    while (pos != std::string::npos) {
+        tokens.push_back(sequence.substr(i, pos-i));
+        i = ++pos;
+        pos = sequence.find(delims, pos);
+        
+        if (pos == std::string::npos) {
+            tokens.push_back(sequence.substr(i, sequence.length()));
+        }
+    }
+}
+
+/**
+ * rudimentary converter from libconfig content to JSON content
+ * - doesn't suppoert '#' comments outside of dictionaries (like in lists)
+ */
+std::string libconfigToJSON(std::string configFilename)
+{
+    std::ifstream file(configFilename);
+
+    if (!file) {
+        return "";
+    }
     
-    std::clog << U("Received request: ") << request_name << std::endl;
-    //http_respond(req, web::http::status_codes::OK, web::json::value::string(U("Request received for: ") + request_name));
+    size_t lineIdx = 0;
+    
+    std::string line;
+    std::stringstream jsonStream;
+
+    std::string commentToken("#");
+    std::string jsonAssign(":");
+    
+    jsonStream << "{" << std::endl;
+
+    while (std::getline(file, line)) {
+        lineIdx++;
+
+        std::replace(line.begin(), line.end(), '=', ':');
+        std::replace(line.begin(), line.end(), '(', '[');
+        std::replace(line.begin(), line.end(), ')', ']');
+        std::replace(line.begin(), line.end(), ';', ',');
+
+        std::vector<std::string> tokens;
+
+        split(line, commentToken, tokens);
+
+        if (line.find(commentToken) != std::string::npos) {
+            jsonStream << "\"_line_comment_" << lineIdx << "\": \"" << tokens[tokens.size() - 1] << "\"," << std::endl;
+        }
+        else {
+            tokens.clear();
+            split(line, jsonAssign, tokens);
+            
+            if (tokens.size() > 1) {
+                size_t p = tokens[0].find_first_not_of(" ");
+                tokens[0].insert(p, "\"");
+                p = tokens[0].find_last_not_of(" ");
+                tokens[0].insert(p + 1, "\"");
+            
+                jsonStream << tokens[0] << ":";
+                for (size_t i = 1; i < tokens.size(); i++) {
+                    jsonStream << " " << tokens[i];
+                }
+                jsonStream << std::endl;
+            }
+            else {
+                jsonStream << line << std::endl;
+            }
+        }
+    }
+
+    jsonStream << "}" << std::endl;
+
+    return jsonStream.str();
+}
+
+/**
+ * serves GET requests on http://localhost/configuration - returns JSON converted
+ * pokey configuration content
+ */
+void SimHubEventController::httpGETConfigurationHandler(web::http::http_request request)
+{
+    std::string config_json = libconfigToJSON(_configManager->pokeyConfigurationFilename());
+    request.reply(web::http::status_codes::OK, config_json);
 }
 
 SimHubEventController::~SimHubEventController(void)
 {
-    _configurationHTTPListener.close();
-    
     if (_running) {
         terminate();
     }
@@ -336,8 +411,14 @@ void SimHubEventController::terminate(void)
 #if defined(_AWS_SDK)
     ceaseSustainThread();
 #endif
+
+    // kill web configuration listener
+    auto listenerCloseTask = _configurationHTTPListener.close();
+    listenerCloseTask.wait();
+
     shutdownPlugin(_prepare3dMethods);
     shutdownPlugin(_pokeyMethods);
+    
     _running = false;
 }
 
