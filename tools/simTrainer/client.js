@@ -3,19 +3,24 @@ var sleep = require('sleep');
 
 var client = new net.Socket();
 
+const ON_GROUND_CRASHED = -1;
+const FLYING = 0;
+const ON_GROUND_LANDED = 1;
+const ILS_LOST = 2;
+
+
 var approach = {
   command: 'approachJump',
-  parameters: {translation: '10 miles final', airport: 'KJFK', runway: '04R'}
+  parameters: {translation: '5 miles final', airport: 'KJFK', runway: '04R'}
 };
 
 var pause = {'command': 'pause', 'parameters': {'set': 'true'}};
 var unpauseJSON = {'command': 'pause', 'parameters': {'set': 'false'}};
 
-
 var autopilot = {
   'command': 'autopilot',
   'parameters': {
-    'altitude': '5000',
+    'altitude': '2000',
     'speed': '180',
     'modes': 'AT,CMD_A,SPEED,VS,HDG_SEL,APP'
   }
@@ -23,7 +28,7 @@ var autopilot = {
 
 var autoland = {'command': 'autoland', 'parameters': {'mode': 'start'}};
 
-var flightState = {'ready': false, 'paused': false};
+var flightState = {ready: false, paused: false, status: undefined};
 
 
 
@@ -62,38 +67,106 @@ var unpause = new Buffer.from(JSON.stringify(unpauseJSON) + '\n');
 var autopilotBuffer = new Buffer.from(JSON.stringify(autopilot) + '\n');
 var autolandBuffer = new Buffer.from(JSON.stringify(autoland) + '\n');
 
-client.connect(8081, '192.168.2.2', function() {
-  console.log('\nConnected');
+function simIsReady() {
+  return flightState.ready && !flightState.paused &&
+      flightState.status == ON_GROUND_LANDED;
+}
 
-  //   if (!flightState.paused) {
-  //     setTimeout(function() {
-  //       client.write(pauseBuffer);
-  //       console.log('\nPaused');
-  //     }, 3000);
+var startRun = function() {
+
+
+  console.log('Waiting for start state');
+
+  // console.log('\nApproach');
+  // client.write(approachJump);
+
+  // let index = 0;
+  // var readyInterval = setInterval(function() {
+
+
+  //   if (flightState.paused && index == 0) {
+  //     client.write(unpause);
+
+  //     console.log(index++);
   //   }
 
-  setTimeout(function() {
-    console.log('\nApproach');
-    client.write(approachJump);
+  //   if (flightState.ready) {
+  //     console.log('\nAutopilot');
+  //     client.write(autopilotBuffer);
+
+  //     console.log('\nAuto land');
+  //     client.write(autolandBuffer);
+
+  //     client.write(unpause);
+  //     clearInterval(readyInterval);
+  //   }
+  // }.bind(this), 1000);
+
+};
+
+function waitForPosition(cb) {
+  var interval = setInterval(function() {
+    // check if reposition is complete
+    if (flightState.ready && !flightState.paused &&
+        flightState.status == FLYING) {
+      clearInterval(interval);
+      cb();
+    }
+  }.bind(this), 1000)
+}
 
 
-    var readyInterval = setInterval(function() {
-      console.log(flightState);
-      client.write(unpause);
+client.connect(8081, '192.168.2.2', function() {
+  console.log('\nConnected');
+  var startRun = false;
+  var inPosition = false;
 
-      if (flightState.ready) {
-        console.log('\nAutopilot');
-        client.write(autopilotBuffer);
+  var readyInterval = setInterval(
+      function() {
 
-        console.log('\nAuto land');
-        client.write(autolandBuffer);
+        if (simIsReady()) {
+          console.log('Ready for run');
+          startRun = true;
+          clearInterval(readyInterval);
+        }
+      }.bind(this),
+      1000)
 
-        client.write(unpause);
-        clearInterval(readyInterval);
-      }
-    }, 1000)
 
-  }, 500)
+      var runInterval = setInterval(function() {
+        if (startRun && !inPosition) {
+          // reposition for approach
+          client.write(approachJump);
+          inPosition = true;
+
+          // setTimeout(function() {
+
+          // }.bind(this), 2500)
+
+          waitForPosition(function() {
+            console.log('Positioned for run')
+            client.write(autopilotBuffer);
+
+            console.log('Auto Pilot Set')
+
+            client.write(autolandBuffer);
+            console.log('Auto Land Set')
+
+            client.write(unpause);
+            startRun = false;
+          })
+        }
+
+        if (flightState.status == ON_GROUND_LANDED && !startRun) {
+          console.log('landed');
+        }
+
+        if (flightState.status == ON_GROUND_CRASHED && !startRun) {
+          console.log('crashed');
+        }
+
+      }.bind(this), 500)
+
 
 
 })
@@ -108,25 +181,14 @@ client.on('data', function(data) {
   var json;
   try {
     json = JSON.parse(data.toString());
-    // process.stdout.write('d');
 
   } catch (e) {
     process.stdout.write('e');
-    // var str = '';
-    // for (var ii = 0; ii < data.length; ii++) {
-    //   str += data[ii].toString(16) + ' ';
-    // };
-    // console.log('--\n');
-    // console.log(e)
-    // // console.log(str + '\n--\n');
-    // console.log(data.toString());
-    // console.log('\n------------\n');
     return;
   }
-  //   console.log(json.data.readay ? "rr");
 
   if (json.result != undefined) {
-    if (json.result == 'fail' || json.result == 'success') {
+    if (json.result == 'fail') {
       console.log('\n', json);
     }
   }
@@ -134,6 +196,25 @@ client.on('data', function(data) {
   if (json.data !== undefined) {
     flightState.paused = json.data.paused;
     flightState.ready = json.data.ready;
+    flightState.status = json.data.status;
+
+    switch (json.data.status) {
+      case ON_GROUND_CRASHED:
+        flightState.statusText = 'ON_GROUND_CRASHED'
+        break;
+      case FLYING:
+        flightState.statusText = 'FLYING'
+        break;
+      case ON_GROUND_LANDED:
+        flightState.statusText = 'ON_GROUND_LANDED'
+        break;
+      case ILS_LOST:
+        flightState.statusText = 'ILS_LOST'
+        break;
+      default:
+        flightState.statusText = 'UNKNOWN'
+    }
+    // console.log(flightState);
   }
 
 })
