@@ -1,5 +1,7 @@
 'use strict'
 
+// "ready","paused","onGround","crashed","sts","ts","pitch","roll","yaw","airspeed","altitude","vspeed","ilsDeviation.loc","ilsDeviation.gs","onTrack","status","lng","lat","weather.wind.heading","weather.wind.speed","weather.temp","weather.turbulance","collectorId","runId"
+
 var color = require('cli-color');
 var cli = require('commander');
 var net = require('net');
@@ -79,6 +81,7 @@ dataStream
         return;
       }
 
+
       jsonData['data']['collectorId'] = collectorId;
       jsonData['data']['runId'] = `${runId}_${runCounter}`;
       jsonData['data']['pitch'] =
@@ -90,8 +93,29 @@ dataStream
           jsonData['data']['airspeed'].toFixed(FLOAT_ACCURACY);
       jsonData['data']['altitude'] =
           jsonData['data']['altitude'].toFixed(FLOAT_ACCURACY);
+      jsonData['data']['vspeed'] =
+          jsonData['data']['vspeed'].toFixed(FLOAT_ACCURACY);
 
-      console.dir(jsonData, {depth: null});
+      if (typeof jsonData['data']['ilsDeviation']['loc'] != 'string')
+        jsonData['data']['ilsDeviation']['loc'] =
+            jsonData['data']['ilsDeviation']['loc'].toFixed(FLOAT_ACCURACY);
+      else
+        jsonData['data']['ilsDeviation']['loc'] = -2.5;
+
+      if (typeof jsonData['data']['ilsDeviation']['gs'] != 'string')
+        jsonData['data']['ilsDeviation']['gs'] =
+            jsonData['data']['ilsDeviation']['gs'].toFixed(FLOAT_ACCURACY);
+      else
+        jsonData['data']['ilsDeviation']['gs'] = -2.5;
+
+      jsonData['data']['weather']['wind']['heading'] =
+          jsonData['data']['weather']['wind']['heading'].toFixed(
+              FLOAT_ACCURACY);
+
+      jsonData['data']['weather']['temp'] =
+          jsonData['data']['weather']['temp'].toFixed(FLOAT_ACCURACY);
+
+      // console.dir(jsonData, {depth: null});
 
 
       if (jsonData.data.success == 'true') {
@@ -105,8 +129,14 @@ dataStream
       if (cli.kinesis) {
         var output = ''
         if (cli.format == 'csv') {
-          output = json2csv(
-              {data: jsonData.data, hasCSVColumnTitle: false, flatten: true})
+          output = json2csv({
+            data: jsonData.data,
+            hasCSVColumnTitle: false,
+            flatten: true,
+            newLine: '\r\n'
+          });
+          output += '\n';
+          console.log(output);
         }
         else {
           output = JSON.stringify(jsonData);
