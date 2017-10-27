@@ -3,6 +3,7 @@ var sleep = require('sleep');
 
 var client = new net.Socket();
 
+// flight state constants
 const ON_GROUND_CRASHED = -1;
 const FLYING = 0;
 const ON_GROUND_LANDED = 1;
@@ -78,12 +79,13 @@ var startRun = false;
 var inPosition = false;
 var hasCrashed = false;
 var hasLanded = false;
+var hasLostILS = false;
 
 
 
-function simIsReady() {
+function simIsReadyForRepositioning() {
   return flightState.ready && !flightState.paused &&
-      (flightState.status == ON_GROUND_LANDED);
+      (flightState.status != FLYING);
 }
 
 function isInPosition() {}
@@ -99,9 +101,9 @@ function enableAutoLand() {
 }
 
 
-function waitForSimReady(cb) {
+function waitForSimReadyToReposition(cb) {
   var interval = setInterval(function() {
-    if (simIsReady()) {
+    if (simIsReadyForRepositioning()) {
       console.log('Simulator is ready');
       startRun = true;
       clearInterval(interval);
@@ -117,7 +119,7 @@ function waitForPosition(cb) {
   setTimeout(() => {
     client.write(unpause);
     console.log('Unpausing simulator....');
-  }, 20000);
+  }, 15000);
 
 
   var interval = setInterval(function() {
@@ -157,13 +159,28 @@ function waitForCrash(cb) {
   }, 1000)
 }
 
+function waitForILSLost(cb) {
+  var interval = setInterval(function() {
+    if (flightState.status == ILS_LOST) {
+      console.log('ils lost')
+      hasLostILS = true;
+      inPosition = false;
+      clearInterval(interval);
+      cb()
+    } else if (hasLanded || hasCrashed) {
+      clearInterval(interval);
+    }
+  }, 1000)
+}
+
 function start() {
   startRun = false;
   inPosition = false;
   hasCrashed = false;
   hasLanded = false;
+  hasLostILS = false;
 
-  waitForSimReady(function() {
+  waitForSimReadyToReposition(function() {
     if (startRun && !inPosition) {
       client.write(approachJump);
       startRun = false;
@@ -181,6 +198,13 @@ function start() {
           client.write(autolandStop);
           start();
         })
+
+        waitForILSLost(function() {
+          client.write(autolandStop);
+          start();
+        })
+
+
       })
     }
   }.bind(this));
