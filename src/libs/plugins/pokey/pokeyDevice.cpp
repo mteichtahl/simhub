@@ -166,11 +166,6 @@ void PokeyDevice::addPin(std::string pinName, int pinNumber, std::string pinType
     _pins[portNumber].description = description;
 }
 
-uint32_t msToTicks(uint32_t ms)
-{
-    return (ms * 1000000) / 40;
-}
-
 void PokeyDevice::addPWM(
     uint8_t channel, 
     std::string name, 
@@ -181,86 +176,9 @@ void PokeyDevice::addPWM(
     uint32_t period)
 {
     _pwmChannels[channel] = true;
-    /*
-    std::lock_guard<std::mutex> pokeyLock(_BigPokeyLock);
 
-    float ms = _pokey->info.PWMinternalFrequency / 1000;
+	mapNameToPWM(name.c_str(), channel);
 
-    PK_PWMConfigurationGet(_pokey);
-
-    // _pokey->PWM.PWMperiod = (ms * period);
-    _pokey->PWM.PWMperiod = 250000;
-    _pokey->PWM.PWMenabledChannels[channel] = true;
-
-    int ret = PK_PWMConfigurationSet(_pokey);
-
-    int left_duty = 62000;
-    int centre_duty = 42000;
-    int right_duty = 22000;
-
-    //PK_SL_PWM_SetDuty(_pokey, channel, centre_duty);
-    //PK_SL_PWM_SetDuty(_pokey, channel, left_duty);
-    //PK_SL_PWM_SetDuty(_pokey, channel, right_duty);
-    int t = PK_PWMUpdate(_pokey);
-    
-    //printf(". %i\n", t);
-    //_pokey->PWM.PWMenabledChannels[channel] = false;
-    //PK_PWMConfigurationSet(_pokey);
-
-    // // std::this_thread::sleep_for(100ms);
-    // t = PK_PWMUpdate(_pokey);
-    // printf(". %i\n", t);
-
-    // // std::this_thread::sleep_for(100ms);
-    // t = PK_PWMUpdate(_pokey);
-    // printf(". %i\n", t);
-
-    // // std::this_thread::sleep_for(10ms);
-    // t = PK_PWMUpdate(_pokey);
-    // printf(". %i\n", t);
-
-    // // std::this_thread::sleep_for(10ms);
-    // t = PK_PWMUpdate(_pokey);
-    // printf(". %i\n", t);
-
-    // t = PK_PWMUpdate(_pokey);
-    // printf(". %i\n", t);
-    // t = PK_PWMUpdate(_pokey);
-    // printf(". %i\n", t);
-    // t = PK_PWMUpdate(_pokey);
-    // printf(". %i\n", t);
-
-    std::this_thread::sleep_for(1000ms);
-    // PK_SL_PWM_SetDuty(_pokey, channel, left_duty);
-    // PK_PWMUpdate(_pokey);
-    // std::this_thread::sleep_for(1000ms);
-    
-    _pokey->PWM.PWMenabledChannels[channel] = true;
-    PK_PWMConfigurationSet(_pokey);
-    t = PK_SL_PWM_SetDuty(_pokey, channel, PWM_SERVO_RIGHT);
-    t = PK_PWMUpdate(_pokey);
-    std::this_thread::sleep_for(20ms);
-    printf(". %i\n", t);
-    _pokey->PWM.PWMenabledChannels[channel] = false;
-    PK_PWMConfigurationSet(_pokey);
-
-    // std::this_thread::sleep_for(10ms);
-    // t = PK_PWMUpdate(_pokey);
-    // printf(". %i\n", t);
-
-    // std::this_thread::sleep_for(10ms);
-    // t = PK_PWMUpdate(_pokey);
-    // printf(". %i\n", t);
-
-    // std::this_thread::sleep_for(10ms);
-    // t = PK_PWMUpdate(_pokey);
-    // printf(". %i\n", t);
-
-    // std::this_thread::sleep_for(10ms);
-    // t = PK_PWMUpdate(_pokey);
-    // printf(". %i\n", t);
-    */
-    mapNameToPWM(name.c_str(), channel);
     _pwm[channel].name = name;
     _pwm[channel].description = description;
     _pwm[channel].units = units;
@@ -499,22 +417,16 @@ using namespace std::chrono_literals;
 
 uint32_t PokeyDevice::targetValue(std::string targetName, float value)
 {
-    //std::lock_guard<std::mutex> pokeyLock(_BigPokeyLock);
-
     uint8_t channel = PWMFromName(targetName);
 
     // value is percent, so calculate cycles back from left cycle count
+
     uint32_t duty = _pwm[channel].leftDutyCycle - ((_pwm[channel].leftDutyCycle - _pwm[channel].rightDutyCycle) * value);
-    //_pokey->PWM.PWMenabledChannels[channel] = true;
     PK_SL_PWM_SetDuty(_pokey, channel, duty);
     PK_PWMUpdate(_pokey);
-    std::this_thread::sleep_for(1000ms);
-    //_pokey->PWM.PWMperiod = 0;
-    //_pokey->PWM.PWMenabledChannels[channel] = false;
-    //PK_PWMConfigurationSet(_pokey);
+    std::this_thread::sleep_for(750ms);
     PK_SL_PWM_SetDuty(_pokey, channel, 0);
     PK_PWMUpdate(_pokey);
-    std::this_thread::sleep_for(100ms);
 
     return 0;
 }

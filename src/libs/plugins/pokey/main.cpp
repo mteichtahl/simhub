@@ -248,10 +248,13 @@ bool PokeyDevicePluginStateManager::devicePWMConfiguration(libconfig::Setting *p
                 pokeyDevice->addPWM(channel, name, description, units, leftDutyCycle, rightDutyCycle, period);
                 _logger(LOG_INFO, "        - Added PWM channel %i - %s", channel, name.c_str());
 
+                /*
+                // -- enable to test
                 pokeyDevice->targetValue(name, 0.0f);
-                
                 pokeyDevice->targetValue(name, 0.5f);
                 pokeyDevice->targetValue(name, 1.0f);
+                pokeyDevice->targetValue(name, 0.0f);
+                */
             }
         }
     }
