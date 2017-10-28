@@ -173,12 +173,8 @@ SimHubEventController::~SimHubEventController(void)
 #if defined(_AWS_SDK)
 void SimHubEventController::startSustainThread(void)
 {
-==== BASE ====
-#if defined(_AWS_SDK)
     _awsHelper.polly()->say("Simulator is ready.");
-#endif
    
-==== BASE ====
     std::shared_ptr<std::thread> sustainThread = std::make_shared<std::thread>([=] {
         _sustainThreadManager.setThreadRunning(true);
         while (!_sustainThreadManager.threadCanceled()) {

@@ -116,7 +116,6 @@ protected:
     device_pwm_t _pwm[MAX_PWM_CHANNELS];
     device_encoder_t _encoders[MAX_ENCODERS];
     device_matrixLED_t _matrixLED[MAX_MATRIX_LEDS];
-    device_pwm_t _pwm[MAX_PWM_CHANNELS];
     uint8_t _pwmChannels[6];
 
     uint8_t _intToDisplayRow[MAX_DIGITS];
@@ -187,7 +186,8 @@ public:
         int pinNumber, 
         std::string pinType, 
         int defaultValue = 0, 
-        std::string description = "None");
+        std::string description = "None",
+        bool invert = false);
 
     void addPWM(
         uint8_t pinNumber, 
