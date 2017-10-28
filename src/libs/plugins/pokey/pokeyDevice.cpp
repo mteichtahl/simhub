@@ -7,12 +7,8 @@
 
 using namespace std::chrono_literals;
 
-std::mutex PokeyDevice::_BigPokeyLock;
-
 PokeyDevice::PokeyDevice(sPoKeysNetworkDeviceSummary deviceSummary, uint8_t index)
 {
-    std::lock_guard<std::mutex> pokeyLock(_BigPokeyLock);
-
     _callbackArg = NULL;
     _enqueueCallback = NULL;
 
@@ -64,8 +60,6 @@ void PokeyDevice::setCallbackInfo(EnqueueEventHandler enqueueCallback, void *cal
 
 void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
 {
-    std::lock_guard<std::mutex> pokeyLock(_BigPokeyLock);
-
     PokeyDevice *self = static_cast<PokeyDevice *>(timer->data);
 
     int encoderRetValue = PK_EncoderValuesGet(self->_pokey);
@@ -270,8 +264,6 @@ bool PokeyDevice::validateEncoder(int encoderNumber)
 
 bool PokeyDevice::isEncoderCapable(int pin)
 {
-    std::lock_guard<std::mutex> pokeyLock(_BigPokeyLock);
-
     switch (pin) {
     case 1:
         return (bool)PK_CheckPinCapability(_pokey, 0, PK_AllPinCap_fastEncoder1A);
@@ -304,8 +296,6 @@ void PokeyDevice::addEncoder(
     std::string units)
 {
     assert(encoderNumber >= 1);
-
-    std::lock_guard<std::mutex> pokeyLock(_BigPokeyLock);
 
     PK_EncoderConfigurationGet(_pokey);
     int encoderIndex = encoderNumber - 1;
@@ -368,8 +358,6 @@ void PokeyDevice::addEncoder(
 
 void PokeyDevice::addMatrixLED(int id, std::string name, std::string type)
 {
-    std::lock_guard<std::mutex> pokeyLock(_BigPokeyLock);
-
     PK_MatrixLEDConfigurationGet(_pokey);
     _matrixLED[id].name = name;
     _matrixLED[id].type = type;
@@ -387,8 +375,6 @@ void PokeyDevice::addGroupToMatrixLED(int id, int displayId, std::string name, i
 
 void PokeyDevice::configMatrixLED(int id, int rows, int cols, int enabled)
 {
-    std::lock_guard<std::mutex> pokeyLock(_BigPokeyLock);
-
     _pokey->MatrixLED[id].rows = rows;
     _pokey->MatrixLED[id].columns = cols;
     _pokey->MatrixLED[id].displayEnabled = enabled;
@@ -433,8 +419,6 @@ uint32_t PokeyDevice::targetValue(std::string targetName, float value)
 
 uint32_t PokeyDevice::targetValue(std::string targetName, bool value)
 {
-    std::lock_guard<std::mutex> pokeyLock(_BigPokeyLock);
-
     uint32_t retValue = -1;
     uint8_t pin = pinFromName(targetName) - 1;
 
@@ -457,8 +441,6 @@ uint32_t PokeyDevice::targetValue(std::string targetName, bool value)
 
 uint8_t PokeyDevice::displayNumber(uint8_t displayNumber, std::string targetName, int value)
 {
-    std::lock_guard<std::mutex> pokeyLock(_BigPokeyLock);
-
     int groupIndex = 0;
 
     for (int i = 0; i < MAX_MATRIX_LED_GROUPS; i++) {
@@ -514,21 +496,18 @@ uint8_t PokeyDevice::displayNumber(uint8_t displayNumber, std::string targetName
 
 uint32_t PokeyDevice::outputPin(uint8_t pin)
 {
-    std::lock_guard<std::mutex> pokeyLock(_BigPokeyLock);
     _pokey->Pins[--pin].PinFunction = PK_PinCap_digitalOutput | PK_PinCap_invertPin;
     return PK_PinConfigurationSet(_pokey);
 }
 
 uint32_t PokeyDevice::inputPin(uint8_t pin)
 {
-    std::lock_guard<std::mutex> pokeyLock(_BigPokeyLock);
     _pokey->Pins[--pin].PinFunction = PK_PinCap_digitalInput;
     return PK_PinConfigurationSet(_pokey);
 }
 
 int32_t PokeyDevice::name(std::string name)
 {
-    std::lock_guard<std::mutex> pokeyLock(_BigPokeyLock);
     strncpy((char *)_pokey->DeviceData.DeviceName, name.c_str(), 30);
     return PK_DeviceNameSet(_pokey);
 }
@@ -592,12 +571,10 @@ void PokeyDevice::mapNameToMatrixLED(std::string name, int id)
 
 bool PokeyDevice::isPinDigitalOutput(uint8_t pin)
 {
-    std::lock_guard<std::mutex> pokeyLock(_BigPokeyLock);
     return (bool)PK_CheckPinCapability(_pokey, pin, PK_AllPinCap_digitalOutput);
 }
 
 bool PokeyDevice::isPinDigitalInput(uint8_t pin)
 {
-    std::lock_guard<std::mutex> pokeyLock(_BigPokeyLock);
     return (bool)PK_CheckPinCapability(_pokey, pin, PK_AllPinCap_digitalInput);
 }

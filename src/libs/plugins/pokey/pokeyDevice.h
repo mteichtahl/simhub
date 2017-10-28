@@ -107,7 +107,6 @@ protected:
     std::map<std::string, int> _encoderMap;
     std::map<std::string, int> _displayMap;
     std::map<std::string, int> _pwmMap;
-    static std::mutex _BigPokeyLock;
 
     sPoKeysDevice *_pokey;
     void *_callbackArg;
