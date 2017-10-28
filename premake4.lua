@@ -79,7 +79,12 @@ solution "simhub"
         targetdir ("bin")
     
         buildoptions { "--std=c++14" }
-    
+
+        configuration { "macosx" }
+            links { "boost_thread-mt" }
+        configuration {}
+
+        
         configuration { "macosx", "Debug" }
             postbuildcommands { "dsymutil bin/simhub", "gtags" }
         configuration {}
@@ -126,6 +131,9 @@ solution "simhub"
 
         targetdir ("bin")
         buildoptions { "--std=c++14" }
+        configuration { "macosx" }
+            links { "boost_thread-mt" }
+        configuration {}
 
     project "prepare3d_plugin"
             kind "SharedLib"

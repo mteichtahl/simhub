@@ -7,7 +7,7 @@
 #include <thread>
 #include <atomic>
 #include <mutex>
-
+#include <sstream>
 #include <cpprest/http_listener.h>
 
 #include "appsupport.h"
@@ -68,8 +68,11 @@ protected:
     libconfig::Config *_prepare3dDeviceConfig;
 
     //! implements configuration server
-    web::http::experimental::listener::http_listener _configurationHTTPListener;
+    std::shared_ptr<web::http::experimental::listener::http_listener> _configurationHTTPListener;
+    std::string _httpListenAddress;
+    size_t _httpListenPort;
     virtual void httpGETConfigurationHandler(web::http::http_request request);
+    virtual void startHTTPListener(void);
 
 public:
     virtual ~SimHubEventController(void);
@@ -122,10 +125,9 @@ template <class F> void SimHubEventController::runEventLoop(F &&eventProcessorFu
 #if defined(_AWS_SDK)
     startSustainThread();
 #endif
-    // start http listener for json config read
-    _configurationHTTPListener.open().wait();
-    _configurationHTTPListener.support(web::http::methods::GET, std::bind(&SimHubEventController::httpGETConfigurationHandler, this, std::placeholders::_1));
-    
+
+    startHTTPListener();
+
     while (!breakLoop) {
         try {
             std::shared_ptr<Attribute> data = _eventQueue.pop();

@@ -22,7 +22,8 @@ std::shared_ptr<SimHubEventController> SimHubEventController::EventControllerIns
     return SimHubEventController::_EventControllerInstance;
 }
 
-SimHubEventController::SimHubEventController() : _configurationHTTPListener(U("http://127.0.0.1:3000"))
+SimHubEventController::SimHubEventController()
+// : _configurationHTTPListener(U("http://127.0.0.1:3000"))
 {
     _prepare3dMethods.plugin_instance = NULL;
     _pokeyMethods.plugin_instance = NULL;
@@ -132,6 +133,22 @@ void SimHubEventController::httpGETConfigurationHandler(web::http::http_request 
 {
     std::string config_json = libconfigToJSON(_configManager->pokeyConfigurationFilename());
     request.reply(web::http::status_codes::OK, config_json);
+}
+
+/**
+ * constructs cpprest HTTP listener instance and tells it to start listening on
+ * cofigured port
+ */
+void SimHubEventController::startHTTPListener(void)
+{
+    std::stringstream httpListenURI;
+    
+    httpListenURI << "http://" << _configManager->httpListenAddress() << ":" << _configManager->httpListenPort();
+    _configurationHTTPListener = std::make_shared<web::http::experimental::listener::http_listener>(httpListenURI.str());
+
+    // start http listener for json config read
+    _configurationHTTPListener->open().wait();
+    _configurationHTTPListener->support(web::http::methods::GET, std::bind(&SimHubEventController::httpGETConfigurationHandler, this, std::placeholders::_1));
 }
 
 SimHubEventController::~SimHubEventController(void)
@@ -413,7 +430,7 @@ void SimHubEventController::terminate(void)
 #endif
 
     // kill web configuration listener
-    auto listenerCloseTask = _configurationHTTPListener.close();
+    auto listenerCloseTask = _configurationHTTPListener->close();
     listenerCloseTask.wait();
 
     shutdownPlugin(_prepare3dMethods);
