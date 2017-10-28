@@ -408,7 +408,7 @@ uint32_t PokeyDevice::targetValue(std::string targetName, float value)
     uint32_t duty = _pwm[channel].leftDutyCycle - ((_pwm[channel].leftDutyCycle - _pwm[channel].rightDutyCycle) * value);
     PK_SL_PWM_SetDuty(_pokey, channel, duty);
     PK_PWMUpdate(_pokey);
-    std::this_thread::sleep_for(750ms);
+    std::this_thread::sleep_for(250ms);
     PK_SL_PWM_SetDuty(_pokey, channel, 0);
     PK_PWMUpdate(_pokey);
 

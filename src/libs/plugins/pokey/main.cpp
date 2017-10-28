@@ -249,10 +249,14 @@ bool PokeyDevicePluginStateManager::devicePWMConfiguration(libconfig::Setting *p
                 _logger(LOG_INFO, "        - Added PWM channel %i - %s", channel, name.c_str());
 
                 /*
-                // -- enable to test
+                // -- uncomment to test
+
                 pokeyDevice->targetValue(name, 0.0f);
-                pokeyDevice->targetValue(name, 0.5f);
-                pokeyDevice->targetValue(name, 1.0f);
+		
+                for (float idx = 0.0f; idx <= 1.00f; idx += 0.05f) {
+                    pokeyDevice->targetValue(name, idx);
+                }
+
                 pokeyDevice->targetValue(name, 0.0f);
                 */
             }
