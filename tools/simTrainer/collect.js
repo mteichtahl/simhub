@@ -16,10 +16,17 @@ var firstRecord = true
 
 const collectorId = uuid();
 const runId = uuid();
-var runCounter = 0
-var runDataCount = 0;
+let runCounter = 0
+let runDataCount = 0;
+let incrementRun = true;
 
 const FLOAT_ACCURACY = 5;
+// flight state constants
+const ON_GROUND_CRASHED = -1;
+const FLYING = 0;
+const ON_GROUND_LANDED = 1;
+const ILS_LOST = 2;
+
 
 AWS.config = {
   region: 'us-east-1'
@@ -29,6 +36,8 @@ AWS.config = {
 var kinesis = new AWS.Firehose();
 var kinesisPartition = 0;
 const partitionCount = 3;
+
+var dynamodb = new AWS.DynamoDB();
 
 function getPartition() {
   if (kinesisPartition < partitionCount) {
@@ -45,6 +54,7 @@ cli.version('1.0.0')
     .option('-s, --streamName <name>', 'Kinesis stream name', 'simTrain')
     .option('-f, --format [csv,json]', 'Output type (csv or json)', 'csv')
     .option('-k, --kinesis [true, false]', 'Send to kinesis', true)
+    .option('-d, --dynamo [true, false', 'Send tracking data to dynamo', true)
     .parse(process.argv)
 
 console.log(color.green(
@@ -72,13 +82,17 @@ dataStream
       var jsonData = JSON.parse(data.toString());
 
       if (firstRecord) {
-        console.log(color.yellow(`Receiving data`));
+        // console.log(color.yellow(`Receiving data`));
       }
 
 
       if (jsonData.data.ready == false || jsonData.data.paused == true) {
-        console.log(color.red(`Skipped`));
+        if (incrementRun)
+          console.log(color.red(`Skipping while sim resetting...`));
+        incrementRun = false;
         return;
+      } else {
+        incrementRun = true;
       }
 
 
@@ -118,9 +132,33 @@ dataStream
       // console.dir(jsonData, {depth: null});
 
 
-      if (jsonData.data.success == 'true') {
-        console.log(color.yellow(`run ${runCounter}/${runDataCount} rows`))
 
+      if (jsonData.data.status == ON_GROUND_CRASHED ||
+          jsonData.data.status == ON_GROUND_LANDED ||
+          jsonData.data.status == ILS_LOST && incrementRun) {
+        console.log(color.yellow(`run ${runCounter}/${runDataCount} rows`));
+
+        var params = {
+          Item: {
+            'sts': {S: jsonData.data.sts},
+            'collectorId': {S: collectorId},
+            'runNumber': {S: runCounter.toString()},
+            'rowCount': {S: runDataCount.toString()}
+          },
+          ReturnConsumedCapacity: 'TOTAL',
+          TableName: 'simTrainer'
+        };
+
+        if (runDataCount > 1 && cli.dynamo)
+          dynamodb.putItem(params, function(err, data) {
+            if (err)
+              console.log(err, err.stack);  // an error occurred
+            else
+              console.log(data);
+          });
+
+
+        incrementRun = false;
         runCounter++
         runDataCount = 0
         console.log(color.yellow(` - New run: ${runCounter}`))
@@ -136,7 +174,7 @@ dataStream
             newLine: '\r\n'
           });
           output += '\n';
-          console.log(output);
+          // console.log(output);
         }
         else {
           output = JSON.stringify(jsonData);
@@ -150,11 +188,12 @@ dataStream
 
 
         kinesis.putRecord(params, function(err, data) {
-          if (err)
-            console.log(err.message)  // an error occurred
-                else {
-              // console.log(color.green(` - written to kinesis`))
-            }
+          if (err) {
+            console.log(err.message);
+          }  // an error occurred
+          else {
+            console.log(color.green(` - written to kinesis`))
+          }
         })
       }
 

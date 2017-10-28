@@ -1,5 +1,11 @@
 var net = require('net');
 var sleep = require('sleep');
+var _ = require('lodash');
+var json2csv = require('json2csv');
+const uuid = require('uuid/v4');
+const color = require('cli-color');
+var KinesisClient = require('./kinesisClient');
+var DynamoClient = require('./dynamoClient');
 
 var client = new net.Socket();
 
@@ -8,6 +14,23 @@ const ON_GROUND_CRASHED = -1;
 const FLYING = 0;
 const ON_GROUND_LANDED = 1;
 const ILS_LOST = 2;
+const FLOAT_ACCURACY = 5;
+
+const collectorId = uuid();
+var approachCount = 0;
+var rowCount = 0;
+
+var json;
+var kinesis = undefined;
+var dynamo = undefined;
+
+config = {
+  region: 'us-east-1',
+  streamName: 'simTrain',
+  simHost: '192.168.2.2',
+  simPort: 8081,
+  dynamoTable: 'simTrainer'
+}
 
 
 var approach = {
@@ -88,44 +111,30 @@ function simIsReadyForRepositioning() {
       (flightState.status != FLYING);
 }
 
-function isInPosition() {}
-
 function enableAutoPilot() {
-  console.log('Auto Pilot Set')
+  console.log(color.yellow(' -> Auto Pilot Set'))
   client.write(autopilot);
 }
 
 function enableAutoLand() {
-  console.log('Auto Land Set')
+  console.log(color.yellow(' -> Auto Land Set'));
   client.write(autolandStart);
 }
 
 
-function waitForSimReadyToReposition(cb) {
-  var interval = setInterval(function() {
-    if (simIsReadyForRepositioning()) {
-      console.log('Simulator is ready');
-      startRun = true;
-      clearInterval(interval);
-      cb()
-    }
-  }, 1000)
-}
-
-
 function waitForPosition(cb) {
-  console.log('Positioning aircraft.....');
+  console.log(color.yellow(` -> Starting approach ${approachCount}`));
 
   setTimeout(() => {
     client.write(unpause);
-    console.log('Unpausing simulator....');
+    console.log(color.yellow('Waiting for sim'));
   }, 15000);
 
 
   var interval = setInterval(function() {
     // check if reposition is complete
     if (flightState.ready && flightState.status == FLYING) {
-      console.log('Aircraft in position');
+      console.log(color.yellow(' -> Aircraft in position'));
       inPosition = true;
       clearInterval(interval);
       cb();
@@ -133,10 +142,23 @@ function waitForPosition(cb) {
   }, 1000)
 }
 
+
+function waitForSimReadyToReposition(cb) {
+  var interval = setInterval(function() {
+    if (simIsReadyForRepositioning()) {
+      console.log(color.green('Simulator is ready'));
+      startRun = true;
+      clearInterval(interval);
+      cb()
+    }
+  }, 1000)
+}
+
 function waitForLanding(cb) {
   var interval = setInterval(function() {
     if (flightState.status == ON_GROUND_LANDED && !hasCrashed) {
-      console.log('landed')
+      console.log(color.green(`Approach ${approachCount} landed successfully`));
+      approachCount++;
       hasLanded = true;
       clearInterval(interval);
       cb()
@@ -146,23 +168,45 @@ function waitForLanding(cb) {
   }, 1000)
 }
 
+function sendApproachDataToDynamo(jsonData) {
+  var item = {
+    'sts': {S: jsonData.data.sts},
+    'collectorId': {S: collectorId},
+    'runNumber': {S: approachCount.toString()},
+    'rowCount': {S: rowCount.toString()},
+    'result': {S: jsonData.outcome}
+  };
+
+  dynamo.writeItem(item, function(err, data) {
+    if (err) {
+      console.log(color.red(err, err.stack));
+    }  // an error occurred
+    else {
+      console.log(color.green(`Written approach ${approachCount} to Dynamo`));
+    }
+  });
+  rowCount = 0;
+}
+
 function waitForCrash(cb) {
   var interval = setInterval(function() {
     if (flightState.status == ON_GROUND_CRASHED) {
-      console.log('crashed')
+      console.log(color.red(`Approach ${approachCount} Crashed`));
+      approachCount++;
       hasCrashed = true;
       clearInterval(interval);
       cb()
     } else if (hasLanded) {
       clearInterval(interval);
     }
-  }, 1000)
+  }, 500)
 }
 
 function waitForILSLost(cb) {
   var interval = setInterval(function() {
     if (flightState.status == ILS_LOST) {
-      console.log('ils lost')
+      console.log(color.red(`Approach ${approachCount} lost ILS`));
+      approachCount++;
       hasLostILS = true;
       inPosition = false;
       clearInterval(interval);
@@ -170,7 +214,7 @@ function waitForILSLost(cb) {
     } else if (hasLanded || hasCrashed) {
       clearInterval(interval);
     }
-  }, 1000)
+  }, 500)
 }
 
 function start() {
@@ -187,19 +231,25 @@ function start() {
       waitForPosition(function() {
         enableAutoPilot();
         enableAutoLand();
-        console.log('running......');
+        console.log(color.blink.yellow('Waiting for approach to complete...'));
 
         waitForLanding(function() {
+          json.outcome = 'Land';
+          sendApproachDataToDynamo(json);
           client.write(autolandStop);
           start();
         })
 
         waitForCrash(function() {
+          json.outcome = 'Crash';
+          sendApproachDataToDynamo(json);
           client.write(autolandStop);
           start();
         })
 
         waitForILSLost(function() {
+          json.outcome = 'ILS';
+          sendApproachDataToDynamo(json);
           client.write(autolandStop);
           start();
         })
@@ -210,30 +260,43 @@ function start() {
   }.bind(this));
 }
 
+function processSimDataForKinesis(sim) {
+  sim.collectorId = collectorId;
+  sim.runId = `${approachCount}`;
+  sim.data.pitch = sim.data.pitch.toFixed(FLOAT_ACCURACY);
+  sim.data.roll = sim.data.roll.toFixed(FLOAT_ACCURACY);
+  sim.data.yaw = sim.data.yaw.toFixed(FLOAT_ACCURACY);
+  sim.data.airspeed = sim.data.airspeed.toFixed(FLOAT_ACCURACY);
+  sim.data.altitude = sim.data.altitude.toFixed(FLOAT_ACCURACY);
+  sim.data.vspeed = sim.data.vspeed.toFixed(FLOAT_ACCURACY);
+  sim.data.weather.wind.heading =
+      sim.data.weather.wind.heading.toFixed(FLOAT_ACCURACY);
+  sim.data.weather.temp = sim.data.weather.temp.toFixed(FLOAT_ACCURACY);
 
-client.connect(8081, '192.168.2.2', function() {
-  console.log('\nConnected');
-  console.log('Waiting for simulator.....');
+  var loc = sim.data.ilsDeviation.loc;
+  var gs = sim.data.ilsDeviation.gs;
+
+  typeof loc != 'string' ? loc = loc.toFixed(FLOAT_ACCURACY) : loc = -2.5;
+  typeof gs != 'string' ? gs = gs.toFixed(FLOAT_ACCURACY) : gs = -2.5;
+  sim.data.ilsDeviation.loc = loc;
+  sim.data.ilsDeviation.gs = gs;
+
+  var output = json2csv(
+      {data: sim, hasCSVColumnTitle: false, flatten: true, newLine: '\r\n'});
+  output += '\n';
+  return output;
+}
+
+
+client.connect(config.simPort, config.simHost, function() {
+  console.log(color.green(`Connected to ${config.simHost}:${config.simPort}`));
+  kinesis = new KinesisClient(config.region, config.streamName);
+  dynamo = new DynamoClient(config.region, config.dynamoTable);
+
+  console.log(color.blueBright('\nWaiting for simulator.....'));
   var hasLanded = false;
 
   start();
-
-
-  //   if ((flightState.status == ON_GROUND_LANDED) && !startRun) {
-  //     if (!hasLanded) {
-  //       console.log('landed');
-  //       client.write(autolandStop);
-  //       console.log('Auto Land Cleared');
-  //       hasLanded = true;
-  //     }
-  //   }
-
-  //   if ((flightState.status == ON_GROUND_CRASHED) && !startRun) {
-  //     console.log('crashed');
-  //   }
-
-
-
 })
 
 client.on('error', function(err) {
@@ -243,7 +306,6 @@ client.on('close', function() {
   console.log('Connection closed');
 });
 client.on('data', function(data) {
-  var json;
   try {
     json = JSON.parse(data.toString());
 
@@ -254,7 +316,7 @@ client.on('data', function(data) {
 
   if (json.result != undefined) {
     if (json.result == 'fail' || json.result == 'error') {
-      console.log('\n', json);
+      console.log(json);
     }
   }
 
@@ -262,6 +324,11 @@ client.on('data', function(data) {
     flightState.paused = json.data.paused;
     flightState.ready = json.data.ready;
     flightState.status = json.data.status;
+
+    var kinesisData = processSimDataForKinesis(json);
+    if (!json.data.paused || !json.data.ready) {
+      kinesis.write(kinesisData, function(ret) {});
+    }
 
     switch (json.data.status) {
       case ON_GROUND_CRASHED:
@@ -279,7 +346,8 @@ client.on('data', function(data) {
       default:
         flightState.statusText = 'UNKNOWN'
     }
-    // console.log(flightState);
   }
+
+  rowCount++;
 
 })
