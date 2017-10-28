@@ -23,6 +23,7 @@ std::shared_ptr<SimHubEventController> SimHubEventController::EventControllerIns
 }
 
 SimHubEventController::SimHubEventController()
+// : _configurationHTTPListener(U("http://127.0.0.1:3000"))
 {
     _prepare3dMethods.plugin_instance = NULL;
     _pokeyMethods.plugin_instance = NULL;
@@ -36,11 +37,126 @@ SimHubEventController::SimHubEventController()
     logger.log(LOG_INFO, "Starting event controller");
 }
 
+/**
+ * like strtok but not evil
+ */
+void split(const std::string &sequence, std::string &delims, std::vector<std::string> &tokens)
+{
+    size_t i = 0;
+    size_t pos = sequence.find(delims);
+
+    if (pos == std::string::npos){
+        tokens.push_back(sequence);
+        return;
+    }
+
+    while (pos != std::string::npos) {
+        tokens.push_back(sequence.substr(i, pos-i));
+        i = ++pos;
+        pos = sequence.find(delims, pos);
+        
+        if (pos == std::string::npos) {
+            tokens.push_back(sequence.substr(i, sequence.length()));
+        }
+    }
+}
+
+/**
+ * rudimentary converter from libconfig content to JSON content
+ * - doesn't suppoert '#' comments outside of dictionaries (like in lists)
+ */
+std::string libconfigToJSON(std::string configFilename)
+{
+    std::ifstream file(configFilename);
+
+    if (!file) {
+        return "";
+    }
+    
+    size_t lineIdx = 0;
+    
+    std::string line;
+    std::stringstream jsonStream;
+
+    std::string commentToken("#");
+    std::string jsonAssign(":");
+    
+    jsonStream << "{" << std::endl;
+
+    while (std::getline(file, line)) {
+        lineIdx++;
+
+        std::replace(line.begin(), line.end(), '=', ':');
+        std::replace(line.begin(), line.end(), '(', '[');
+        std::replace(line.begin(), line.end(), ')', ']');
+        std::replace(line.begin(), line.end(), ';', ',');
+
+        std::vector<std::string> tokens;
+
+        split(line, commentToken, tokens);
+
+        if (line.find(commentToken) != std::string::npos) {
+            jsonStream << "\"_line_comment_" << lineIdx << "\": \"" << tokens[tokens.size() - 1] << "\"," << std::endl;
+        }
+        else {
+            tokens.clear();
+            split(line, jsonAssign, tokens);
+            
+            if (tokens.size() > 1) {
+                size_t p = tokens[0].find_first_not_of(" ");
+                tokens[0].insert(p, "\"");
+                p = tokens[0].find_last_not_of(" ");
+                tokens[0].insert(p + 1, "\"");
+            
+                jsonStream << tokens[0] << ":";
+                for (size_t i = 1; i < tokens.size(); i++) {
+                    jsonStream << " " << tokens[i];
+                }
+                jsonStream << std::endl;
+            }
+            else {
+                jsonStream << line << std::endl;
+            }
+        }
+    }
+
+    jsonStream << "}" << std::endl;
+
+    return jsonStream.str();
+}
+
+/**
+ * serves GET requests on http://localhost/configuration - returns JSON converted
+ * pokey configuration content
+ */
+void SimHubEventController::httpGETConfigurationHandler(web::http::http_request request)
+{
+    std::string config_json = libconfigToJSON(_configManager->pokeyConfigurationFilename());
+    request.reply(web::http::status_codes::OK, config_json);
+}
+
+/**
+ * constructs cpprest HTTP listener instance and tells it to start listening on
+ * cofigured port
+ */
+void SimHubEventController::startHTTPListener(void)
+{
+    std::stringstream httpListenURI;
+    
+    httpListenURI << "http://" << _configManager->httpListenAddress() << ":" << _configManager->httpListenPort();
+    _configurationHTTPListener = std::make_shared<web::http::experimental::listener::http_listener>(httpListenURI.str());
+
+    // start http listener for json config read
+    _configurationHTTPListener->open().wait();
+    _configurationHTTPListener->support(web::http::methods::GET, std::bind(&SimHubEventController::httpGETConfigurationHandler, this, std::placeholders::_1));
+}
+
 SimHubEventController::~SimHubEventController(void)
 {
     if (_running) {
         terminate();
     }
+
 #if defined(_AWS_SDK)
     if (_awsHelper.polly()) {
         _awsHelper.polly()->shutdown();
@@ -54,11 +170,10 @@ SimHubEventController::~SimHubEventController(void)
 #endif
 }
 
+#if defined(_AWS_SDK)
 void SimHubEventController::startSustainThread(void)
 {
-#if defined(_AWS_SDK)
     _awsHelper.polly()->say("Simulator is ready.");
-#endif
    
     std::shared_ptr<std::thread> sustainThread = std::make_shared<std::thread>([=] {
         _sustainThreadManager.setThreadRunning(true);
@@ -93,7 +208,6 @@ void SimHubEventController::ceaseSustainThread(void)
     _sustainThreadManager.shutdownThread();
 }
 
-#if defined(_AWS_SDK)
 void SimHubEventController::deliverKinesisValue(std::shared_ptr<Attribute> value)
 {
     std::string name = value->name();
@@ -159,12 +273,14 @@ bool SimHubEventController::deliverValue(std::shared_ptr<Attribute> value)
 
     bool retVal = false;
 
+#if defined(_AWS_SDK)
     if (mapContains(_configManager->mapManager()->sustainMap(), value->name())) {
         // update the sustain value map entry
         std::lock_guard<std::mutex> sustainGuard(_sustainValuesMutex);
         _sustainValues[value->name()].second = value;
         _sustainValues[value->name()].first = std::chrono::milliseconds(_configManager->mapManager()->sustainMap()[value->name()]);
     }
+#endif
 
     // determine value destination from the source - very simple at the moment
     // (just deliver to whatever instance is not the source) - may want more
@@ -175,11 +291,12 @@ bool SimHubEventController::deliverValue(std::shared_ptr<Attribute> value)
     }
     else if (value->ownerPlugin() == _prepare3dMethods.plugin_instance) {
 
+#if defined(_AWS_SDK)
         if (value->name() == "N_ELEC_PANEL_LOWER_LEFT") {
             if (c_value >= 0)
                 _awsHelper.polly()->say("dc volts %i", c_value->value);
         }
-
+#endif
         retVal = !_pokeyMethods.simplug_deliver_value(_pokeyMethods.plugin_instance, c_value);
     }
 
@@ -308,9 +425,17 @@ void SimHubEventController::terminate(void)
 {
     assert(_running);
 
+#if defined(_AWS_SDK)
     ceaseSustainThread();
+#endif
+
+    // kill web configuration listener
+    auto listenerCloseTask = _configurationHTTPListener->close();
+    listenerCloseTask.wait();
+
     shutdownPlugin(_prepare3dMethods);
     shutdownPlugin(_pokeyMethods);
+    
     _running = false;
 }
 

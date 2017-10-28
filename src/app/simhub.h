@@ -7,7 +7,8 @@
 #include <thread>
 #include <atomic>
 #include <mutex>
-
+#include <sstream>
+#include <cpprest/http_listener.h>
 
 #include "appsupport.h"
 #include "elements/attributes/attribute.h"
@@ -54,15 +55,24 @@ protected:
     simplug_vtable _pokeyMethods;
     ConfigManager *_configManager;
 
+#if defined(_AWS_SDK)
     CancelableThreadManager _sustainThreadManager;
     std::map<std::string, SustainMapEntry> _sustainValues;
     std::mutex _sustainValuesMutex;
+#endif
 
     bool _running;
 
     // -- temp solution to plugin device configuration conundrum
     libconfig::Config *_pokeyDeviceConfig;
     libconfig::Config *_prepare3dDeviceConfig;
+
+    //! implements configuration server
+    std::shared_ptr<web::http::experimental::listener::http_listener> _configurationHTTPListener;
+    std::string _httpListenAddress;
+    size_t _httpListenPort;
+    virtual void httpGETConfigurationHandler(web::http::http_request request);
+    virtual void startHTTPListener(void);
 
 public:
     virtual ~SimHubEventController(void);
@@ -112,7 +122,11 @@ template <class F> void SimHubEventController::runEventLoop(F &&eventProcessorFu
 
     _running = true;
 
+#if defined(_AWS_SDK)
     startSustainThread();
+#endif
+
+    startHTTPListener();
 
     while (!breakLoop) {
         try {
