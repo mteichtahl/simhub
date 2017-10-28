@@ -139,14 +139,12 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
     }
 }
 
-void PokeyDevice::addPin(std::string pinName, int pinNumber, std::string pinType, int defaultValue, std::string description)
+void PokeyDevice::addPin(std::string pinName, int pinNumber, std::string pinType, int defaultValue, std::string description, bool invert)
 {
-    if (pinType == "DIGITAL_OUTPUT") {
+    if (pinType == "DIGITAL_OUTPUT")
         outputPin(pinNumber);
-    }
-    else if (pinType == "DIGITAL_INPUT") {
-        inputPin(pinNumber);
-    }
+    if (pinType == "DIGITAL_INPUT")
+        inputPin(pinNumber, invert);
 
     mapNameToPin(pinName.c_str(), pinNumber);
 
@@ -500,9 +498,15 @@ uint32_t PokeyDevice::outputPin(uint8_t pin)
     return PK_PinConfigurationSet(_pokey);
 }
 
-uint32_t PokeyDevice::inputPin(uint8_t pin)
+uint32_t PokeyDevice::inputPin(uint8_t pin, bool invert)
 {
-    _pokey->Pins[--pin].PinFunction = PK_PinCap_digitalInput;
+    int pinSetting = PK_PinCap_digitalInput;
+
+    if (invert) {
+        pinSetting = pinSetting | PK_PinCap_invertPin;
+    }
+
+    _pokey->Pins[--pin].PinFunction = pinSetting;
     return PK_PinConfigurationSet(_pokey);
 }
 

@@ -15,7 +15,7 @@
 #include <uv.h>
 
 #define DEVICE_READ_INTERVAL 100
-#define DEVICE_START_DELAY 100
+#define DEVICE_START_DELAY 1000
 #define ENCODER_1 1
 #define ENCODER_2 2
 #define ENCODER_3 3
@@ -113,6 +113,7 @@ protected:
     SPHANDLE _pluginInstance;
 
     device_port_t _pins[MAX_PINS];
+    device_pwm_t _pwm[MAX_PWM_CHANNELS];
     device_encoder_t _encoders[MAX_ENCODERS];
     device_matrixLED_t _matrixLED[MAX_MATRIX_LEDS];
     device_pwm_t _pwm[MAX_PWM_CHANNELS];
@@ -147,8 +148,7 @@ public:
     uint32_t targetValue(std::string targetName, bool value);
     uint32_t targetValue(std::string targetName, int value);
     uint32_t targetValue(std::string targetName, float value);
-
-    uint32_t inputPin(uint8_t pin);
+    uint32_t inputPin(uint8_t pin, bool invert = false);
     uint32_t outputPin(uint8_t pin);
     int32_t name(std::string name);
 

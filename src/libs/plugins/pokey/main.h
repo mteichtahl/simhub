@@ -34,6 +34,7 @@ protected:
     bool devicePinsConfiguration(libconfig::Setting *pins, std::shared_ptr<PokeyDevice> pokeyDevice);
     bool deviceEncodersConfiguration(libconfig::Setting *encoders, std::shared_ptr<PokeyDevice> pokeyDevice);
     bool deviceDisplaysConfiguration(libconfig::Setting *displays, std::shared_ptr<PokeyDevice> pokeyDevice);
+    bool devicePWMConfiguration(libconfig::Setting *pwm, std::shared_ptr<PokeyDevice> pokeyDevice);
     int deviceDisplaysGroupsConfiguration(libconfig::Setting *displayGroups, int id, std::shared_ptr<PokeyDevice> pokeyDevice, std::string type);
     bool devicePWMConfiguration(libconfig::Setting *pwm, std::shared_ptr<PokeyDevice> pokeyDevice);
     bool addTargetToDeviceTargetList(std::string, std::shared_ptr<PokeyDevice> device);
