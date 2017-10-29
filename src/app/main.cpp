@@ -80,7 +80,6 @@ int main(int argc, char *argv[])
 
     if (simhubController->loadPokeyPlugin()) {
         if (simhubController->loadPrepare3dPlugin()) {
-
             // kick off the simhub envent loop
 
             simhubController->runEventLoop([=](std::shared_ptr<Attribute> value) {
