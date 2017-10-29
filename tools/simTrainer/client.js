@@ -46,7 +46,7 @@ var autopilotJSON = {
   'parameters': {
     'altitude': '2000',
     'speed': '180',
-    'modes': 'AT,CMD_A,SPEED,VS,HDG_SEL,APP'
+    'modes': 'CMD_A,ALT_HOLD,HDG_SEL,APP'
   }
 };
 
@@ -103,6 +103,8 @@ var inPosition = false;
 var hasCrashed = false;
 var hasLanded = false;
 var hasLostILS = false;
+var hrStart = undefined;
+var hrEnd = undefined;
 
 
 
@@ -120,7 +122,6 @@ function enableAutoLand() {
   console.log(color.yellow(' -> Auto Land Set'));
   client.write(autolandStart);
 }
-
 
 function waitForPosition(cb) {
   console.log(color.yellow(` -> Starting approach ${approachCount}`));
@@ -141,7 +142,6 @@ function waitForPosition(cb) {
     }
   }, 1000)
 }
-
 
 function waitForSimReadyToReposition(cb) {
   var interval = setInterval(function() {
@@ -170,7 +170,9 @@ function waitForLanding(cb) {
 
 function sendApproachDataToDynamo(jsonData) {
   var item = {
+    'ts': {S: jsonData.data.ts},
     'sts': {S: jsonData.data.sts},
+    'duration': {S: jsonData.approachDuration.toString()},
     'collectorId': {S: collectorId},
     'runNumber': {S: approachCount.toString()},
     'rowCount': {S: rowCount.toString()},
@@ -179,7 +181,8 @@ function sendApproachDataToDynamo(jsonData) {
 
   dynamo.writeItem(item, function(err, data) {
     if (err) {
-      console.log(color.red(err, err.stack));
+      console.log(err);
+      console.log(color.red(err));
     }  // an error occurred
     else {
       console.log(color.green(`Written approach ${approachCount} to Dynamo`));
@@ -224,6 +227,8 @@ function start() {
   hasLanded = false;
   hasLostILS = false;
 
+  hrStart = process.hrtime();
+
   waitForSimReadyToReposition(function() {
     if (startRun && !inPosition) {
       client.write(approachJump);
@@ -231,24 +236,32 @@ function start() {
       waitForPosition(function() {
         enableAutoPilot();
         enableAutoLand();
-        console.log(color.blink.yellow('Waiting for approach to complete...'));
+        console.log(
+            color.blink.yellow(' -> Waiting for approach to complete...'));
 
         waitForLanding(function() {
+          hrEnd = process.hrtime(hrStart);
           json.outcome = 'Land';
+          json.approachDuration = hrEnd[1] / 1000000
           sendApproachDataToDynamo(json);
           client.write(autolandStop);
+
           start();
         })
 
         waitForCrash(function() {
+          hrEnd = process.hrtime(hrStart);
           json.outcome = 'Crash';
+          json.approachDuration = hrEnd[1] / 1000000
           sendApproachDataToDynamo(json);
           client.write(autolandStop);
           start();
         })
 
         waitForILSLost(function() {
+          hrEnd = process.hrtime(hrStart);
           json.outcome = 'ILS';
+          json.approachDuration = hrEnd[1] / 1000000
           sendApproachDataToDynamo(json);
           client.write(autolandStop);
           start();
@@ -289,12 +302,14 @@ function processSimDataForKinesis(sim) {
 
 
 client.connect(config.simPort, config.simHost, function() {
+  var hasLanded = false;
+
   console.log(color.green(`Connected to ${config.simHost}:${config.simPort}`));
+
   kinesis = new KinesisClient(config.region, config.streamName);
   dynamo = new DynamoClient(config.region, config.dynamoTable);
 
-  console.log(color.blueBright('\nWaiting for simulator.....'));
-  var hasLanded = false;
+  console.log(color.blueBright('\nWaiting for simulator.....\n'));
 
   start();
 })

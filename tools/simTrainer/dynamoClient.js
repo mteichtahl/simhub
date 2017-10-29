@@ -19,7 +19,7 @@ class DynamoClient {
 
     this.dynamodb.putItem(params, function(err, data) {
       if (err) {
-        console.log(color.red(err.message));
+        console.log(err);
       } else {
         cb(data);
       }
