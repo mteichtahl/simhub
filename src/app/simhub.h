@@ -6,6 +6,10 @@
 #include <mutex>
 #include <string>
 #include <thread>
+#include <atomic>
+#include <mutex>
+#include <sstream>
+#include <cpprest/http_listener.h>
 
 #include "appsupport.h"
 #include "elements/attributes/attribute.h"
@@ -67,6 +71,13 @@ protected:
     libconfig::Config *_pokeyDeviceConfig;
     libconfig::Config *_prepare3dDeviceConfig;
 
+    //! implements configuration server
+    std::shared_ptr<web::http::experimental::listener::http_listener> _configurationHTTPListener;
+    std::string _httpListenAddress;
+    size_t _httpListenPort;
+    virtual void httpGETConfigurationHandler(web::http::http_request request);
+    virtual void startHTTPListener(void);
+
 public:
     virtual ~SimHubEventController(void);
     bool loadPrepare3dPlugin(void);
@@ -118,6 +129,8 @@ template <class F> void SimHubEventController::runEventLoop(F &&eventProcessorFu
 #if defined(_AWS_SDK)
     startSustainThread();
 #endif
+
+    startHTTPListener();
 
     while (!breakLoop) {
         try {

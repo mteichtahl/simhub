@@ -248,10 +248,17 @@ bool PokeyDevicePluginStateManager::devicePWMConfiguration(libconfig::Setting *p
                 pokeyDevice->addPWM(channel, name, description, units, leftDutyCycle, rightDutyCycle, period);
                 _logger(LOG_INFO, "        - Added PWM channel %i - %s", channel, name.c_str());
 
+                /*
+                // -- uncomment to test
+
                 pokeyDevice->targetValue(name, 0.0f);
-                
-                pokeyDevice->targetValue(name, 0.5f);
-                pokeyDevice->targetValue(name, 1.0f);
+		
+                for (float idx = 0.0f; idx <= 1.00f; idx += 0.05f) {
+                    pokeyDevice->targetValue(name, idx);
+                }
+
+                pokeyDevice->targetValue(name, 0.0f);
+                */
             }
         }
     }
@@ -308,7 +315,11 @@ bool PokeyDevicePluginStateManager::devicePinsConfiguration(libconfig::Setting *
                     }
                 }
                 else if (pinType == "DIGITAL_INPUT") {
-                    pokeyDevice->addPin(pinName, pinNumber, pinType, 0, description);
+                    bool invert = false;
+                    if (iter->exists("invert"))
+                        iter->lookupValue("invert", invert);
+
+                    pokeyDevice->addPin(pinName, pinNumber, pinType, 0, description, invert);
                     _logger(LOG_INFO, "        - [%d] Added source %s on pin %d", pinIndex, pinName.c_str(), pinNumber);
                 }
                 pinIndex++;

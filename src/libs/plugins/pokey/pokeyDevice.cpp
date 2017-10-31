@@ -7,12 +7,8 @@
 
 using namespace std::chrono_literals;
 
-std::mutex PokeyDevice::_BigPokeyLock;
-
 PokeyDevice::PokeyDevice(sPoKeysNetworkDeviceSummary deviceSummary, uint8_t index)
 {
-    std::lock_guard<std::mutex> pokeyLock(_BigPokeyLock);
-
     _callbackArg = NULL;
     _enqueueCallback = NULL;
 
@@ -64,8 +60,6 @@ void PokeyDevice::setCallbackInfo(EnqueueEventHandler enqueueCallback, void *cal
 
 void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
 {
-    std::lock_guard<std::mutex> pokeyLock(_BigPokeyLock);
-
     PokeyDevice *self = static_cast<PokeyDevice *>(timer->data);
 
     int encoderRetValue = PK_EncoderValuesGet(self->_pokey);
@@ -145,14 +139,12 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
     }
 }
 
-void PokeyDevice::addPin(std::string pinName, int pinNumber, std::string pinType, int defaultValue, std::string description)
+void PokeyDevice::addPin(std::string pinName, int pinNumber, std::string pinType, int defaultValue, std::string description, bool invert)
 {
-    if (pinType == "DIGITAL_OUTPUT") {
+    if (pinType == "DIGITAL_OUTPUT")
         outputPin(pinNumber);
-    }
-    else if (pinType == "DIGITAL_INPUT") {
-        inputPin(pinNumber);
-    }
+    if (pinType == "DIGITAL_INPUT")
+        inputPin(pinNumber, invert);
 
     mapNameToPin(pinName.c_str(), pinNumber);
 
@@ -166,11 +158,6 @@ void PokeyDevice::addPin(std::string pinName, int pinNumber, std::string pinType
     _pins[portNumber].description = description;
 }
 
-uint32_t msToTicks(uint32_t ms)
-{
-    return (ms * 1000000) / 40;
-}
-
 void PokeyDevice::addPWM(
     uint8_t channel, 
     std::string name, 
@@ -181,86 +168,9 @@ void PokeyDevice::addPWM(
     uint32_t period)
 {
     _pwmChannels[channel] = true;
-    /*
-    std::lock_guard<std::mutex> pokeyLock(_BigPokeyLock);
 
-    float ms = _pokey->info.PWMinternalFrequency / 1000;
+	mapNameToPWM(name.c_str(), channel);
 
-    PK_PWMConfigurationGet(_pokey);
-
-    // _pokey->PWM.PWMperiod = (ms * period);
-    _pokey->PWM.PWMperiod = 250000;
-    _pokey->PWM.PWMenabledChannels[channel] = true;
-
-    int ret = PK_PWMConfigurationSet(_pokey);
-
-    int left_duty = 62000;
-    int centre_duty = 42000;
-    int right_duty = 22000;
-
-    //PK_SL_PWM_SetDuty(_pokey, channel, centre_duty);
-    //PK_SL_PWM_SetDuty(_pokey, channel, left_duty);
-    //PK_SL_PWM_SetDuty(_pokey, channel, right_duty);
-    int t = PK_PWMUpdate(_pokey);
-    
-    //printf(". %i\n", t);
-    //_pokey->PWM.PWMenabledChannels[channel] = false;
-    //PK_PWMConfigurationSet(_pokey);
-
-    // // std::this_thread::sleep_for(100ms);
-    // t = PK_PWMUpdate(_pokey);
-    // printf(". %i\n", t);
-
-    // // std::this_thread::sleep_for(100ms);
-    // t = PK_PWMUpdate(_pokey);
-    // printf(". %i\n", t);
-
-    // // std::this_thread::sleep_for(10ms);
-    // t = PK_PWMUpdate(_pokey);
-    // printf(". %i\n", t);
-
-    // // std::this_thread::sleep_for(10ms);
-    // t = PK_PWMUpdate(_pokey);
-    // printf(". %i\n", t);
-
-    // t = PK_PWMUpdate(_pokey);
-    // printf(". %i\n", t);
-    // t = PK_PWMUpdate(_pokey);
-    // printf(". %i\n", t);
-    // t = PK_PWMUpdate(_pokey);
-    // printf(". %i\n", t);
-
-    std::this_thread::sleep_for(1000ms);
-    // PK_SL_PWM_SetDuty(_pokey, channel, left_duty);
-    // PK_PWMUpdate(_pokey);
-    // std::this_thread::sleep_for(1000ms);
-    
-    _pokey->PWM.PWMenabledChannels[channel] = true;
-    PK_PWMConfigurationSet(_pokey);
-    t = PK_SL_PWM_SetDuty(_pokey, channel, PWM_SERVO_RIGHT);
-    t = PK_PWMUpdate(_pokey);
-    std::this_thread::sleep_for(20ms);
-    printf(". %i\n", t);
-    _pokey->PWM.PWMenabledChannels[channel] = false;
-    PK_PWMConfigurationSet(_pokey);
-
-    // std::this_thread::sleep_for(10ms);
-    // t = PK_PWMUpdate(_pokey);
-    // printf(". %i\n", t);
-
-    // std::this_thread::sleep_for(10ms);
-    // t = PK_PWMUpdate(_pokey);
-    // printf(". %i\n", t);
-
-    // std::this_thread::sleep_for(10ms);
-    // t = PK_PWMUpdate(_pokey);
-    // printf(". %i\n", t);
-
-    // std::this_thread::sleep_for(10ms);
-    // t = PK_PWMUpdate(_pokey);
-    // printf(". %i\n", t);
-    */
-    mapNameToPWM(name.c_str(), channel);
     _pwm[channel].name = name;
     _pwm[channel].description = description;
     _pwm[channel].units = units;
@@ -352,8 +262,6 @@ bool PokeyDevice::validateEncoder(int encoderNumber)
 
 bool PokeyDevice::isEncoderCapable(int pin)
 {
-    std::lock_guard<std::mutex> pokeyLock(_BigPokeyLock);
-
     switch (pin) {
     case 1:
         return (bool)PK_CheckPinCapability(_pokey, 0, PK_AllPinCap_fastEncoder1A);
@@ -386,8 +294,6 @@ void PokeyDevice::addEncoder(
     std::string units)
 {
     assert(encoderNumber >= 1);
-
-    std::lock_guard<std::mutex> pokeyLock(_BigPokeyLock);
 
     PK_EncoderConfigurationGet(_pokey);
     int encoderIndex = encoderNumber - 1;
@@ -450,8 +356,6 @@ void PokeyDevice::addEncoder(
 
 void PokeyDevice::addMatrixLED(int id, std::string name, std::string type)
 {
-    std::lock_guard<std::mutex> pokeyLock(_BigPokeyLock);
-
     PK_MatrixLEDConfigurationGet(_pokey);
     _matrixLED[id].name = name;
     _matrixLED[id].type = type;
@@ -469,8 +373,6 @@ void PokeyDevice::addGroupToMatrixLED(int id, int displayId, std::string name, i
 
 void PokeyDevice::configMatrixLED(int id, int rows, int cols, int enabled)
 {
-    std::lock_guard<std::mutex> pokeyLock(_BigPokeyLock);
-
     _pokey->MatrixLED[id].rows = rows;
     _pokey->MatrixLED[id].columns = cols;
     _pokey->MatrixLED[id].displayEnabled = enabled;
@@ -499,30 +401,22 @@ using namespace std::chrono_literals;
 
 uint32_t PokeyDevice::targetValue(std::string targetName, float value)
 {
-    //std::lock_guard<std::mutex> pokeyLock(_BigPokeyLock);
-
     uint8_t channel = PWMFromName(targetName);
 
     // value is percent, so calculate cycles back from left cycle count
+
     uint32_t duty = _pwm[channel].leftDutyCycle - ((_pwm[channel].leftDutyCycle - _pwm[channel].rightDutyCycle) * value);
-    //_pokey->PWM.PWMenabledChannels[channel] = true;
     PK_SL_PWM_SetDuty(_pokey, channel, duty);
     PK_PWMUpdate(_pokey);
-    std::this_thread::sleep_for(1000ms);
-    //_pokey->PWM.PWMperiod = 0;
-    //_pokey->PWM.PWMenabledChannels[channel] = false;
-    //PK_PWMConfigurationSet(_pokey);
+    std::this_thread::sleep_for(250ms);
     PK_SL_PWM_SetDuty(_pokey, channel, 0);
     PK_PWMUpdate(_pokey);
-    std::this_thread::sleep_for(100ms);
 
     return 0;
 }
 
 uint32_t PokeyDevice::targetValue(std::string targetName, bool value)
 {
-    std::lock_guard<std::mutex> pokeyLock(_BigPokeyLock);
-
     uint32_t retValue = -1;
     uint8_t pin = pinFromName(targetName) - 1;
 
@@ -545,8 +439,6 @@ uint32_t PokeyDevice::targetValue(std::string targetName, bool value)
 
 uint8_t PokeyDevice::displayNumber(uint8_t displayNumber, std::string targetName, int value)
 {
-    std::lock_guard<std::mutex> pokeyLock(_BigPokeyLock);
-
     int groupIndex = 0;
 
     for (int i = 0; i < MAX_MATRIX_LED_GROUPS; i++) {
@@ -602,21 +494,24 @@ uint8_t PokeyDevice::displayNumber(uint8_t displayNumber, std::string targetName
 
 uint32_t PokeyDevice::outputPin(uint8_t pin)
 {
-    std::lock_guard<std::mutex> pokeyLock(_BigPokeyLock);
     _pokey->Pins[--pin].PinFunction = PK_PinCap_digitalOutput | PK_PinCap_invertPin;
     return PK_PinConfigurationSet(_pokey);
 }
 
-uint32_t PokeyDevice::inputPin(uint8_t pin)
+uint32_t PokeyDevice::inputPin(uint8_t pin, bool invert)
 {
-    std::lock_guard<std::mutex> pokeyLock(_BigPokeyLock);
-    _pokey->Pins[--pin].PinFunction = PK_PinCap_digitalInput;
+    int pinSetting = PK_PinCap_digitalInput;
+
+    if (invert) {
+        pinSetting = pinSetting | PK_PinCap_invertPin;
+    }
+
+    _pokey->Pins[--pin].PinFunction = pinSetting;
     return PK_PinConfigurationSet(_pokey);
 }
 
 int32_t PokeyDevice::name(std::string name)
 {
-    std::lock_guard<std::mutex> pokeyLock(_BigPokeyLock);
     strncpy((char *)_pokey->DeviceData.DeviceName, name.c_str(), 30);
     return PK_DeviceNameSet(_pokey);
 }
@@ -680,12 +575,10 @@ void PokeyDevice::mapNameToMatrixLED(std::string name, int id)
 
 bool PokeyDevice::isPinDigitalOutput(uint8_t pin)
 {
-    std::lock_guard<std::mutex> pokeyLock(_BigPokeyLock);
     return (bool)PK_CheckPinCapability(_pokey, pin, PK_AllPinCap_digitalOutput);
 }
 
 bool PokeyDevice::isPinDigitalInput(uint8_t pin)
 {
-    std::lock_guard<std::mutex> pokeyLock(_BigPokeyLock);
     return (bool)PK_CheckPinCapability(_pokey, pin, PK_AllPinCap_digitalInput);
 }

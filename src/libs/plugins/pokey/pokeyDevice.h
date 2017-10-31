@@ -15,7 +15,7 @@
 #include <uv.h>
 
 #define DEVICE_READ_INTERVAL 100
-#define DEVICE_START_DELAY 100
+#define DEVICE_START_DELAY 1000
 #define ENCODER_1 1
 #define ENCODER_2 2
 #define ENCODER_3 3
@@ -107,16 +107,15 @@ protected:
     std::map<std::string, int> _encoderMap;
     std::map<std::string, int> _displayMap;
     std::map<std::string, int> _pwmMap;
-    static std::mutex _BigPokeyLock;
 
     sPoKeysDevice *_pokey;
     void *_callbackArg;
     SPHANDLE _pluginInstance;
 
     device_port_t _pins[MAX_PINS];
+    device_pwm_t _pwm[MAX_PWM_CHANNELS];
     device_encoder_t _encoders[MAX_ENCODERS];
     device_matrixLED_t _matrixLED[MAX_MATRIX_LEDS];
-    device_pwm_t _pwm[MAX_PWM_CHANNELS];
     uint8_t _pwmChannels[6];
 
     uint8_t _intToDisplayRow[MAX_DIGITS];
@@ -148,8 +147,7 @@ public:
     uint32_t targetValue(std::string targetName, bool value);
     uint32_t targetValue(std::string targetName, int value);
     uint32_t targetValue(std::string targetName, float value);
-
-    uint32_t inputPin(uint8_t pin);
+    uint32_t inputPin(uint8_t pin, bool invert = false);
     uint32_t outputPin(uint8_t pin);
     int32_t name(std::string name);
 
@@ -188,7 +186,8 @@ public:
         int pinNumber, 
         std::string pinType, 
         int defaultValue = 0, 
-        std::string description = "None");
+        std::string description = "None",
+        bool invert = false);
 
     void addPWM(
         uint8_t pinNumber, 
