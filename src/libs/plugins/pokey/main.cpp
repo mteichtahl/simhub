@@ -71,6 +71,8 @@ PokeyDevicePluginStateManager *PokeyDevicePluginStateManager::StateManagerInstan
 PokeyDevicePluginStateManager::~PokeyDevicePluginStateManager(void)
 {
     free(_devices);
+
+    _StateManagerInstance = NULL;
 }
 
 void PokeyDevicePluginStateManager::ceaseEventing(void)

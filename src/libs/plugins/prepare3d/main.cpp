@@ -86,8 +86,12 @@ SimSourcePluginStateManager::SimSourcePluginStateManager(LoggingFunctionCB logge
 SimSourcePluginStateManager::~SimSourcePluginStateManager(void)
 {
     ceaseEventing();
-    if (_rawBuffer != NULL)
+    
+    if (_rawBuffer != NULL) {
         free(_rawBuffer);
+    }
+
+    _StateManagerInstance = NULL;
 }
 
 int SimSourcePluginStateManager::preflightComplete(void)

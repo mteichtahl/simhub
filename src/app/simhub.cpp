@@ -22,6 +22,13 @@ std::shared_ptr<SimHubEventController> SimHubEventController::EventControllerIns
     return SimHubEventController::_EventControllerInstance;
 }
 
+//! allows reset of global singleton
+void SimHubEventController::DestroyEventControllerInstance(void)
+{
+    SimHubEventController::_EventControllerInstance.reset();
+    SimHubEventController::_EventControllerInstance = NULL;
+}
+
 SimHubEventController::SimHubEventController()
 // : _configurationHTTPListener(U("http://127.0.0.1:3000"))
 {
