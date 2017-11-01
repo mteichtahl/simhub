@@ -71,7 +71,6 @@ PokeyDevicePluginStateManager *PokeyDevicePluginStateManager::StateManagerInstan
 PokeyDevicePluginStateManager::~PokeyDevicePluginStateManager(void)
 {
     free(_devices);
-
     _StateManagerInstance = NULL;
 }
 
