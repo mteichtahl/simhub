@@ -37,6 +37,9 @@ void configureCli(cmdline::parser *cli)
     cli->footer("\n");
 }
 
+//! this static allows the signal handlers to control shutdown/restart logic in main()
+static bool ReloadRestart = false;
+
 // TODO: handle SIGHUP for settings reload
 void sigint_handler(int sigid)
 {
@@ -44,24 +47,22 @@ void sigint_handler(int sigid)
         // tell app event loop to end on control+c
         logger.log(LOG_INFO, "Shutting down simhub, this may take a couple seconds...");
         SimHubEventController::EventControllerInstance()->ceaseEventLoop();
+        ReloadRestart = false;
     }
-    else if (sigid == SIGHUP) {
+    else if (sigid == SIGHUP || sigid == SIGQUIT) {
+        // tell app event loop to end on control+h
+        // -- destroy and reload event controller
+		// -- cheat a little and capture SIGQUIT so we can use ctrl+\
+		//    as keyboard shortcut for this
+		
+        logger.log(LOG_INFO, "Reload simhub, this may take a couple seconds...");
+        ReloadRestart = true;
+        SimHubEventController::EventControllerInstance()->ceaseEventLoop();   
     }
 }
 
-int main(int argc, char *argv[])
+void run_simhub(const cmdline::parser &cli)
 {
-    struct sigaction act;
-    act.sa_handler = sigint_handler;
-    sigaction(SIGINT, &act, NULL);
-    sigaction(SIGHUP, &act, NULL);
-
-    cmdline::parser cli;
-    configureCli(&cli);
-    cli.parse_check(argc, argv);
-
-    logger.init(cli.get<std::string>("logConfig"));
-
     ConfigManager config(cli.get<std::string>("config"));
     std::shared_ptr<SimHubEventController> simhubController = SimHubEventController::EventControllerInstance();
 
@@ -98,6 +99,26 @@ int main(int argc, char *argv[])
     else {
         logger.log(LOG_ERROR, "Could not pokey plugin");
     }
+}
+
+int main(int argc, char *argv[])
+{
+    struct sigaction act;
+    act.sa_handler = sigint_handler;
+    sigaction(SIGINT, &act, NULL);
+    sigaction(SIGHUP, &act, NULL);
+    sigaction(SIGQUIT, &act, NULL);
+
+    cmdline::parser cli;
+    configureCli(&cli);
+    cli.parse_check(argc, argv);
+
+    logger.init(cli.get<std::string>("logConfig"));
+
+    do {
+        run_simhub(cli);
+        SimHubEventController::DestroyEventControllerInstance();        
+    } while (ReloadRestart);
 
     return 0;
 }

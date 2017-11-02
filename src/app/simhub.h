@@ -110,6 +110,7 @@ public:
 public:
     static void LoggerWrapper(const int category, const char *msg, ...);
     static std::shared_ptr<SimHubEventController> EventControllerInstance(void);
+    static void DestroyEventControllerInstance(void);
 };
 
 //! TODO - add perpetual and cancelable loop
