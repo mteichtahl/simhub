@@ -49,9 +49,12 @@ void sigint_handler(int sigid)
         SimHubEventController::EventControllerInstance()->ceaseEventLoop();
         ReloadRestart = false;
     }
-    else if (sigid == SIGHUP) {
+    else if (sigid == SIGHUP || sigid == SIGQUIT) {
         // tell app event loop to end on control+h
         // -- destroy and reload event controller
+		// -- cheat a little and capture SIGQUIT so we can use ctrl+\
+		//    as keyboard shortcut for this
+		
         logger.log(LOG_INFO, "Reload simhub, this may take a couple seconds...");
         ReloadRestart = true;
         SimHubEventController::EventControllerInstance()->ceaseEventLoop();   
@@ -104,6 +107,7 @@ int main(int argc, char *argv[])
     act.sa_handler = sigint_handler;
     sigaction(SIGINT, &act, NULL);
     sigaction(SIGHUP, &act, NULL);
+    sigaction(SIGQUIT, &act, NULL);
 
     cmdline::parser cli;
     configureCli(&cli);
