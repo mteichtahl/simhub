@@ -185,7 +185,6 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
     int ret = PK_DigitalIOGet(self->_pokey);
 
     if (ret == PK_OK) {
-        //std::lock_guard<std::mutex> remapGuard(self->_owner->pinRemappingMutex());
         self->_owner->pinRemappingMutex().lock();
 
         GenericTLV el;
@@ -213,8 +212,7 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
                         // remappedPinInfo.first->pins()[remappedPinIndex].previousValue = self->_pins[self->_pins[i].pinNumber - 1].value;
                         self->_pins[i].previousValue = self->_pins[self->_pins[i].pinNumber - 1].value;
 
-                        remappedPinInfo.first->_pins[remappedPinIndex].previousValue = self->_pokey->Pins[sourcePinNumber - 1].DigitalValueGet; // self->_pins[i].previousValue;
-                        //remappedPinInfo.first->_pins[remappedPinIndex].previousValue = self->_pins[i].previousValue;
+                        remappedPinInfo.first->_pins[remappedPinIndex].previousValue = self->_pokey->Pins[sourcePinNumber - 1].DigitalValueGet;
 
                         remappedPinInfo.first->_pins[remappedPinIndex].value = self->_pokey->Pins[sourcePinNumber - 1].DigitalValueGet;
                         self->_pins[i].value = self->_pokey->Pins[sourcePinNumber - 1].DigitalValueGet;
