@@ -170,3 +170,18 @@ std::string ConfigManager::name(void)
 
     return _configName;
 }
+
+std::string ConfigManager::httpListenAddress(void)
+{
+    std::string retVal("");
+    config()->lookupValue("httpListenAddress", retVal);
+    return retVal;
+}
+
+size_t ConfigManager::httpListenPort(void)
+{
+    int port = 0;    
+    config()->lookupValue("httpListenPort", port);
+    return port;
+}
+

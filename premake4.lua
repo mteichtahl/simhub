@@ -25,6 +25,7 @@ solution "simhub"
     configuration {""}
     
     defines {"__PLATFORM"}
+
     configuration "Debug"
         defines { "DEBUG" }
         symbols "On"
@@ -57,31 +58,44 @@ solution "simhub"
 
         includedirs { "src",
                       "src/app",
-					  "src/common",
-					  "src/libs",
-					  "src/libs/variant/include",
-					  "src/libs/variant/include/mpark",
-					  "src/libs/queue" }
+                      "/usr/local/opt/openssl/include",
+ 		      "src/common",
+                      "src/libs",
+                      "src/libs/variant/include",
+                      "src/libs/variant/include/mpark",
+                      "src/libs/queue" }
+
+        libdirs { "/usr/local/opt/openssl/lib" }
 
         links { "zlog", 
-                "pthread", 
+                "pthread",
+                "cpprest",
+                "ssl",
+                "boost_system",
+                "crypto",
+                "boost_chrono",
                 "config++" }
 
         targetdir ("bin")
     
         buildoptions { "--std=c++14" }
-    
+
+        configuration { "macosx" }
+            links { "boost_thread-mt" }
+        configuration {}
+
+        
         configuration { "macosx", "Debug" }
             postbuildcommands { "dsymutil bin/simhub", "gtags" }
         configuration {}
-		
+                
         configuration {"linux"}
             links {"dl"}
         configuration {""}
                 
     project "simhub_tests"
         kind "ConsoleApp"
-	    language "C++"
+            language "C++"
         files { "src/common/**.h", 
                 "src/common/**.cpp", 
                 "src/test/**.h", 
@@ -93,6 +107,8 @@ solution "simhub"
             excludes {"src/common/aws/**"}
         configuration {}
 
+        libdirs { "/usr/local/opt/openssl/lib" }
+
         includedirs { "src/libs/googletest/include", 
                       "src/libs/googletest", 
                       "src",
@@ -101,18 +117,27 @@ solution "simhub"
                       "src/libs/variant/include", 
                       "src/libs",
                       "src/libs/variant/include/mpark",
-					  "src/libs/queue" }
+                      "/usr/local/opt/openssl/include",
+                                          "src/libs/queue" }
         links { "dl", 
                 "zlog", 
-                "pthread", 
+                "pthread",
+                        "cpprest",
+                        "ssl",
+                        "boost_system",
+                "crypto",
+                "boost_chrono",
                 "config++"}
 
         targetdir ("bin")
         buildoptions { "--std=c++14" }
+        configuration { "macosx" }
+            links { "boost_thread-mt" }
+        configuration {}
 
     project "prepare3d_plugin"
-	    kind "SharedLib"
-		language "C++"
+            kind "SharedLib"
+                language "C++"
         targetname "prepare3d"
         targetdir ("bin/plugins")
         links { 'uv',
@@ -166,25 +191,23 @@ solution "simhub"
         targetname "pokey"
         targetdir ("bin/plugins")
         libdirs { "lib/pokey" }
-        links {
-            "PoKeys",
-            "usb-1.0",
-            "uv"
-        }
+        links { "PoKeys",
+                "usb-1.0",
+                "uv" }
         files { "src/libs/plugins/pokey/**.h",
                 "src/libs/plugins/common/**.cpp",
                 "src/libs/plugins/pokey/**.cpp",
                 "src/common/elements/attributes/attribute.cpp" }
         includedirs { "src/libs/googletest/include", 
-                    "src/libs/googletest", 
-                    "src/common",
-                    "src/libs/plugins",
-                    "src/libs/variant/include", 
-                    "src/libs",
-                    "src/libs/variant/include/mpark",
-                    "lib/pokey",
-                    "src/libs/queue" }
-        links { 'config++',
-                'pthread'}
+                      "src/libs/googletest", 
+                      "src/common",
+                      "src/libs/plugins",
+                      "src/libs/variant/include", 
+                      "src/libs",
+                      "src/libs/variant/include/mpark",
+                      "lib/pokey",
+                      "src/libs/queue" }
+        links { "config++",
+                "pthread"}
         buildoptions { "--std=c++14" }
             

@@ -15,7 +15,7 @@ popd
 ~/Library/Python/2.7/bin/aws s3 cp $FUNCTION/$FUNCTION_NAME.zip $S3_BUCKET/$FUNCTION_NAME
 
 # aws cloudformation update-stack --stack-name $STACK_NAME$FUNCTION_NAME --template-body file://$FUNCTION_PATH/$FUNCTION_NAME/stack.json
-~/Library/Python/2.7/bin/aws lambda update-function-code --zip-file fileb://$FUNCTION/$FUNCTION_NAME.zip --publish --function-name simhubLambdaprocessKinesis-ProcessKinesisFunction-16EZRH4FEEMK4
+~/Library/Python/2.7/bin/aws lambda update-function-code --zip-file fileb://$FUNCTION/$FUNCTION_NAME.zip --publish --function-name simhubLambdaprocessKinesis-ProcessKinesisFunction-1S8BPNICD1HGA
 
 rm $FUNCTION/$FUNCTION_NAME.zip
 

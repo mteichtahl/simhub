@@ -13,7 +13,7 @@
 #include <uv.h>
 
 #define DEVICE_READ_INTERVAL 100
-#define DEVICE_START_DELAY 100
+#define DEVICE_START_DELAY 1000
 #define ENCODER_1 1
 #define ENCODER_2 2
 #define ENCODER_3 3

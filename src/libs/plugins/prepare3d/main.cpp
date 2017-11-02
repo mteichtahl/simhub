@@ -319,7 +319,6 @@ void SimSourcePluginStateManager::processElement(char *element)
         else if (strncmp(type, "bool", sizeof(&type)) == 0) {
             el.type = CONFIG_BOOL;
             el.length = sizeof(uint8_t);
-
             if (strncmp(value, "0", sizeof(el.value)) == 0) {
                 el.value.bool_value = 0;
             }
@@ -342,6 +341,7 @@ void SimSourcePluginStateManager::processElement(char *element)
 
 char *SimSourcePluginStateManager::getElementDataType(char identifier)
 {
+
     switch (identifier) {
     case GAUGE_IDENTIFIER:
         return (char *)"float";
