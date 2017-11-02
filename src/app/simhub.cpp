@@ -1,6 +1,6 @@
 #include <assert.h>
-#include <utility>
 #include <chrono>
+#include <utility>
 
 #include "common/configmanager/configmanager.h"
 #include "log/clog.h"
@@ -161,7 +161,7 @@ SimHubEventController::~SimHubEventController(void)
     if (_awsHelper.polly()) {
         _awsHelper.polly()->shutdown();
     }
-    
+
     if (_awsHelper.kinesis()) {
         _awsHelper.kinesis()->shutdown();
     }
@@ -174,7 +174,6 @@ SimHubEventController::~SimHubEventController(void)
 void SimHubEventController::startSustainThread(void)
 {
     _awsHelper.polly()->say("Simulator is ready.");
-   
     std::shared_ptr<std::thread> sustainThread = std::make_shared<std::thread>([=] {
         _sustainThreadManager.setThreadRunning(true);
         while (!_sustainThreadManager.threadCanceled()) {
@@ -297,6 +296,7 @@ bool SimHubEventController::deliverValue(std::shared_ptr<Attribute> value)
                 _awsHelper.polly()->say("dc volts %i", c_value->value);
         }
 #endif
+
         retVal = !_pokeyMethods.simplug_deliver_value(_pokeyMethods.plugin_instance, c_value);
     }
 

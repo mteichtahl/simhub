@@ -46,6 +46,9 @@ public:
     virtual int deliverValue(GenericTLV *value);
     virtual void ceaseEventing(void);
     virtual std::string name() { return _name; }
+
+    // transformations
+    virtual std::string transformBoolToString(std::string orginalValue, std::string transformResultOff, std::string transformResultOn);
 };
 
 #endif
