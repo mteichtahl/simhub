@@ -276,6 +276,8 @@ bool PokeyDevicePluginStateManager::devicePWMConfiguration(libconfig::Setting *p
             }
         }
     }
+
+    return retVal;
 }
 
 void PokeyDevicePluginStateManager::loadTransform(std::string pinName, libconfig::Setting *transform)
@@ -439,22 +441,6 @@ std::pair<std::shared_ptr<PokeyDevice>, std::string> PokeyDevicePluginStateManag
 
     if (mapContains(_remappedPins, pinName)) {
         retVal = _remappedPins[pinName];
-    }
-
-    return retVal;
-}
-
-bool PokeyDevicePluginStateManager::devicePWMConfiguration(libconfig::Setting *pwm, std::shared_ptr<PokeyDevice> pokeyDevice)
-{
-    bool retVal = true;
-    int pwmCount = pwm->getLength();
-
-    if (pwmCount > 0) {
-        _logger(LOG_INFO, "    [%s]  - Found %i PWM Channels", pokeyDevice->name().c_str(), pwmCount);
-        int encoderIndex = 0;
-
-        for (libconfig::SettingIterator iter = pwm->begin(); iter != pwm->end(); iter++) {
-        }
     }
 
     return retVal;

@@ -132,6 +132,7 @@ protected:
     uv_timer_t _pollTimer;
 
     int pinFromName(std::string targetName);
+    int pinIndexFromName(std::string targetName);
     uint8_t PWMFromName(std::string targetName);
     uint8_t displayFromName(std::string targetName);
     uint8_t displayNumber(uint8_t displayNumwber, std::string targetName, int value);
@@ -190,7 +191,8 @@ public:
     bool isPinDigitalInput(uint8_t pin);
     bool isEncoderCapable(int pin);
 
-    void addPin(std::string name, 
+    void addPin(int pinIndex,
+        std::string name, 
         int pinNumber, 
         std::string pinType, 
         int defaultValue = 0, 
