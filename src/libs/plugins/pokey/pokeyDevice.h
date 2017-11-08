@@ -39,12 +39,14 @@
 typedef struct {
     std::string pinName;
     int pinNumber;
+    int pinIndex;
     std::string type;
     std::string description;
     std::string units;
     uint8_t defaultValue;
     uint8_t value;
     uint8_t previousValue;
+    bool skipNext;
 } device_port_t;
 
 typedef struct {
@@ -86,6 +88,8 @@ typedef struct {
     uint32_t period;
 } device_pwm_t;
 
+class PokeyDevicePluginStateManager;
+
 class PokeyDevice
 {
 private:
@@ -107,6 +111,8 @@ protected:
     std::map<std::string, int> _encoderMap;
     std::map<std::string, int> _displayMap;
     std::map<std::string, int> _pwmMap;
+
+    PokeyDevicePluginStateManager *_owner;
 
     sPoKeysDevice *_pokey;
     void *_callbackArg;
@@ -133,9 +139,10 @@ protected:
     void pollCallback(uv_timer_t *timer, int status);
 
 public:
-    PokeyDevice(sPoKeysNetworkDeviceSummary, uint8_t);
+    PokeyDevice(PokeyDevicePluginStateManager *owner, sPoKeysNetworkDeviceSummary, uint8_t);
     virtual ~PokeyDevice(void);
 
+    bool ownsPin(std::string pinName);
     bool validatePinCapability(int, std::string);
     bool validateEncoder(int encoderNumber);
 
@@ -154,6 +161,7 @@ public:
     void setCallbackInfo(EnqueueEventHandler enqueueCallback, void *callbackArg, SPHANDLE pluginInstance);
 
     std::string serialNumber() { return _serialNumber; };
+    void setSerialNumber(std::string serialNumber) { _serialNumber = serialNumber; };
     uint8_t userId() { return _userId; };
     uint8_t firmwareMajorMajorVersion() { return _firwareVersionMajorMajor; };
     uint8_t firmwareMajorVersion() { return _firwareVersionMajor; };
@@ -214,11 +222,7 @@ public:
     void addGroupToMatrixLED(int id, int displayId, std::string name, int digits, int position);
     void startPolling();
     void stopPolling();
-    std::string name()
-    {
-        std::string tmp((char *)deviceData().DeviceName);
-        return tmp;
-    }
+    std::string name();
 };
 
 #endif

@@ -7,6 +7,7 @@
 
 #include "main.h"
 #include "plugins/common/simhubdeviceplugin.h"
+#include "plugins/common/utils.h"
 
 // -- public C FFI
 
@@ -71,6 +72,7 @@ PokeyDevicePluginStateManager *PokeyDevicePluginStateManager::StateManagerInstan
 PokeyDevicePluginStateManager::~PokeyDevicePluginStateManager(void)
 {
     free(_devices);
+    _StateManagerInstance = NULL;
 }
 
 void PokeyDevicePluginStateManager::ceaseEventing(void)
@@ -82,25 +84,35 @@ void PokeyDevicePluginStateManager::ceaseEventing(void)
     }
 }
 
+int PokeyDevicePluginStateManager::processPokeyDeviceUpdate(std::shared_ptr<PokeyDevice> device)
+{
+    return 0;
+}
+
 int PokeyDevicePluginStateManager::deliverValue(GenericTLV *data)
 {
     assert(data);
+    
+    int retVal = 0;
 
     std::shared_ptr<PokeyDevice> device = targetFromDeviceTargetList(data->name);
 
     if (device) {
         if (data->type == ConfigType::CONFIG_BOOL) {
-            device->targetValue(data->name, (bool)data->value);
+            retVal = device->targetValue(data->name, (bool)data->value);
         }
         else if (data->type == ConfigType::CONFIG_INT) {
-            device->targetValue(data->name, (int)data->value);
+            retVal = device->targetValue(data->name, (int)data->value);
         }
         else if (data->type == ConfigType::CONFIG_FLOAT) {
             device->targetValue(data->name, (float)data->value);
         }
     }
+    else {
+        std::cout << "NO DEVICE!" << std::endl;
+    }
 
-    return 0;
+    return retVal;
 }
 
 void PokeyDevicePluginStateManager::commenceEventing(EnqueueEventHandler enqueueCallback, void *arg)
@@ -119,7 +131,7 @@ void PokeyDevicePluginStateManager::enumerateDevices(void)
 
     for (int i = 0; i < _numberOfDevices; i++) {
         try {
-            std::shared_ptr<PokeyDevice> device = std::make_shared<PokeyDevice>(_devices[i], i);
+            std::shared_ptr<PokeyDevice> device = std::make_shared<PokeyDevice>(this, _devices[i], i);
 
             if (device->pokey()) {
                 _logger(LOG_INFO, "    - #%s %s %s (v%d.%d.%d) - %u.%u.%u.%u ", device->serialNumber().c_str(), device->hardwareTypeString().c_str(),
@@ -177,6 +189,8 @@ bool PokeyDevicePluginStateManager::validateConfig(libconfig::SettingIterator it
 
     return retValue;
 }
+
+//#define FAKE_POKEY
 
 bool PokeyDevicePluginStateManager::deviceConfiguration(libconfig::SettingIterator iter, std::shared_ptr<PokeyDevice> pokeyDevice)
 {
@@ -262,6 +276,47 @@ bool PokeyDevicePluginStateManager::devicePWMConfiguration(libconfig::Setting *p
             }
         }
     }
+}
+
+void PokeyDevicePluginStateManager::loadTransform(std::string pinName, libconfig::Setting *transform)
+{
+    _logger(LOG_INFO, " - transform %s", pinName.c_str());
+
+    if (transform->exists("On") && transform->exists("Off")) {
+        std::string transformResultOn;
+        std::string transformResultOff;
+
+        transform->lookupValue("On", transformResultOn);
+        transform->lookupValue("Off", transformResultOff);
+        _pinValueTransforms.emplace(pinName, std::bind(&PokeyDevicePluginStateManager::transformBoolToString, this, std::placeholders::_1, transformResultOff, transformResultOn));
+    }
+}
+
+void PokeyDevicePluginStateManager::loadMapTo(std::string pinName, libconfig::Setting *mapTo)
+{
+    for (libconfig::Setting &entry : *mapTo) {
+        std::string name;
+
+        entry.lookupValue("name", name);
+
+        _logger(LOG_INFO, " - transform %s", name.c_str());
+
+        if (entry.exists("transform")) {
+            loadTransform(pinName, &entry);
+        }
+    }
+}
+
+std::shared_ptr<PokeyDevice> PokeyDevicePluginStateManager::deviceForPin(std::string pinName)
+{
+    std::shared_ptr<PokeyDevice> retVal;
+
+    for (auto entry : _deviceMap) {
+        if (entry.second->ownsPin(pinName)) {
+            retVal = entry.second;
+        }
+    }
+
     return retVal;
 }
 
@@ -287,7 +342,9 @@ bool PokeyDevicePluginStateManager::devicePinsConfiguration(libconfig::Setting *
             std::string pinType = "";
             std::string description = "";
             std::string units = "";
+            std::string mapTo = "";
             bool pinDefault = false;
+            int defaultValue = 0;
 
             try {
                 iter->lookupValue("pin", pinNumber);
@@ -295,31 +352,49 @@ bool PokeyDevicePluginStateManager::devicePinsConfiguration(libconfig::Setting *
                 iter->lookupValue("type", pinType);
                 iter->lookupValue("description", description);
                 iter->lookupValue("units", units);
+                if (iter->exists("transform")) {
+                    loadTransform(pinName, &iter->lookup("transform"));
+                }
             }
             catch (const libconfig::SettingNotFoundException &nfex) {
                 _logger(LOG_ERROR, "Config file parse error at %s. Skipping....", nfex.getPath());
             }
 
             if (pokeyDevice->validatePinCapability(pinNumber, pinType)) {
+                if (iter->exists("mapTo")) {
+                    iter->lookupValue("mapTo", mapTo);
+                    assert(!mapContains(_remappedPins, pinName));
+
+                    std::shared_ptr<PokeyDevice> remapTargetDevice = deviceForPin(mapTo);
+
+                    assert(remapTargetDevice);
+
+                    // NOTE: the fact config entries that mapTo must be defined *after* the
+                    //       device to which they refer is an explicit limitation
+                    _remappedPins[pinName] = std::make_pair(remapTargetDevice, mapTo);
+                }
 
                 if (pinType == "DIGITAL_OUTPUT") {
-                    int defaultValue = 0;
 
                     if (addTargetToDeviceTargetList(pinName, pokeyDevice)) {
 
                         if (iter->exists("default"))
                             iter->lookupValue("default", defaultValue);
 
-                        pokeyDevice->addPin(pinName, pinNumber, pinType, defaultValue, description);
+                        pokeyDevice->addPin(pinIndex, pinName, pinNumber, pinType, defaultValue, description, false);
                         _logger(LOG_INFO, "        - [%d] Added target %s on pin %d", pinIndex, pinName.c_str(), pinNumber);
                     }
                 }
                 else if (pinType == "DIGITAL_INPUT") {
+                    if (iter->exists("default"))
+                        iter->lookupValue("default", defaultValue);
+
                     bool invert = false;
                     if (iter->exists("invert"))
                         iter->lookupValue("invert", invert);
 
-                    pokeyDevice->addPin(pinName, pinNumber, pinType, 0, description, invert);
+                    pokeyDevice->addPin(pinIndex, pinName, pinNumber, pinType, defaultValue, description, invert);
+
                     _logger(LOG_INFO, "        - [%d] Added source %s on pin %d", pinIndex, pinName.c_str(), pinNumber);
                 }
                 pinIndex++;
@@ -332,6 +407,38 @@ bool PokeyDevicePluginStateManager::devicePinsConfiguration(libconfig::Setting *
     }
     else {
         retVal = false;
+    }
+
+    return retVal;
+}
+
+/**
+ *   @brief  Default  find a transform by element name
+ *
+ *   @return TransformFunction or NULL if not found
+ */
+TransformFunction PokeyDevicePluginStateManager::transformForPinName(std::string name)
+{
+    TransformMap::iterator it = _pinValueTransforms.find(name);
+
+    if (it != _pinValueTransforms.end()) {
+        return (*it).second;
+    }
+
+    return NULL;
+}
+
+bool PokeyDevicePluginStateManager::pinRemapped(std::string pinName)
+{
+    return mapContains(_remappedPins, pinName);
+}
+
+std::pair<std::shared_ptr<PokeyDevice>, std::string> PokeyDevicePluginStateManager::remappedPinDetails(std::string pinName)
+{
+    std::pair<std::shared_ptr<PokeyDevice>, std::string> retVal;
+
+    if (mapContains(_remappedPins, pinName)) {
+        retVal = _remappedPins[pinName];
     }
 
     return retVal;
@@ -479,6 +586,8 @@ int PokeyDevicePluginStateManager::preflightComplete(void)
     int retVal = PREFLIGHT_OK;
     libconfig::Setting *devicesConfiguraiton = NULL;
 
+    _preflightComplete = false;
+
     enumerateDevices();
 
     try {
@@ -493,6 +602,13 @@ int PokeyDevicePluginStateManager::preflightComplete(void)
         std::string serialNumber = "";
         iter->lookupValue("serialNumber", serialNumber);
 
+#if defined FAKE_POKEY
+        sPoKeysNetworkDeviceSummary dummyData;
+        std::shared_ptr<PokeyDevice> dev = std::make_shared<PokeyDevice>(this, dummyData, 0);
+        dev->setSerialNumber(serialNumber);
+        _deviceMap.emplace(dev->serialNumber(), dev);
+        _numberOfDevices++;
+#endif
         std::shared_ptr<PokeyDevice> pokeyDevice = device(serialNumber);
 
         // check that the configuration has the required config sections
@@ -528,6 +644,8 @@ int PokeyDevicePluginStateManager::preflightComplete(void)
     else {
         _logger(LOG_INFO, "   - No Pokey devices discovered");
     }
+
+    _preflightComplete = (retVal == PREFLIGHT_OK);
 
     return retVal;
 }
