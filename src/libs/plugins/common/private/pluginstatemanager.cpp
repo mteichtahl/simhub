@@ -40,3 +40,14 @@ void PluginStateManager::ceaseEventing(void)
 {
     _logger(LOG_INFO, "  - Cease eventing");
 }
+
+std::string PluginStateManager::transformBoolToString(std::string orginalValue, std::string transformResultOff, std::string transformResultOn)
+{
+    if (orginalValue == "0") {
+        return transformResultOff;
+    }
+    else if (orginalValue == "1") {
+        return transformResultOn;
+    }
+    return orginalValue;
+}
