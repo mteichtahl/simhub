@@ -92,19 +92,24 @@ int PokeyDevicePluginStateManager::processPokeyDeviceUpdate(std::shared_ptr<Poke
 int PokeyDevicePluginStateManager::deliverValue(GenericTLV *data)
 {
     assert(data);
+    
+    int retVal = 0;
 
     std::shared_ptr<PokeyDevice> device = targetFromDeviceTargetList(data->name);
 
     if (device) {
         if (data->type == ConfigType::CONFIG_BOOL) {
-            device->targetValue(data->name, (bool)data->value);
+            retVal = device->targetValue(data->name, (bool)data->value);
         }
         else if (data->type == ConfigType::CONFIG_INT) {
-            device->targetValue(data->name, (int)data->value);
+            retVal = device->targetValue(data->name, (int)data->value);
         }
     }
+    else {
+        std::cout << "NO DEVICE!" << std::endl;
+    }
 
-    return 0;
+    return retVal;
 }
 
 void PokeyDevicePluginStateManager::commenceEventing(EnqueueEventHandler enqueueCallback, void *arg)
