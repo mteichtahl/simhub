@@ -19,14 +19,23 @@
       "Type": "String",
       "Default": "teichtah-lambda-functions",
       "Description": "Lambda function bucket"
+    },
+    "DynamoRegion": {
+      "Type": "String",
+      "Default": "us-east-1",
+      "Description": "AWS region of the dynamoDB table"
+    },
+    "DynamoTable": {
+      "Type": "String",
+      "Default": "simhub-KeyVal",
+      "Description": "Name of the dynamoDB table"
     }
   },
   "Resources": {
     "ProcessKinesisFunction": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
-        "Tags": [
-          {
+        "Tags": [{
             "Key": "Environment",
             "Value": {
               "Ref": "EnvironmentName"
@@ -49,7 +58,16 @@
             "Ref": "ProcessKinesisFunctionKey"
           }
         },
-        "Environment": {},
+        "Environment": {
+          "Variables": {
+            "dynamoRegion": {
+              "Ref": "DynamoRegion"
+            },
+            "dynamoTable": {
+              "Ref": "DynamoTable"
+            }
+          }
+        },
         "Runtime": "nodejs6.10",
         "Timeout": "120",
         "MemorySize": "1024",
@@ -72,9 +90,9 @@
             "Arn"
           ]
         },
-        "StartingPosition": "TRIM_HORIZON"
-      },
-      "BatchSize": 10
+        "StartingPosition": "LATEST",
+        "BatchSize": 5
+      }
     },
     "LambdaPermission": {
       "Type": "AWS::Lambda::Permission",
@@ -89,8 +107,7 @@
         "Principal": "apigateway.amazonaws.com",
         "SourceArn": {
           "Fn::Join": [
-            "",
-            [
+            "", [
               "arn:aws:execute-api:",
               {
                 "Ref": "AWS::Region"

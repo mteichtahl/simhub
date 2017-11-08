@@ -104,6 +104,9 @@ int PokeyDevicePluginStateManager::deliverValue(GenericTLV *data)
         else if (data->type == ConfigType::CONFIG_INT) {
             retVal = device->targetValue(data->name, (int)data->value);
         }
+        else if (data->type == ConfigType::CONFIG_FLOAT) {
+            device->targetValue(data->name, (float)data->value);
+        }
     }
     else {
         std::cout << "NO DEVICE!" << std::endl;
@@ -222,6 +225,57 @@ bool PokeyDevicePluginStateManager::deviceConfiguration(libconfig::SettingIterat
     }
 
     return retVal;
+}
+
+bool PokeyDevicePluginStateManager::devicePWMConfiguration(libconfig::Setting *pwm, std::shared_ptr<PokeyDevice> pokeyDevice)
+{
+    bool retVal = true;
+
+    int PWMLength = pwm->getLength();
+
+    if (PWMLength > 0) {
+        _logger(LOG_INFO, "    [%s]  - Found %i PWM Channels", pokeyDevice->name().c_str(), PWMLength);
+
+        for (libconfig::SettingIterator iter = pwm->begin(); iter != pwm->end(); iter++) {
+            int channel = 0;
+            std::string name = "";
+            std::string description = "";
+            std::string units = "";
+            uint32_t leftDutyCycle = 0;
+            uint32_t rightDutyCycle = 0;
+            uint32_t period = 250000; // pokey clock cycles
+
+            try {
+                iter->lookupValue("channel", channel);
+                iter->lookupValue("name", name);
+                iter->lookupValue("description", description);
+                iter->lookupValue("units", units);
+                iter->lookupValue("leftDutyCycle", leftDutyCycle);
+                iter->lookupValue("rightDutyCycle", rightDutyCycle);
+                iter->lookupValue("period", period);
+            }
+            catch (const libconfig::SettingNotFoundException &nfex) {
+                _logger(LOG_ERROR, "Config file parse error at %s. Skipping....", nfex.getPath());
+            }
+
+            if (addTargetToDeviceTargetList(name, pokeyDevice)) {
+                pokeyDevice->addPWM(channel, name, description, units, leftDutyCycle, rightDutyCycle, period);
+                _logger(LOG_INFO, "        - Added PWM channel %i - %s", channel, name.c_str());
+
+                /*
+                // -- uncomment to test
+
+                pokeyDevice->targetValue(name, 0.0f);
+		
+                for (float idx = 0.0f; idx <= 1.00f; idx += 0.05f) {
+                    pokeyDevice->targetValue(name, idx);
+                }
+
+                pokeyDevice->targetValue(name, 0.0f);
+                */
+            }
+        }
+    }
 }
 
 void PokeyDevicePluginStateManager::loadTransform(std::string pinName, libconfig::Setting *transform)
@@ -385,22 +439,6 @@ std::pair<std::shared_ptr<PokeyDevice>, std::string> PokeyDevicePluginStateManag
 
     if (mapContains(_remappedPins, pinName)) {
         retVal = _remappedPins[pinName];
-    }
-
-    return retVal;
-}
-
-bool PokeyDevicePluginStateManager::devicePWMConfiguration(libconfig::Setting *pwm, std::shared_ptr<PokeyDevice> pokeyDevice)
-{
-    bool retVal = true;
-    int pwmCount = pwm->getLength();
-
-    if (pwmCount > 0) {
-        _logger(LOG_INFO, "    [%s]  - Found %i PWM Channels", pokeyDevice->name().c_str(), pwmCount);
-        int encoderIndex = 0;
-
-        for (libconfig::SettingIterator iter = pwm->begin(); iter != pwm->end(); iter++) {
-        }
     }
 
     return retVal;
@@ -594,7 +632,7 @@ int PokeyDevicePluginStateManager::preflightComplete(void)
             deviceDisplaysConfiguration(&iter->lookup("displays"), pokeyDevice);
 
         if (iter->exists("pwm"))
-            devicePWMConfiguration(&iter->lookup("displays"), pokeyDevice);
+            devicePWMConfiguration(&iter->lookup("pwm"), pokeyDevice);
 
         pokeyDevice->startPolling();
     }

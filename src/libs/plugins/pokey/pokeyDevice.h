@@ -4,9 +4,11 @@
 #include "PoKeysLib.h"
 #include "common/simhubdeviceplugin.h"
 #include <assert.h>
+#include <chrono>
 #include <cmath>
 #include <iostream>
 #include <map>
+#include <mutex>
 #include <stdlib.h>
 #include <thread>
 #include <unistd.h>
@@ -29,6 +31,10 @@
 #define MAX_MATRIX_LED_GROUPS 8
 #define MAX_DIGITS 10
 #define MAX_PWM_CHANNELS 6
+
+#define PWM_SERVO_LEFT 50000
+#define PWM_SERVO_RIGHT 25000
+#define PWM_SERVO_CENTER 37500
 
 typedef struct {
     std::string pinName;
@@ -73,10 +79,13 @@ typedef struct {
 
 typedef struct {
     uint8_t id;
+    std::string units;
     std::string name;
     std::string description;
+    uint8_t pin;
+    uint32_t leftDutyCycle;
+    uint32_t rightDutyCycle;
     uint32_t period;
-    uint32_t duty;
 } device_pwm_t;
 
 class PokeyDevicePluginStateManager;
@@ -108,10 +117,13 @@ protected:
     sPoKeysDevice *_pokey;
     void *_callbackArg;
     SPHANDLE _pluginInstance;
+
     device_port_t _pins[MAX_PINS];
     device_pwm_t _pwm[MAX_PWM_CHANNELS];
     device_encoder_t _encoders[MAX_ENCODERS];
     device_matrixLED_t _matrixLED[MAX_MATRIX_LEDS];
+    uint8_t _pwmChannels[6];
+
     uint8_t _intToDisplayRow[MAX_DIGITS];
     EnqueueEventHandler _enqueueCallback;
 
@@ -120,7 +132,7 @@ protected:
     uv_timer_t _pollTimer;
 
     int pinFromName(std::string targetName);
-    int pinIndexFromName(std::string targetName);
+    uint8_t PWMFromName(std::string targetName);
     uint8_t displayFromName(std::string targetName);
     uint8_t displayNumber(uint8_t displayNumwber, std::string targetName, int value);
 
@@ -133,12 +145,15 @@ public:
     bool ownsPin(std::string pinName);
     bool validatePinCapability(int, std::string);
     bool validateEncoder(int encoderNumber);
+
     void mapNameToPin(std::string name, int pin);
     void mapNameToEncoder(std::string name, int encoderNumber);
     void mapNameToMatrixLED(std::string name, int id);
+    void mapNameToPWM(std::string name, int pin);
 
     uint32_t targetValue(std::string targetName, bool value);
     uint32_t targetValue(std::string targetName, int value);
+    uint32_t targetValue(std::string targetName, float value);
     uint32_t inputPin(uint8_t pin, bool invert = false);
     uint32_t outputPin(uint8_t pin);
     int32_t name(std::string name);
@@ -174,9 +189,33 @@ public:
     bool isPinDigitalOutput(uint8_t pin);
     bool isPinDigitalInput(uint8_t pin);
     bool isEncoderCapable(int pin);
-    void addPin(int pindex, std::string name, int pinNumber, std::string pinType, int defaultValue, std::string description, bool invert);
-    void addEncoder(int encoderNumber, uint32_t defaultValue, std::string name = DEFAULT_ENCODER_NAME, std::string description = DEFAULT_ENCODER_DESCRIPTION,
-        int min = DEFAULT_ENCODER_MIN, int max = DEFAULT_ENCODER_MAX, int step = DEFAULT_ENCODER_STEP, int invertDirection = DEFAULT_ENCODER_DIRECTION, std::string units = "");
+
+    void addPin(std::string name, 
+        int pinNumber, 
+        std::string pinType, 
+        int defaultValue = 0, 
+        std::string description = "None",
+        bool invert = false);
+
+    void addPWM(
+        uint8_t pinNumber, 
+        std::string name, 
+        std::string description, 
+        std::string units, 
+        uint32_t leftDutyCycle, 
+        uint32_t rightDutyCycle,
+        uint32_t period);
+
+    void addEncoder(
+        int encoderNumber, 
+        uint32_t defaultValue, 
+        std::string name = DEFAULT_ENCODER_NAME, 
+        std::string description = DEFAULT_ENCODER_DESCRIPTION,
+        int min = DEFAULT_ENCODER_MIN, 
+        int max = DEFAULT_ENCODER_MAX, 
+        int step = DEFAULT_ENCODER_STEP, 
+        int invertDirection = DEFAULT_ENCODER_DIRECTION, 
+        std::string units = "");
 
     void addMatrixLED(int id, std::string name, std::string type);
     void configMatrixLED(int id, int rows, int cols = 8, int enabled = 0);
