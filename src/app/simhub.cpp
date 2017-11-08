@@ -192,7 +192,7 @@ void SimHubEventController::startSustainThread(void)
 
             std::chrono::milliseconds now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
 
-            for (std::pair<std::string, SustainMapEntry> entry: _sustainValues) {
+            for (std::pair<std::string, SustainMapEntry> entry : _sustainValues) {
                 std::chrono::milliseconds sustain = entry.second.first;
                 std::chrono::milliseconds ts = entry.second.second->timestamp();
 

@@ -31,6 +31,7 @@ typedef union {
     int bool_value;
     operator bool() const { return bool_value; }
     operator int() const { return int_value; }
+    operator float() const { return float_value; }
 } VariantUnion;
 
 typedef struct {

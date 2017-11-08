@@ -1,4 +1,6 @@
+#include <chrono>
 #include <string.h>
+#include <thread>
 
 #include "elements/attributes/attribute.h"
 #include "main.h"
@@ -295,6 +297,8 @@ void PokeyDevice::addPin(int pinIndex, std::string pinName, int pinNumber, std::
 
     mapNameToPin(pinName.c_str(), pinNumber);
 
+    int portNumber = pinNumber - 1;
+
     _pins[pinIndex].pinName = pinName;
     _pins[pinIndex].pinIndex = pinIndex;
     _pins[pinIndex].type = pinType.c_str();
@@ -302,6 +306,32 @@ void PokeyDevice::addPin(int pinIndex, std::string pinName, int pinNumber, std::
     _pins[pinIndex].defaultValue = defaultValue;
     _pins[pinIndex].value = defaultValue;
     _pins[pinIndex].description = description;
+}
+
+void PokeyDevice::addPWM(
+    uint8_t channel, 
+    std::string name, 
+    std::string description, 
+    std::string units, 
+    uint32_t leftDutyCycle, 
+    uint32_t rightDutyCycle, 
+    uint32_t period)
+{
+    _pwmChannels[channel] = true;
+
+	  mapNameToPWM(name.c_str(), channel);
+
+    _pwm[channel].name = name;
+    _pwm[channel].description = description;
+    _pwm[channel].units = units;
+    _pwm[channel].leftDutyCycle = leftDutyCycle;
+    _pwm[channel].rightDutyCycle = rightDutyCycle;
+    _pwm[channel].period = period;
+
+    PK_PWMConfigurationGet(_pokey);
+    _pokey->PWM.PWMperiod = _pwm[channel].period;
+    _pokey->PWM.PWMenabledChannels[channel] = true;
+    int ret = PK_PWMConfigurationSet(_pokey);
 }
 
 void PokeyDevice::startPolling()
@@ -351,6 +381,7 @@ std::string PokeyDevice::hardwareTypeString()
     if (_hardwareType == 31) {
         return "Pokey 57E";
     }
+
     return "Unknown";
 }
 
@@ -391,7 +422,6 @@ bool PokeyDevice::validateEncoder(int encoderNumber)
 
 bool PokeyDevice::isEncoderCapable(int pin)
 {
-
     switch (pin) {
     case 1:
         return (bool)PK_CheckPinCapability(_pokey, 0, PK_AllPinCap_fastEncoder1A);
@@ -413,7 +443,15 @@ bool PokeyDevice::isEncoderCapable(int pin)
 }
 
 void PokeyDevice::addEncoder(
-    int encoderNumber, uint32_t defaultValue, std::string name, std::string description, int min, int max, int step, int invertDirection, std::string units)
+    int encoderNumber, 
+    uint32_t defaultValue, 
+    std::string name, 
+    std::string description, 
+    int min, 
+    int max, 
+    int step, 
+    int invertDirection, 
+    std::string units)
 {
     assert(encoderNumber >= 1);
 
@@ -520,6 +558,24 @@ uint32_t PokeyDevice::targetValue(std::string targetName, int value)
     return 0;
 }
 
+using namespace std::chrono_literals;
+
+uint32_t PokeyDevice::targetValue(std::string targetName, float value)
+{
+    uint8_t channel = PWMFromName(targetName);
+
+    // value is percent, so calculate cycles back from left cycle count
+
+    uint32_t duty = _pwm[channel].leftDutyCycle - ((_pwm[channel].leftDutyCycle - _pwm[channel].rightDutyCycle) * value);
+    PK_SL_PWM_SetDuty(_pokey, channel, duty);
+    PK_PWMUpdate(_pokey);
+    std::this_thread::sleep_for(250ms);
+    PK_SL_PWM_SetDuty(_pokey, channel, 0);
+    PK_PWMUpdate(_pokey);
+
+    return 0;
+}
+
 uint32_t PokeyDevice::targetValue(std::string targetName, bool value)
 {
     uint32_t retValue = -1;
@@ -570,7 +626,6 @@ uint8_t PokeyDevice::displayNumber(uint8_t displayNumber, std::string targetName
     }
 
     if (numberOfChars <= groupLength) {
-
         for (int i = 0; i < numberOfChars; i++) {
             int displayOffset = (int)charString.at(i) - 48;
             int convertedValue = _intToDisplayRow[displayOffset];
@@ -659,9 +714,25 @@ int PokeyDevice::pinFromName(std::string targetName)
         return -1;
 }
 
+uint8_t PokeyDevice::PWMFromName(std::string targetName)
+{
+    std::map<std::string, int>::iterator it = _pwmMap.find(targetName);
+
+    if (it != _pwmMap.end()) {
+        return it->second;
+    }
+    else
+        return -1;
+}
+
 void PokeyDevice::mapNameToPin(std::string name, int pin)
 {
     _pinMap.emplace(name, pin);
+}
+
+void PokeyDevice::mapNameToPWM(std::string name, int pin)
+{
+    _pwmMap.emplace(name, pin);
 }
 
 void PokeyDevice::mapNameToEncoder(std::string name, int encoderNumber)

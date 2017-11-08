@@ -10,49 +10,47 @@
       "AllowedPattern": "[a-zA-Z0-9]*",
       "ConstraintDescription": "Environment names must be 3-16 characters and contain only a-z and 0-9."
     },
-    "StreamName": {
-      "Description": "Kinesis Stream Name",
-      "Type": "String",
-      "MinLength": "3",
-      "MaxLength": "16",
-      "Default": "simhubStream",
-      "AllowedPattern": "[a-zA-Z0-9]*",
-      "ConstraintDescription": "Environment names must be 3-16 characters and contain only a-z and 0-9."
-    },
-    "DynamoTable": {
+    "DynamoTableName": {
       "Description": "DynamoDB",
       "Type": "String",
       "MinLength": "3",
       "MaxLength": "16",
-      "Default": "simhub",
-      "AllowedPattern": "[a-zA-Z0-9]*",
+      "Default": "simhub-KeyVal",
+      "AllowedPattern": "[a-zA-Z0-9-]*",
       "ConstraintDescription": "dynamo db names must be 3-16 characters and contain only a-z and 0-9."
     }
   },
   "Resources": {
-    "KinesisStream": {
-      "Type": "AWS::Kinesis::Stream",
+    "DynamoTable": {
+      "Type": "AWS::DynamoDB::Table",
       "Properties": {
-        "Name": {
-          "Ref": "StreamName"
+        "AttributeDefinitions": [{
+          "AttributeName": "source",
+          "AttributeType": "S"
+        }],
+        "KeySchema": [{
+          "AttributeName": "source",
+          "KeyType": "HASH"
+        }],
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits": "10",
+          "WriteCapacityUnits": "10"
         },
-        "RetentionPeriodHours": 24,
-        "ShardCount": 1
+        "TableName": {
+          "Ref": "DynamoTableName"
+        }
       }
     }
   },
   "Outputs": {
-    "KinesisStreamARN": {
+    "DynamoARN": {
       "Value": {
-        "Fn::GetAtt": [
-          "KinesisStream",
-          "Arn"
-        ]
+        "Fn::GetAtt": ["DynamoTable", "Arn"]
       },
-      "Description": "Kinesis Stream",
+      "Description": "DynamoTable ARN",
       "Export": {
         "Name": {
-          "Fn::Sub": "${AWS::StackName}-KinesisStream-ARN"
+          "Fn::Sub": "${AWS::StackName}-DynamoTable-ARN"
         }
       }
     }
