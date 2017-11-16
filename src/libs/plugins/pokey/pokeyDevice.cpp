@@ -147,22 +147,33 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
 
                 if (newEncoderValue < previousEncoderValue) {
                     // values are decreasing
-                    if (currentValue <= min) {
-                        self->_encoders[i].previousValue = min;
-                        self->_encoders[i].value = min;
+
+                    if (self->_encoders[i].type == "absolute") {
+                        self->_encoders[i].value = 1;
                     }
                     else {
-                        self->_encoders[i].value = currentValue - step;
+                        if (currentValue <= min) {
+                            self->_encoders[i].previousValue = min;
+                            self->_encoders[i].value = min;
+                        }
+                        else {
+                            self->_encoders[i].value = currentValue - step;
+                        }
                     }
                 }
                 else {
                     // values are increasing
-                    if (currentValue >= max) {
-                        self->_encoders[i].previousValue = max;
-                        self->_encoders[i].value = max;
+                    if (self->_encoders[i].type == "absolute") {
+                        self->_encoders[i].value = -1;
                     }
                     else {
-                        self->_encoders[i].value = currentValue + step;
+                        if (currentValue >= max) {
+                            self->_encoders[i].previousValue = max;
+                            self->_encoders[i].value = max;
+                        }
+                        else {
+                            self->_encoders[i].value = currentValue + step;
+                        }
                     }
                 }
 
@@ -413,7 +424,7 @@ bool PokeyDevice::isEncoderCapable(int pin)
 }
 
 void PokeyDevice::addEncoder(
-    int encoderNumber, uint32_t defaultValue, std::string name, std::string description, int min, int max, int step, int invertDirection, std::string units)
+    int encoderNumber, uint32_t defaultValue, std::string name, std::string description, int min, int max, int step, int invertDirection, std::string units, std::string type)
 {
     assert(encoderNumber >= 1);
 
@@ -460,11 +471,13 @@ void PokeyDevice::addEncoder(
     _encoders[encoderIndex].value = defaultValue;
     _encoders[encoderIndex].previousValue = defaultValue;
     _encoders[encoderIndex].previousEncoderValue = defaultValue;
+
     _encoders[encoderIndex].min = min;
     _encoders[encoderIndex].max = max;
     _encoders[encoderIndex].step = step;
     _encoders[encoderIndex].units = units;
     _encoders[encoderIndex].description = description;
+    _encoders[encoderIndex].type = type;
 
     int val = PK_EncoderConfigurationSet(_pokey);
 
@@ -542,7 +555,7 @@ uint32_t PokeyDevice::targetValue(std::string targetName, bool value)
     return retValue;
 }
 
-uint8_t PokeyDevice::displayNumber(uint8_t displayNumber, std::string targetName, int value)
+uint8_t PokeyDevice::displayNumber(uint8_t displayNumber, std::string targetName, int16_t value)
 {
     int groupIndex = 0;
 
@@ -552,39 +565,36 @@ uint8_t PokeyDevice::displayNumber(uint8_t displayNumber, std::string targetName
         }
     }
 
-    // we should only display +ve values
-    if (value < -1) {
-        value = value * -1;
-    }
-
     std::string charString = std::to_string(value);
     int numberOfChars = charString.length();
     int groupLength = _matrixLED[displayNumber].group[groupIndex].length;
 
-    if (value == 0) {
+    if (value == 18) {
+        value = 0;
         int position = _matrixLED[displayNumber].group[groupIndex].position;
         for (int i = position; i < (groupLength + position); i++) {
-            _pokey->MatrixLED[displayNumber].data[i] = 0b00000000;
+            _pokey->MatrixLED[displayNumber].data[i] = _intToDisplayRow[0];
         }
-        _pokey->MatrixLED[displayNumber].data[(position + groupLength) - 1] = _intToDisplayRow[0];
     }
-
-    if (numberOfChars <= groupLength) {
+    else if (numberOfChars <= groupLength) {
+        int offset = groupLength - numberOfChars;
 
         for (int i = 0; i < numberOfChars; i++) {
             int displayOffset = (int)charString.at(i) - 48;
             int convertedValue = _intToDisplayRow[displayOffset];
             int position = groupIndex + i;
 
-            if (value > 0) {
-                _matrixLED[displayNumber].group[groupIndex].value = convertedValue;
-                _pokey->MatrixLED[displayNumber].data[position] = convertedValue;
-            }
-            else if (value == -1) {
-                for (int i = groupIndex; i < groupLength + groupIndex; i++) {
-                    _pokey->MatrixLED[displayNumber].data[i] = 0b00000000;
+            // zero out the leading positions
+            if (position < offset) {
+                if (value < 0) {
+                    _pokey->MatrixLED[displayNumber].data[i] = 0b00000010;
+                }
+                else {
+                    _pokey->MatrixLED[displayNumber].data[i] = _intToDisplayRow[0];
                 }
             }
+            _matrixLED[displayNumber].group[groupIndex].value = convertedValue;
+            _pokey->MatrixLED[displayNumber].data[position + offset] = convertedValue;
         }
     }
 

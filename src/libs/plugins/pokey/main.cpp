@@ -152,6 +152,8 @@ bool PokeyDevicePluginStateManager::addTargetToDeviceTargetList(std::string targ
 
 std::shared_ptr<PokeyDevice> PokeyDevicePluginStateManager::targetFromDeviceTargetList(std::string key)
 {
+    // std::cout << "trying to find " << key << std::endl;
+    
     std::map<std::string, std::shared_ptr<PokeyDevice>>::iterator it = _deviceMap.find(key);
 
     if (it != _deviceMap.end()) {
@@ -429,6 +431,7 @@ bool PokeyDevicePluginStateManager::deviceEncodersConfiguration(libconfig::Setti
             int encoderNumber = 0;
             std::string encoderName = "";
             std::string description = "";
+            std::string type = "";
             int encoderDefault = 0;
             int encoderMin = 0;
             int encoderMax = 1000;
@@ -446,6 +449,7 @@ bool PokeyDevicePluginStateManager::deviceEncodersConfiguration(libconfig::Setti
                 iter->lookupValue("step", encoderStep);
                 iter->lookupValue("invertDirection", invertDirection);
                 iter->lookupValue("units", units);
+                iter->lookupValue("type", type);
             }
             catch (const libconfig::SettingNotFoundException &nfex) {
                 _logger(LOG_ERROR, "Could not find %s. Skipping....", nfex.what());
@@ -453,7 +457,7 @@ bool PokeyDevicePluginStateManager::deviceEncodersConfiguration(libconfig::Setti
             }
 
             if (pokeyDevice->validateEncoder(encoderNumber)) {
-                pokeyDevice->addEncoder(encoderNumber, encoderDefault, encoderName, description, encoderMin, encoderMax, encoderStep, invertDirection, units);
+                pokeyDevice->addEncoder(encoderNumber, encoderDefault, encoderName, description, encoderMin, encoderMax, encoderStep, invertDirection, units,type);
                 _logger(LOG_INFO, "        - [%s] Added encoder %i (%s)", pokeyDevice->name().c_str(), encoderNumber, encoderName.c_str());
                 encoderIndex++;
             }
