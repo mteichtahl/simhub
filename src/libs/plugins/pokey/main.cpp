@@ -92,7 +92,7 @@ int PokeyDevicePluginStateManager::processPokeyDeviceUpdate(std::shared_ptr<Poke
 int PokeyDevicePluginStateManager::deliverValue(GenericTLV *data)
 {
     assert(data);
-    
+
     int retVal = 0;
 
     std::shared_ptr<PokeyDevice> device = targetFromDeviceTargetList(data->name);
@@ -604,7 +604,7 @@ int PokeyDevicePluginStateManager::preflightComplete(void)
         retVal = PREFLIGHT_OK;
     }
     else {
-        _logger(LOG_INFO, "   - No Pokey devices discovered");
+        _logger(LOG_INFO, "   - WARNING: No Pokey devices discovered");
     }
 
     _preflightComplete = (retVal == PREFLIGHT_OK);
