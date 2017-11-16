@@ -604,7 +604,7 @@ int PokeyDevicePluginStateManager::preflightComplete(void)
         retVal = PREFLIGHT_OK;
     }
     else {
-        _logger(LOG_INFO, "   - WARNING: No Pokey devices discovered");
+        _logger(LOG_INFO, "    - WARNING: No Pokey devices discovered");
     }
 
     _preflightComplete = (retVal == PREFLIGHT_OK);
