@@ -86,7 +86,7 @@ SimSourcePluginStateManager::SimSourcePluginStateManager(LoggingFunctionCB logge
 SimSourcePluginStateManager::~SimSourcePluginStateManager(void)
 {
     ceaseEventing();
-    
+
     if (_rawBuffer != NULL) {
         free(_rawBuffer);
     }
@@ -371,6 +371,9 @@ char *SimSourcePluginStateManager::getElementDataType(char identifier)
     case SWITCH_IDENTIFIER:
         return (char *)"bool";
         break;
+    case ENCODER_IDENTIFIER:
+        return (char *)"float";
+        break;
     default:
         _logger(LOG_ERROR, "Missing prosim element data type %c", identifier);
         break;
@@ -389,9 +392,9 @@ std::string SimSourcePluginStateManager::prosimValueString(std::shared_ptr<Attri
 
     switch (attribute->name().c_str()[0]) {
     case SWITCH_IDENTIFIER:
-        // printf("SimSourcePluginStateManager\n");
-        // retVal = attribute->value<bool>() ? 0 : 1;
-        // break;
+    // printf("SimSourcePluginStateManager\n");
+    // retVal = attribute->value<bool>() ? 0 : 1;
+    // break;
 
     default:
         retVal = attribute->valueToString();

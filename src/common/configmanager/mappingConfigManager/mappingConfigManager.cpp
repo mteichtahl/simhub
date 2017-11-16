@@ -66,6 +66,11 @@ int MappingConfigManager::init(void)
         _mappingConfig = &_config.lookup("mapping");
         logger.log(LOG_INFO, " - Found %d mappings", _mappingConfig->getLength());
 
+        // no need to continue if there are no mappings to be processed
+        if (_mappingConfig->getLength() == 0) {
+            return RETURN_OK;
+        }
+
         for (int i = 0; i <= _mappingConfig->getLength() - 1; i++) {
             std::string source;
             std::string target;
