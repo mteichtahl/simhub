@@ -196,7 +196,8 @@ solution "simhub"
                 "uv" }
         files { "src/libs/plugins/pokey/**.h",
                 "src/libs/plugins/common/**.cpp",
-                "src/libs/plugins/pokey/**.cpp" }
+                "src/libs/plugins/pokey/**.cpp",
+                "src/common/elements/attributes/attribute.cpp" }
         includedirs { "src/libs/googletest/include", 
                       "src/libs/googletest", 
                       "src/common",

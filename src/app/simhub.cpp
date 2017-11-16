@@ -1,6 +1,6 @@
 #include <assert.h>
-#include <utility>
 #include <chrono>
+#include <utility>
 
 #include "common/configmanager/configmanager.h"
 #include "log/clog.h"
@@ -22,8 +22,16 @@ std::shared_ptr<SimHubEventController> SimHubEventController::EventControllerIns
     return SimHubEventController::_EventControllerInstance;
 }
 
+//! allows reset of global singleton
+void SimHubEventController::DestroyEventControllerInstance(void)
+{
+    logger.log(LOG_INFO, "Destroying event controller singleton");
+
+    SimHubEventController::_EventControllerInstance.reset();
+    SimHubEventController::_EventControllerInstance = NULL;
+}
+
 SimHubEventController::SimHubEventController()
-// : _configurationHTTPListener(U("http://127.0.0.1:3000"))
 {
     _prepare3dMethods.plugin_instance = NULL;
     _pokeyMethods.plugin_instance = NULL;
@@ -37,9 +45,7 @@ SimHubEventController::SimHubEventController()
     logger.log(LOG_INFO, "Starting event controller");
 }
 
-/**
- * like strtok but not evil
- */
+//! like strtok but not evil
 void split(const std::string &sequence, std::string &delims, std::vector<std::string> &tokens)
 {
     size_t i = 0;
@@ -62,8 +68,9 @@ void split(const std::string &sequence, std::string &delims, std::vector<std::st
 }
 
 /**
- * rudimentary converter from libconfig content to JSON content
- * - doesn't suppoert '#' comments outside of dictionaries (like in lists)
+ * rudimentary converter from libconfig content to JSON content -
+ * doesn't suppoert '#' comments outside of dictionaries (like in
+ * lists)
  */
 std::string libconfigToJSON(std::string configFilename)
 {
@@ -126,8 +133,8 @@ std::string libconfigToJSON(std::string configFilename)
 }
 
 /**
- * serves GET requests on http://localhost/configuration - returns JSON converted
- * pokey configuration content
+ * serves GET requests on http://localhost/configuration - returns
+ * JSON converted pokey configuration content
  */
 void SimHubEventController::httpGETConfigurationHandler(web::http::http_request request)
 {
@@ -136,8 +143,8 @@ void SimHubEventController::httpGETConfigurationHandler(web::http::http_request 
 }
 
 /**
- * constructs cpprest HTTP listener instance and tells it to start listening on
- * cofigured port
+ * constructs cpprest HTTP listener instance and tells it to start
+ * listening on cofigured port
  */
 void SimHubEventController::startHTTPListener(void)
 {
@@ -161,7 +168,7 @@ SimHubEventController::~SimHubEventController(void)
     if (_awsHelper.polly()) {
         _awsHelper.polly()->shutdown();
     }
-    
+
     if (_awsHelper.kinesis()) {
         _awsHelper.kinesis()->shutdown();
     }
@@ -174,7 +181,6 @@ SimHubEventController::~SimHubEventController(void)
 void SimHubEventController::startSustainThread(void)
 {
     _awsHelper.polly()->say("Simulator is ready.");
-   
     std::shared_ptr<std::thread> sustainThread = std::make_shared<std::thread>([=] {
         _sustainThreadManager.setThreadRunning(true);
         while (!_sustainThreadManager.threadCanceled()) {
@@ -238,18 +244,18 @@ void SimHubEventController::enablePolly(void)
 
 void SimHubEventController::enableKinesis(void)
 {
-    //! read the configuration sections we need
+    // read the configuration sections we need
     const libconfig::Setting &aws = _configManager->config()->lookup("aws");
     const libconfig::Setting &kinesis = aws.lookup("kinesis");
-    //! somehwere to store our variables
+    // somehwere to store our variables
     std::string region;
     std::string stream;
     std::string partition;
-    //! read the configuration values
+    // read the configuration values
     aws.lookupValue("region", region);
     kinesis.lookupValue("stream", stream);
     kinesis.lookupValue("partition", partition);
-    //! initialise the kinesis helper
+    // initialise the kinesis helper
     _awsHelper.initKinesis(stream, partition, region);
 }
 
@@ -297,6 +303,7 @@ bool SimHubEventController::deliverValue(std::shared_ptr<Attribute> value)
                 _awsHelper.polly()->say("dc volts %i", c_value->value);
         }
 #endif
+
         retVal = !_pokeyMethods.simplug_deliver_value(_pokeyMethods.plugin_instance, c_value);
     }
 
@@ -309,9 +316,10 @@ bool SimHubEventController::deliverValue(std::shared_ptr<Attribute> value)
 
     return retVal;
 }
+
 // these callbacks will be called from the thread of the event
-// generator which is assumed to not be the thread of the for
-// loop below
+// generator which is assumed to not be the thread of the for loop
+// below
 
 void SimHubEventController::prepare3dEventCallback(SPHANDLE eventSource, void *eventData)
 {

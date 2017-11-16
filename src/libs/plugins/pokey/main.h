@@ -5,6 +5,7 @@
 #include <iostream>
 #include <iterator>
 #include <thread>
+#include <mutex>
 #include <unistd.h>
 
 #include "PoKeysLib.h"
@@ -19,6 +20,9 @@ typedef std::pair<std::string, std::shared_ptr<PokeyDevice>> pokeyDevicePair;
 typedef std::map<std::string, std::shared_ptr<PokeyDevice>> PokeyDeviceMap; ///< a list of unique device pointers
 typedef PokeyDeviceMap::iterator deviceTargetIterator; ///< iterator for deviceTargers
 
+typedef std::function<std::string(std::string, std::string, std::string)> TransformFunction;
+typedef std::map<std::string, TransformFunction> TransformMap;
+
 //! barest specialisation of the internal plugin management support base class
 class PokeyDevicePluginStateManager : public PluginStateManager
 {
@@ -27,6 +31,7 @@ private:
     static PokeyDevicePluginStateManager *_StateManagerInstance;
     static PokeyDevicePluginStateManager *StateManagerInstance(void);
     PokeyDeviceMap _deviceTargetList;
+    bool _preflightComplete;
 
 protected:
     bool validateConfig(libconfig::SettingIterator);
@@ -39,10 +44,15 @@ protected:
     bool addTargetToDeviceTargetList(std::string, std::shared_ptr<PokeyDevice> device);
     std::shared_ptr<PokeyDevice> targetFromDeviceTargetList(std::string);
     void enumerateDevices(void);
+    void loadTransform(std::string pinName, libconfig::Setting *transform);
+    void loadMapTo(std::string pinName, libconfig::Setting *mapTo);
 
     int _numberOfDevices;
     PokeyDeviceMap _deviceMap;
     sPoKeysNetworkDeviceSummary *_devices;
+    TransformMap _pinValueTransforms;
+    std::map<std::string, std::pair<std::shared_ptr<PokeyDevice>, std::string>> _remappedPins;
+    std::mutex _pinRemappingMutex;
 
 public:
     PokeyDevicePluginStateManager(LoggingFunctionCB logger);
@@ -52,6 +62,23 @@ public:
     virtual int deliverValue(GenericTLV *value);
     virtual void ceaseEventing(void);
     std::shared_ptr<PokeyDevice> device(std::string);
+    virtual int processPokeyDeviceUpdate(std::shared_ptr<PokeyDevice> device);
+
+    //! returns the value transformation for the given pin name
+    TransformFunction transformForPinName(std::string name);
+
+    //! allows callers to check if a given pin has a remapping
+    bool pinRemapped(std::string pinName);
+
+    //! returns the final target device and ping from the give original source pin
+    std::pair<std::shared_ptr<PokeyDevice>, std::string> remappedPinDetails(std::string pinName);
+
+    //! KLUDGE: will refactor
+    std::mutex &pinRemappingMutex(void) { return _pinRemappingMutex; };
+
+    std::shared_ptr<PokeyDevice> deviceForPin(std::string pinName);
+
+    bool successfulPreflightCompleted(void) { return _preflightComplete; };
 };
 
 #endif
