@@ -147,7 +147,7 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
 
                 if (newEncoderValue < previousEncoderValue) {
                     // values are decreasing
-
+                    // absolute encoders send 1 or -1
                     if (self->_encoders[i].type == "absolute") {
                         self->_encoders[i].value = 1;
                     }
@@ -164,6 +164,7 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
                 else {
                     // values are increasing
                     if (self->_encoders[i].type == "absolute") {
+                        // absolute encoders send 1 or -1
                         self->_encoders[i].value = -1;
                     }
                     else {
@@ -555,7 +556,7 @@ uint32_t PokeyDevice::targetValue(std::string targetName, bool value)
     return retValue;
 }
 
-uint8_t PokeyDevice::displayNumber(uint8_t displayNumber, std::string targetName, int16_t value)
+uint8_t PokeyDevice::displayNumber(uint8_t displayNumber, std::string targetName, int value)
 {
     int groupIndex = 0;
 
@@ -565,36 +566,39 @@ uint8_t PokeyDevice::displayNumber(uint8_t displayNumber, std::string targetName
         }
     }
 
+    // we should only display +ve values
+    if (value < -1) {
+        value = value * -1;
+    }
+
     std::string charString = std::to_string(value);
     int numberOfChars = charString.length();
     int groupLength = _matrixLED[displayNumber].group[groupIndex].length;
 
-    if (value == 18) {
-        value = 0;
+    if (value == 0) {
         int position = _matrixLED[displayNumber].group[groupIndex].position;
         for (int i = position; i < (groupLength + position); i++) {
-            _pokey->MatrixLED[displayNumber].data[i] = _intToDisplayRow[0];
+            _pokey->MatrixLED[displayNumber].data[i] = 0b00000000;
         }
+        _pokey->MatrixLED[displayNumber].data[(position + groupLength) - 1] = _intToDisplayRow[0];
     }
-    else if (numberOfChars <= groupLength) {
-        int offset = groupLength - numberOfChars;
+
+    if (numberOfChars <= groupLength) {
 
         for (int i = 0; i < numberOfChars; i++) {
             int displayOffset = (int)charString.at(i) - 48;
             int convertedValue = _intToDisplayRow[displayOffset];
             int position = groupIndex + i;
 
-            // zero out the leading positions
-            if (position < offset) {
-                if (value < 0) {
-                    _pokey->MatrixLED[displayNumber].data[i] = 0b00000010;
-                }
-                else {
-                    _pokey->MatrixLED[displayNumber].data[i] = _intToDisplayRow[0];
+            if (value > 0) {
+                _matrixLED[displayNumber].group[groupIndex].value = convertedValue;
+                _pokey->MatrixLED[displayNumber].data[position] = convertedValue;
+            }
+            else if (value == -1) {
+                for (int i = groupIndex; i < groupLength + groupIndex; i++) {
+                    _pokey->MatrixLED[displayNumber].data[i] = 0b00000000;
                 }
             }
-            _matrixLED[displayNumber].group[groupIndex].value = convertedValue;
-            _pokey->MatrixLED[displayNumber].data[position + offset] = convertedValue;
         }
     }
 
