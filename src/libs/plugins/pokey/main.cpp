@@ -481,16 +481,18 @@ bool PokeyDevicePluginStateManager::deviceDisplaysConfiguration(libconfig::Setti
         for (libconfig::SettingIterator iter = displays->begin(); iter != displays->end(); iter++) {
             std::string name = "None";
             std::string type = "";
+            std::string driver = "";
             int enabled = 0;
 
             try {
                 iter->lookupValue("name", name);
                 iter->lookupValue("type", type);
+                iter->lookupValue("driver", driver);
                 iter->lookupValue("enabled", enabled);
 
                 _logger(LOG_INFO, "    [%s]  - %s [%s]", pokeyDevice->name().c_str(), name.c_str(), type.c_str());
 
-                int matrixRows = deviceDisplaysGroupsConfiguration(&iter->lookup("groups"), displayIndex, pokeyDevice, type);
+                int matrixRows = deviceDisplaysGroupsConfiguration(&iter->lookup("groups"), displayIndex, pokeyDevice, type, driver);
                 _logger(LOG_INFO, "    [%s]  - Added %i digits", pokeyDevice->name().c_str(), matrixRows);
 
                 pokeyDevice->configMatrixLED(displayIndex, 8, 8, enabled);
@@ -506,7 +508,8 @@ bool PokeyDevicePluginStateManager::deviceDisplaysConfiguration(libconfig::Setti
     return retVal;
 }
 
-int PokeyDevicePluginStateManager::deviceDisplaysGroupsConfiguration(libconfig::Setting *displayGroups, int displayId, std::shared_ptr<PokeyDevice> pokeyDevice, std::string type)
+int PokeyDevicePluginStateManager::deviceDisplaysGroupsConfiguration(
+    libconfig::Setting *displayGroups, int displayId, std::shared_ptr<PokeyDevice> pokeyDevice, std::string type, std::string driver)
 {
     int groupCount = displayGroups->getLength();
     int totalDigits = 0;
@@ -527,12 +530,17 @@ int PokeyDevicePluginStateManager::deviceDisplaysGroupsConfiguration(libconfig::
                 iter->lookupValue("digits", digits);
                 iter->lookupValue("position", position);
 
-                _logger(LOG_INFO, "    [%s]    - %s %i digits / position %i", pokeyDevice->name().c_str(), name.c_str(), digits, position);
-                pokeyDevice->addMatrixLED(displayId, name, type);
+                if (driver == "microdriver") {
+                    _logger(LOG_INFO, "    [%s]    - %s %i digits / position %i", pokeyDevice->name().c_str(), name.c_str(), digits, position);
+                    pokeyDevice->addMatrixLED(displayId, name, type, driver);
 
-                pokeyDevice->addGroupToMatrixLED(id++, displayId, name, digits, position);
-                addTargetToDeviceTargetList(name, pokeyDevice);
-                totalDigits += digits;
+                    pokeyDevice->addGroupToMatrixLED(id++, displayId, name, digits, position);
+                    addTargetToDeviceTargetList(name, pokeyDevice);
+                    totalDigits += digits;
+                }
+                else {
+                    _logger(LOG_INFO, "    WARNING - Unknown display driver %s\n", driver.c_str());
+                }
             }
             catch (const libconfig::SettingNotFoundException &nfex) {
                 _logger(LOG_ERROR, "Could not find %s. Skipping....", nfex.what());

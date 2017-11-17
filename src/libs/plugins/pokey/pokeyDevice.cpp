@@ -477,11 +477,12 @@ void PokeyDevice::addEncoder(
     }
 }
 
-void PokeyDevice::addMatrixLED(int id, std::string name, std::string type)
+void PokeyDevice::addMatrixLED(int id, std::string name, std::string type, std::string driver)
 {
     PK_MatrixLEDConfigurationGet(_pokey);
     _matrixLED[id].name = name;
     _matrixLED[id].type = type;
+    _matrixLED[id].driver = driver;
 
     mapNameToMatrixLED(name, id);
 }
@@ -545,47 +546,91 @@ uint32_t PokeyDevice::targetValue(std::string targetName, bool value)
 uint8_t PokeyDevice::displayNumber(uint8_t displayNumber, std::string targetName, int value)
 {
     int groupIndex = 0;
+    std::string displayType = "";
+    std::string charString = "";
 
     for (int i = 0; i < MAX_MATRIX_LED_GROUPS; i++) {
         if (_matrixLED[displayNumber].group[i].name == targetName) {
             groupIndex = i;
+            displayType = _matrixLED[displayNumber].type;
+            break;
         }
     }
 
-    // we should only display +ve values
-    if (value < -1) {
-        value = value * -1;
-    }
-
-    std::string charString = std::to_string(value);
     int numberOfChars = charString.length();
     int groupLength = _matrixLED[displayNumber].group[groupIndex].length;
 
-    if (value == 0) {
-        int position = _matrixLED[displayNumber].group[groupIndex].position;
-        for (int i = position; i < (groupLength + position); i++) {
-            _pokey->MatrixLED[displayNumber].data[i] = 0b00000000;
+    if (displayType == DISPLAY_FORMAT_TYPE_BASIC) {
+        if (value < -1) {
+            value = value * -1;
         }
-        _pokey->MatrixLED[displayNumber].data[(position + groupLength) - 1] = _intToDisplayRow[0];
-    }
 
-    if (numberOfChars <= groupLength) {
+        charString = std::to_string(value);
 
-        for (int i = 0; i < numberOfChars; i++) {
-            int displayOffset = (int)charString.at(i) - 48;
-            int convertedValue = _intToDisplayRow[displayOffset];
-            int position = groupIndex + i;
-
-            if (value > 0) {
-                _matrixLED[displayNumber].group[groupIndex].value = convertedValue;
-                _pokey->MatrixLED[displayNumber].data[position] = convertedValue;
+        if (value == 0) {
+            int position = _matrixLED[displayNumber].group[groupIndex].position;
+            for (int i = position; i < (groupLength + position); i++) {
+                _pokey->MatrixLED[displayNumber].data[i] = 0b00000000;
             }
-            else if (value == -1) {
-                for (int i = groupIndex; i < groupLength + groupIndex; i++) {
-                    _pokey->MatrixLED[displayNumber].data[i] = 0b00000000;
+            _pokey->MatrixLED[displayNumber].data[(position + groupLength) - 1] = _intToDisplayRow[0];
+        }
+
+        if (numberOfChars <= groupLength) {
+
+            for (int i = 0; i < numberOfChars; i++) {
+                int displayOffset = (int)charString.at(i) - 48;
+                int convertedValue = _intToDisplayRow[displayOffset];
+                int position = groupIndex + i;
+
+                if (value > 0) {
+                    _matrixLED[displayNumber].group[groupIndex].value = convertedValue;
+                    _pokey->MatrixLED[displayNumber].data[position] = convertedValue;
+                }
+                else if (value == -1) {
+                    for (int i = groupIndex; i < groupLength + groupIndex; i++) {
+                        _pokey->MatrixLED[displayNumber].data[i] = 0b00000000;
+                    }
                 }
             }
         }
+    }
+    else if (displayType == DISPLAY_FORMAT_TYPE_ADVANCED) {
+        std::string charString = std::to_string(value);
+        int numberOfChars = charString.length();
+        int groupLength = _matrixLED[displayNumber].group[groupIndex].length;
+
+        if (value == 18) {
+            value = 0;
+            int position = _matrixLED[displayNumber].group[groupIndex].position;
+            for (int i = position; i < (groupLength + position); i++) {
+                _pokey->MatrixLED[displayNumber].data[i] = _intToDisplayRow[0];
+            }
+        }
+        else if (numberOfChars <= groupLength) {
+            int offset = groupLength - numberOfChars;
+
+            for (int i = 0; i < numberOfChars; i++) {
+                int displayOffset = (int)charString.at(i) - 48;
+                int convertedValue = _intToDisplayRow[displayOffset];
+                int position = groupIndex + i;
+
+                // zero out the leading positions
+                if (position < offset) {
+                    if (value < 0) {
+                        _pokey->MatrixLED[displayNumber].data[i] = 0b00000010;
+                    }
+                    else {
+                        _pokey->MatrixLED[displayNumber].data[i] = _intToDisplayRow[0];
+                    }
+                }
+                _matrixLED[displayNumber].group[groupIndex].value = convertedValue;
+                _pokey->MatrixLED[displayNumber].data[position + offset] = convertedValue;
+            }
+        }
+    }
+    else {
+        printf("----> Unknown display driver %s \n", displayType.c_str());
+        return -1;
     }
 
     _pokey->MatrixLED[displayNumber].RefreshFlag = 1;
