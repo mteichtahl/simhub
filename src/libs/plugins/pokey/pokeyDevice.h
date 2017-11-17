@@ -29,6 +29,8 @@
 #define MAX_MATRIX_LED_GROUPS 8
 #define MAX_DIGITS 10
 #define MAX_PWM_CHANNELS 6
+#define DISPLAY_FORMAT_TYPE_BASIC "basic"
+#define DISPLAY_FORMAT_TYPE_ADVANCED "advanced"
 
 typedef struct {
     std::string pinName;
@@ -67,6 +69,7 @@ typedef struct {
 typedef struct {
     uint8_t id;
     std::string type;
+    std::string driver;
     std::string name;
     device_matrixLED_group_t group[MAX_MATRIX_LED_GROUPS];
 } device_matrixLED_t;
@@ -178,7 +181,7 @@ public:
     void addEncoder(int encoderNumber, uint32_t defaultValue, std::string name = DEFAULT_ENCODER_NAME, std::string description = DEFAULT_ENCODER_DESCRIPTION,
         int min = DEFAULT_ENCODER_MIN, int max = DEFAULT_ENCODER_MAX, int step = DEFAULT_ENCODER_STEP, int invertDirection = DEFAULT_ENCODER_DIRECTION, std::string units = "");
 
-    void addMatrixLED(int id, std::string name, std::string type);
+    void addMatrixLED(int id, std::string name, std::string type, std::string driver);
     void configMatrixLED(int id, int rows, int cols = 8, int enabled = 0);
     void addGroupToMatrixLED(int id, int displayId, std::string name, int digits, int position);
     void startPolling();

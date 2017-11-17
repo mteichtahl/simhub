@@ -4,8 +4,8 @@
 #include <assert.h>
 #include <iostream>
 #include <iterator>
-#include <thread>
 #include <mutex>
+#include <thread>
 #include <unistd.h>
 
 #include "PoKeysLib.h"
@@ -40,7 +40,7 @@ protected:
     bool deviceEncodersConfiguration(libconfig::Setting *encoders, std::shared_ptr<PokeyDevice> pokeyDevice);
     bool deviceDisplaysConfiguration(libconfig::Setting *displays, std::shared_ptr<PokeyDevice> pokeyDevice);
     bool devicePWMConfiguration(libconfig::Setting *pwm, std::shared_ptr<PokeyDevice> pokeyDevice);
-    int deviceDisplaysGroupsConfiguration(libconfig::Setting *displayGroups, int id, std::shared_ptr<PokeyDevice> pokeyDevice, std::string type);
+    int deviceDisplaysGroupsConfiguration(libconfig::Setting *displayGroups, int id, std::shared_ptr<PokeyDevice> pokeyDevice, std::string type, std::string driver);
     bool addTargetToDeviceTargetList(std::string, std::shared_ptr<PokeyDevice> device);
     std::shared_ptr<PokeyDevice> targetFromDeviceTargetList(std::string);
     void enumerateDevices(void);
