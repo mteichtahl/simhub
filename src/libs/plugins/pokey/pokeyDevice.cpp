@@ -513,6 +513,25 @@ void PokeyDevice::configMatrixLED(int id, int rows, int cols, int enabled)
     PK_MatrixLEDUpdate(_pokey);
 }
 
+void PokeyDevice::configMatrix(int id, int chipSelect, std::string type, int enabled, std::string name)
+{
+    assert(id == 0);
+
+    int retVal;
+    _matrix[id].type = type;
+    _matrix[id].enabled = enabled;
+   
+    _matrix[id].name = name;
+
+
+    PokeyMAX7219Matrix poo(_pokey,1,chipSelect);
+
+    poo.driver(0).setIntensity(1);
+    poo.refreshDisplay();
+
+   
+}
+
 uint32_t PokeyDevice::targetValue(std::string targetName, int value)
 {
     uint8_t displayNum = displayFromName(targetName);

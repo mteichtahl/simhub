@@ -30,6 +30,8 @@
 #define MAX_MATRIX_LED_GROUPS 8
 #define MAX_DIGITS 10
 #define MAX_PWM_CHANNELS 6
+#define MAX_MATRIX 1
+
 
 typedef struct {
     std::string pinName;
@@ -80,6 +82,14 @@ typedef struct {
     uint32_t duty;
 } device_pwm_t;
 
+typedef struct {
+    uint8_t id;
+    std::string type;
+    int enabled;
+    int chipSelect;
+    std::string name;
+} device_matrix_t;
+
 class PokeyDevicePluginStateManager;
 
 class PokeyDevice
@@ -115,6 +125,9 @@ protected:
     device_encoder_t _encoders[MAX_ENCODERS];
     device_matrixLED_t _matrixLED[MAX_MATRIX_LEDS];
     uint8_t _intToDisplayRow[MAX_DIGITS];
+    device_matrix_t _matrix[MAX_MATRIX];
+
+
     EnqueueEventHandler _enqueueCallback;
 
     std::shared_ptr<std::thread> _pollThread;
@@ -183,6 +196,11 @@ public:
     void addMatrixLED(int id, std::string name, std::string type);
     void configMatrixLED(int id, int rows, int cols = 8, int enabled = 0);
     void addGroupToMatrixLED(int id, int displayId, std::string name, int digits, int position);
+
+    
+    void configMatrix(int id, int chipSelect, std::string type, int enabled = 0, std::string name="");
+
+    
     void startPolling();
     void stopPolling();
     std::string name();

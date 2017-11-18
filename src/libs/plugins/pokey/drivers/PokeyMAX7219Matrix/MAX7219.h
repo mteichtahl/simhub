@@ -16,6 +16,8 @@ public:
     bool *needsRefresh = new bool[12];
 
     MAX7219();
+    // MAX7219(MAX7219 const &) = delete;
+    void operator=(MAX7219 const &) = delete;
     ~MAX7219();
     uint8_t *createData(int index, uint8_t reg, uint8_t value);
     uint8_t *sendDataToOutput();
@@ -23,7 +25,7 @@ public:
     void setShutdown(uint8_t value);
     void setDigitDecoder(uint8_t value);
     void setDigitsCount(uint8_t value);
-    void setIntensitu(uint8_t value);
+    void setIntensity(uint8_t value);
     void setDigit(uint8_t digit, uint8_t value);
 };
 

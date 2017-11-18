@@ -71,7 +71,7 @@ void MAX7219::setDigitsCount(uint8_t value)
     this->digitsCount = value;
 }
 
-void MAX7219::setIntensitu(uint8_t value)
+void MAX7219::setIntensity(uint8_t value)
 {
     this->needsRefresh[3] = (this->intensity != value);
     this->intensity = value;
@@ -88,6 +88,6 @@ void MAX7219::setDigit(uint8_t digit, uint8_t value)
 
 MAX7219::~MAX7219()
 {
-    delete[] digitsData;
-    delete[] needsRefresh;
+    // delete[] digitsData;
+    // delete[] needsRefresh;
 }
