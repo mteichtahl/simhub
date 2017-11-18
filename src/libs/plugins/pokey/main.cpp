@@ -408,16 +408,6 @@ bool PokeyDevicePluginStateManager::devicePWMConfiguration(libconfig::Setting *p
 
 bool PokeyDevicePluginStateManager::deviceEncodersConfiguration(libconfig::Setting *encoders, std::shared_ptr<PokeyDevice> pokeyDevice)
 {
-    /**
-    {
-        # channel 1 - Fast Encoder 1 - uses pins 1 and 2
-        encoder = 1,
-        name = "",
-        description = "",
-        default = 100
-      }
-    **/
-
     bool retVal = true;
     int encoderCount = encoders->getLength();
 

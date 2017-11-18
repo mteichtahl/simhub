@@ -3,6 +3,7 @@
 
 #include "PoKeysLib.h"
 #include "common/simhubdeviceplugin.h"
+#include "drivers/PokeyMAX7219Matrix/PokeyMAX7219Matrix.h"
 #include <assert.h>
 #include <cmath>
 #include <iostream>
@@ -102,6 +103,7 @@ protected:
     std::map<std::string, int> _encoderMap;
     std::map<std::string, int> _displayMap;
     std::map<std::string, int> _pwmMap;
+    std::map<std::string, int> _ledMatrix;
 
     PokeyDevicePluginStateManager *_owner;
 
