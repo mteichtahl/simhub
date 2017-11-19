@@ -11,24 +11,23 @@
 #define MAX7219_PRESCALER 100
 #define MAX7219_FRAMEFORMAT 0
 
-typedef std::vector<MAX7219> deviceVector;
+typedef std::vector<std::shared_ptr<MAX7219>> DeviceVector;
 
 class PokeyMAX7219Matrix
 {
-public:
-    PokeyMAX7219Matrix(sPoKeysDevice *pokey, uint8_t deviceCount, uint8_t chipSelect);
-    virtual ~PokeyMAX7219Matrix(void);
-
-    uint8_t spi(uint8_t data);
-    MAX7219 driver(uint8_t index);
-    void refreshDisplay();
-
-private:
 protected:
     uint8_t _chipSelect;
     uint8_t _deviceCount;
     sPoKeysDevice *_pokey;
-    deviceVector _drivers;
+    DeviceVector _drivers;
+
+public:
+    PokeyMAX7219Matrix(sPoKeysDevice *pokey, uint8_t deviceCount, uint8_t chipSelect);
+    virtual ~PokeyMAX7219Matrix(void);
+
+    uint8_t *spi(uint8_t *data, uint8_t dataLength);
+    std::shared_ptr<MAX7219> driver(uint8_t index);
+    void refreshDisplay(void);
 };
 
 #endif

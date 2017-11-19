@@ -4,49 +4,44 @@
 
 PokeyMAX7219Matrix::PokeyMAX7219Matrix(sPoKeysDevice *pokey, uint8_t deviceCount, uint8_t chipSelect)
 {
-
     _chipSelect = chipSelect;
     _deviceCount = deviceCount;
     _pokey = pokey;
 
-    deviceVector _drivers;
-
     printf("SIZE %i\n", (int)_drivers.size());
 
-    MAX7219 *max = new MAX7219();
-    _drivers.push_back(*max);
-
+    std::shared_ptr<MAX7219> max = std::make_shared<MAX7219>();
+    _drivers.push_back(max);
     
-    //_drivers.assign(_deviceCount, MAX7219());
+    printf("SIZE %i\n", (int)_drivers.size());
 
-printf("SIZE %i\n", (int)_drivers.size());
     PK_SPIConfigure(_pokey, MAX7219_PRESCALER, MAX7219_FRAMEFORMAT);
 }
 
-PokeyMAX7219Matrix::~PokeyMAX7219Matrix() {}
+PokeyMAX7219Matrix::~PokeyMAX7219Matrix(void) {}
 
-MAX7219 PokeyMAX7219Matrix::driver(uint8_t index)
+std::shared_ptr<MAX7219> PokeyMAX7219Matrix::driver(uint8_t index)
 {
-printf("SIZE %i\n", (int)_drivers.size());
-
+    printf("SIZE %i\n", (int)_drivers.size());
     printf("----> index %i\n", index);
+
     return _drivers.at(index);
 }
 
-uint8_t PokeyMAX7219Matrix::spi(uint8_t data)
+uint8_t *PokeyMAX7219Matrix::spi(uint8_t *data, uint8_t dataLength)
 {
-    uint8_t *retVal = new uint8_t[sizeof(data)];
+    uint8_t *retVal = (uint8_t *)calloc(dataLength, 1);
     uint8_t status = 0;
 
     assert(_pokey);
 
-    PK_SPIWrite(_pokey, &data, sizeof(data), _chipSelect);
-    PK_SPIRead(_pokey, retVal, sizeof(data));
+    int32_t result = PK_SPIWrite(_pokey, data, dataLength, _chipSelect);
+    result = PK_SPIRead(_pokey, retVal, dataLength);
 
-    return *retVal;
+    return retVal;
 }
 
-void PokeyMAX7219Matrix::refreshDisplay()
+void PokeyMAX7219Matrix::refreshDisplay(void)
 {
     if (_deviceCount > 8)
         _deviceCount = 8;
@@ -60,12 +55,13 @@ void PokeyMAX7219Matrix::refreshDisplay()
 
         int index = 0;
 
-        for (deviceVector::iterator driver = _drivers.begin(); driver != _drivers.end(); ++driver) {
-            index = std::distance(_drivers.begin(), driver);
+        for (auto driver: _drivers) {
             uint8_t *data = driver->sendDataToOutput();
             memcpy(dataToSend + (index * 2), data, sizeof(&data));
+            index++;
         }
 
-        spi(*dataToSend);
+        uint8_t *result = spi(dataToSend, _deviceCount * 2);
+        free(result);
     }
 }

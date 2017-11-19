@@ -482,8 +482,8 @@ bool PokeyDevicePluginStateManager::deviceLedMatrixConfiguration(libconfig::Sett
                 iter->lookupValue("name", name);
 
                 _logger(LOG_INFO, "    [%s]    - %s [%s - CS %i]", pokeyDevice->name().c_str(), name.c_str(), matrixType.c_str(), chipSelect);
-                pokeyDevice->configMatrix(ledMatrixIndex, chipSelect, matrixType, enabled,name);
-                ledMatrixIndex = ledMatrixIndex + 1;
+                pokeyDevice->configMatrix(ledMatrixIndex, (uint8_t)chipSelect, matrixType, enabled, name);
+                ledMatrixIndex++;
             }
             catch (const libconfig::SettingNotFoundException &nfex) {
                 _logger(LOG_ERROR, "Could not find %s. Skipping....", nfex.what());

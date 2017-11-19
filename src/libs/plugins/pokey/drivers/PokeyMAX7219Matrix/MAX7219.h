@@ -15,13 +15,12 @@ public:
     unsigned char *digitsData = new unsigned char[8];
     bool *needsRefresh = new bool[12];
 
-    MAX7219();
-    // MAX7219(MAX7219 const &) = delete;
-    void operator=(MAX7219 const &) = delete;
-    ~MAX7219();
+    MAX7219(void);
+    virtual ~MAX7219(void);
+
     uint8_t *createData(int index, uint8_t reg, uint8_t value);
-    uint8_t *sendDataToOutput();
-    bool dataToRefresh();
+    uint8_t *sendDataToOutput(void);
+    bool dataToRefresh(void);
     void setShutdown(uint8_t value);
     void setDigitDecoder(uint8_t value);
     void setDigitsCount(uint8_t value);

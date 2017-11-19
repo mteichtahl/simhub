@@ -198,7 +198,7 @@ public:
     void addGroupToMatrixLED(int id, int displayId, std::string name, int digits, int position);
 
     
-    void configMatrix(int id, int chipSelect, std::string type, int enabled = 0, std::string name="");
+    void configMatrix(int id, uint8_t chipSelect, std::string type, int enabled = 0, std::string name="");
 
     
     void startPolling();

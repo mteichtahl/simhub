@@ -513,10 +513,8 @@ void PokeyDevice::configMatrixLED(int id, int rows, int cols, int enabled)
     PK_MatrixLEDUpdate(_pokey);
 }
 
-void PokeyDevice::configMatrix(int id, int chipSelect, std::string type, int enabled, std::string name)
+void PokeyDevice::configMatrix(int id, uint8_t chipSelect, std::string type, int enabled, std::string name)
 {
-    assert(id == 0);
-
     int retVal;
     _matrix[id].type = type;
     _matrix[id].enabled = enabled;
@@ -524,12 +522,22 @@ void PokeyDevice::configMatrix(int id, int chipSelect, std::string type, int ena
     _matrix[id].name = name;
 
 
-    PokeyMAX7219Matrix poo(_pokey,1,chipSelect);
+    PokeyMAX7219Matrix poo(_pokey, 1, chipSelect);
 
-    poo.driver(0).setIntensity(1);
+    std::shared_ptr<MAX7219> output = poo.driver(0);
+    output->setIntensity(15);
+
+    for (uint8_t i = 0; i < 8; i++) {
+        for (uint8_t d = 0; d < 8; d++) {
+            output->setDigit(d, (1 << d));
+        }
+
+        output->setIntensity((i * 2));   // Set indensity...
+        output->setDigitDecoder(((1 << 1) | (1 << 5))); // Use BCD decoder on second and sixth digit (indexes 1 and 5)
+        output->setShutdown(1);                // Normal mode
+    }
+
     poo.refreshDisplay();
-
-   
 }
 
 uint32_t PokeyDevice::targetValue(std::string targetName, int value)

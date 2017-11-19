@@ -2,7 +2,7 @@
 #include <assert.h>
 #include <unistd.h>
 
-MAX7219::MAX7219()
+MAX7219::MAX7219(void)
 {
     for (int i = 0; i < 12; i++) {
         this->needsRefresh[i] = true;
@@ -18,10 +18,8 @@ uint8_t *MAX7219::createData(int index, uint8_t reg, uint8_t value)
     return retVal;
 }
 
-uint8_t *MAX7219::sendDataToOutput()
+uint8_t *MAX7219::sendDataToOutput(void)
 {
-    uint8_t *data = new uint8_t[2];
-
     if (this->needsRefresh[0])
         return this->createData(0, 0x0C, this->shutdown); // Shutdown
     if (this->needsRefresh[1])
@@ -39,10 +37,11 @@ uint8_t *MAX7219::sendDataToOutput()
     uint8_t *retVal = new uint8_t[2];
     retVal[0] = 0x00;
     retVal[1] = 0x00;
+
     return retVal;
 }
 
-bool MAX7219::dataToRefresh()
+bool MAX7219::dataToRefresh(void)
 {
     bool tmp = false;
 
@@ -79,15 +78,15 @@ void MAX7219::setIntensity(uint8_t value)
 
 void MAX7219::setDigit(uint8_t digit, uint8_t value)
 {
-    if (digit > 0)
+    if (digit >= 8)
         return;
 
     this->needsRefresh[digit + 4] = (this->digitsData[digit] != value);
     this->digitsData[digit] = value;
 }
 
-MAX7219::~MAX7219()
+MAX7219::~MAX7219(void)
 {
-    // delete[] digitsData;
-    // delete[] needsRefresh;
+    delete[] digitsData;
+    delete[] needsRefresh;
 }
