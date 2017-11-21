@@ -3,7 +3,7 @@
 
 #include "PoKeysLib.h"
 #include "common/simhubdeviceplugin.h"
-#include "drivers/PokeyMAX7219Matrix/PokeyMAX7219Matrix.h"
+#include "drivers/PokeyMAX7219Manager/PokeyMAX7219Manager.h"
 #include <assert.h>
 #include <cmath>
 #include <iostream>
