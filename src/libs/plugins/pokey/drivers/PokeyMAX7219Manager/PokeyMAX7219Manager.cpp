@@ -76,7 +76,6 @@ void PokeyMAX7219Manager::setPinState(uint8_t col, uint8_t row, bool enabled)
 
     uint8_t rowMask = 0;
     uint8_t colRegister = REG_COL_1 + col - 1;
-    uint16_t packet = driver()->encodeOutputPacket(colRegister, rowMask);
 
     // build up the mask for the entire col to which the row belongs
 
@@ -85,7 +84,9 @@ void PokeyMAX7219Manager::setPinState(uint8_t col, uint8_t row, bool enabled)
 	    rowMask |= (1 << idx);
         }
     }
-
+    
+    uint16_t packet = driver()->encodeOutputPacket(colRegister, rowMask);
+    
     // PRINTF("---> COL REG BITS: " BYTE_TO_BINARY_PATTERN, BYTE_TO_BINARY((&packet)[0]));
     // printf("---> COL ROW MASK BITS: " BYTE_TO_BINARY_PATTERN, BYTE_TO_BINARY(((uint8_t*)&packet)[1]));
 
@@ -109,7 +110,7 @@ bool PokeyMAX7219Manager::RunTests(sPoKeysDevice *pokey, uint8_t chipSelect)
 
     try {
         std::shared_ptr<PokeyMAX7219Manager> matrixManager = std::make_shared<PokeyMAX7219Manager>(pokey, chipSelect);
-        //matrixManager->setAllPinStates(true);
+        matrixManager->setAllPinStates(true);
         std::this_thread::sleep_for(500ms);
         matrixManager->setAllPinStates(false);
         std::this_thread::sleep_for(500ms);
