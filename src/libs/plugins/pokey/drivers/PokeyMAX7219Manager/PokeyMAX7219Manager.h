@@ -8,7 +8,7 @@
 #include "MAX7219.h"
 #include "PoKeysLib.h"
 
-#define MAX7219_PRESCALER 100
+#define MAX7219_PRESCALER   100
 #define MAX7219_FRAMEFORMAT 0
 
 typedef std::vector<std::shared_ptr<MAX7219>> DeviceVector;
