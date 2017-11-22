@@ -109,19 +109,19 @@ bool PokeyMAX7219Manager::RunTests(sPoKeysDevice *pokey, uint8_t chipSelect)
 
     try {
         std::shared_ptr<PokeyMAX7219Manager> matrixManager = std::make_shared<PokeyMAX7219Manager>(pokey, chipSelect);
-        matrixManager->setAllPinStates(true);
+        //matrixManager->setAllPinStates(true);
         std::this_thread::sleep_for(500ms);
         matrixManager->setAllPinStates(false);
         std::this_thread::sleep_for(500ms);
 
-	for (uint8_t col = 1; col < 9; col++) {
-	     for (uint8_t row = 1; row < 9; row++) {
-		  matrixManager->setPinState(col, row, true);
-		  std::this_thread::sleep_for(250ms);
-	     }
-	}
-	
-	matrixManager->setAllPinStates(false);
+        for (uint8_t col = 1; col < 9; col++) {
+            for (uint8_t row = 1; row < 9; row++) {
+            matrixManager->setPinState(col, row, true);
+            std::this_thread::sleep_for(250ms);
+            }
+        }
+        
+        matrixManager->setAllPinStates(false);
     }
     catch (std::runtime_error &err) {
         std::cout << "ERROR: " << err.what() << std::endl;
