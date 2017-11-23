@@ -1,9 +1,22 @@
 #ifndef __MAX7219_H
 #define __MAX7219_H
 
-#include <vector>
 #include <assert.h>
+#include <string>
 #include <unistd.h>
+#include <vector>
+#include <iostream>
+#include <thread>
+#include "PoKeysLib.h"
+
+
+#define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c\n"
+#define BYTE_TO_BINARY(byte)                                                                                                                                                       \
+    (byte & 0x80 ? '1' : '0'), (byte & 0x40 ? '1' : '0'), (byte & 0x20 ? '1' : '0'), (byte & 0x10 ? '1' : '0'), (byte & 0x08 ? '1' : '0'), (byte & 0x04 ? '1' : '0'),              \
+        (byte & 0x02 ? '1' : '0'), (byte & 0x01 ? '1' : '0')
+
+
+
 
 enum eRefreshRegisters {
     REFRESH_SHUTDOWN = 0,
@@ -60,16 +73,33 @@ enum eModeValues {
     MODE_ROW_8 = 0x80
 };
 
+#define MAX7219_PRESCALER 100
+#define MAX7219_FRAMEFORMAT 0
+
 class MAX7219
 {
 protected:
     std::vector<std::vector<bool>> _stateMatrix;
+    uint8_t _chipSelect;
+    int _id;
+    std::string _name;
+    std::string _matrixType;
+    std::string _description;
+    uint8_t _enabled;
+    sPoKeysDevice *_pokey;
+    uint16_t _encodeOutputPacket(uint8_t reg, uint8_t value);
 
 public:
-    MAX7219(void);
+    MAX7219(sPoKeysDevice *pokey, int id, uint8_t chipSelect, std::string matrixType, uint8_t enabled, std::string name, std::string description);
     virtual ~MAX7219(void);
 
-    uint16_t encodeOutputPacket(uint8_t reg, uint8_t value);
+    void setAllPinStates(bool enabled);
+    void setPinState(uint8_t col, uint8_t row, bool enabled);
+    uint32_t setIntensity(uint8_t intensity);
+    uint32_t SPIWrite(uint16_t packet);
+
+    bool runTest(bool cycleThrough = false);
+
 };
 
 #endif

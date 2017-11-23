@@ -82,14 +82,6 @@ typedef struct {
     uint32_t duty;
 } device_pwm_t;
 
-typedef struct {
-    uint8_t id;
-    std::string type;
-    int enabled;
-    int chipSelect;
-    std::string name;
-} device_matrix_t;
-
 class PokeyDevicePluginStateManager;
 
 class PokeyDevice
@@ -116,6 +108,7 @@ protected:
     std::map<std::string, int> _ledMatrix;
 
     PokeyDevicePluginStateManager *_owner;
+    std::shared_ptr<PokeyMAX7219Manager> _pokeyMax7219Manager;
 
     sPoKeysDevice *_pokey;
     void *_callbackArg;
@@ -125,8 +118,6 @@ protected:
     device_encoder_t _encoders[MAX_ENCODERS];
     device_matrixLED_t _matrixLED[MAX_MATRIX_LEDS];
     uint8_t _intToDisplayRow[MAX_DIGITS];
-    device_matrix_t _matrix[MAX_MATRIX];
-
 
     EnqueueEventHandler _enqueueCallback;
 
@@ -198,7 +189,7 @@ public:
     void addGroupToMatrixLED(int id, int displayId, std::string name, int digits, int position);
 
     
-    void configMatrix(int id, uint8_t chipSelect, std::string type, int enabled = 0, std::string name="");
+    void configMatrix(int id, uint8_t chipSelect, std::string type, uint8_t enabled = 0, std::string name="", std::string description="");
 
     
     void startPolling();

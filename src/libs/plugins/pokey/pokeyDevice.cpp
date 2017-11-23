@@ -90,6 +90,7 @@ PokeyDevice::PokeyDevice(PokeyDevicePluginStateManager *owner, sPoKeysNetworkDev
     _intToDisplayRow[9] = 0b11100110;
 
     loadPinConfiguration();
+
     _pollTimer.data = this;
     _pollLoop = uv_loop_new();
     uv_timer_init(_pollLoop, &_pollTimer);
@@ -513,15 +514,14 @@ void PokeyDevice::configMatrixLED(int id, int rows, int cols, int enabled)
     PK_MatrixLEDUpdate(_pokey);
 }
 
-void PokeyDevice::configMatrix(int id, uint8_t chipSelect, std::string type, int enabled, std::string name)
+void PokeyDevice::configMatrix(int id, uint8_t chipSelect, std::string type, uint8_t enabled, std::string name, std::string description)
 {
-    int retVal;
-    _matrix[id].type = type;
-    _matrix[id].enabled = enabled;
-   
-    _matrix[id].name = name;
+    _pokeyMax7219Manager = std::make_shared<PokeyMAX7219Manager>(_pokey);
 
-    assert(PokeyMAX7219Manager::RunTests(_pokey, chipSelect));
+    if (enabled){
+        _pokeyMax7219Manager->addMatrix(id, chipSelect, type, enabled, name, description);
+    }
+
 }
 
 uint32_t PokeyDevice::targetValue(std::string targetName, int value)

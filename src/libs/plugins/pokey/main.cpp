@@ -473,16 +473,18 @@ bool PokeyDevicePluginStateManager::deviceLedMatrixConfiguration(libconfig::Sett
             try {
                 std::string matrixType = "";
                 std::string name="";
+                std::string description="";
                 int chipSelect = 0;
                 int enabled = 0;
 
                 iter->lookupValue("type", matrixType);
                 iter->lookupValue("chipSelect", chipSelect);
                 iter->lookupValue("enabled", enabled);
+                iter->lookupValue("description", description);
                 iter->lookupValue("name", name);
 
-                _logger(LOG_INFO, "    [%s]    - %s [%s - CS %i]", pokeyDevice->name().c_str(), name.c_str(), matrixType.c_str(), chipSelect);
-                pokeyDevice->configMatrix(ledMatrixIndex, (uint8_t)chipSelect, matrixType, enabled, name);
+                _logger(LOG_INFO, "    [%s] - Found %s [%s - CS %i]", pokeyDevice->name().c_str(), name.c_str(), matrixType.c_str(), chipSelect);
+                pokeyDevice->configMatrix(ledMatrixIndex, (uint8_t)chipSelect, matrixType, (uint8_t)enabled, name, description);
                 ledMatrixIndex++;
             }
             catch (const libconfig::SettingNotFoundException &nfex) {
