@@ -190,6 +190,7 @@ public:
 
     
     void configMatrix(int id, uint8_t chipSelect, std::string type, uint8_t enabled = 0, std::string name="", std::string description="");
+    void addLedToLedMatrix(int ledMatrixIndex, uint8_t ledIndex, std::string name, std::string description, uint8_t enabled, uint8_t row, uint8_t col);
 
     
     void startPolling();

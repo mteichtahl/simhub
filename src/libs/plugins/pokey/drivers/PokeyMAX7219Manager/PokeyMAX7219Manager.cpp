@@ -19,3 +19,30 @@ int PokeyMAX7219Manager::addMatrix(int id, uint8_t chipSelect, std::string matri
     _max7219.push_back(max7219);
     return retVal;
 }
+
+std::shared_ptr<MAX7219> PokeyMAX7219Manager::getMax7219(int id)
+{
+
+    std::shared_ptr<MAX7219> retVal;
+
+    for (auto &max7219 : _max7219) {
+        if (max7219->id() == id) {
+            retVal = max7219;
+            break;
+        }
+    }
+
+    return retVal;
+}
+
+int PokeyMAX7219Manager::addLedToMatrix(int ledMatrixIndex, uint8_t ledIndex, std::string name, std::string description, uint8_t enabled, uint8_t row, uint8_t col)
+{
+
+    if (enabled) {
+        std::shared_ptr<MAX7219> max7219 = getMax7219(ledMatrixIndex);
+        assert(max7219);
+        max7219->addLed(ledIndex, name, description, enabled, row, col);
+    }
+
+    return 0;
+}

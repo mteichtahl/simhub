@@ -1,22 +1,18 @@
 #ifndef __MAX7219_H
 #define __MAX7219_H
 
+#include "PoKeysLib.h"
 #include <assert.h>
+#include <iostream>
 #include <string>
+#include <thread>
 #include <unistd.h>
 #include <vector>
-#include <iostream>
-#include <thread>
-#include "PoKeysLib.h"
-
 
 #define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c\n"
 #define BYTE_TO_BINARY(byte)                                                                                                                                                       \
     (byte & 0x80 ? '1' : '0'), (byte & 0x40 ? '1' : '0'), (byte & 0x20 ? '1' : '0'), (byte & 0x10 ? '1' : '0'), (byte & 0x08 ? '1' : '0'), (byte & 0x04 ? '1' : '0'),              \
         (byte & 0x02 ? '1' : '0'), (byte & 0x01 ? '1' : '0')
-
-
-
 
 enum eRefreshRegisters {
     REFRESH_SHUTDOWN = 0,
@@ -76,10 +72,14 @@ enum eModeValues {
 #define MAX7219_PRESCALER 100
 #define MAX7219_FRAMEFORMAT 0
 
+class Led;
+
+
 class MAX7219
 {
 protected:
     std::vector<std::vector<bool>> _stateMatrix;
+    std::vector<std::shared_ptr<Led>> _leds;
     uint8_t _chipSelect;
     int _id;
     std::string _name;
@@ -97,9 +97,39 @@ public:
     void setPinState(uint8_t col, uint8_t row, bool enabled);
     uint32_t setIntensity(uint8_t intensity);
     uint32_t SPIWrite(uint16_t packet);
-
     bool runTest(bool cycleThrough = false);
+    void addLed(uint8_t ledIndex, std::string name, std::string description, uint8_t enabled, uint8_t row, uint8_t col);
 
+    int id() { return _id; }
+};
+
+class Led
+{
+protected:
+    int _index;
+    std::string _name;
+    std::string _description;
+    uint8_t _enabled;
+    uint8_t _row;
+    uint8_t _col;
+    MAX7219 *_owner;
+
+public:
+    Led(MAX7219 *owner, int index, std::string name, std::string description, uint8_t enabled, uint8_t row, uint8_t col)
+    {
+        _owner = owner;
+        _index = index;
+        _name = name;
+        _description = description;
+        _enabled = enabled;
+        _row = row;
+        _col = col;
+
+        setState(true);
+    }
+    void setState(bool val){
+         _owner->setPinState( _col,  _row, val);
+    }
 };
 
 #endif

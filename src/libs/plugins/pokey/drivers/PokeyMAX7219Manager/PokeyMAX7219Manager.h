@@ -21,6 +21,8 @@ protected:
 public:
     PokeyMAX7219Manager(sPoKeysDevice *pokey);
     int addMatrix(int id, uint8_t chipSelect, std::string matrixType, uint8_t enabled, std::string name, std::string description);
+    int addLedToMatrix(int ledMatrixIndex, uint8_t ledIndex, std::string name, std::string description, uint8_t enabled, uint8_t row, uint8_t col);
+    std::shared_ptr<MAX7219> getMax7219(int id);
 
     virtual ~PokeyMAX7219Manager(void);
 

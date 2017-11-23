@@ -524,6 +524,15 @@ void PokeyDevice::configMatrix(int id, uint8_t chipSelect, std::string type, uin
 
 }
 
+void PokeyDevice::addLedToLedMatrix(int ledMatrixIndex, uint8_t ledIndex, std::string name, std::string description, uint8_t enabled, uint8_t row, uint8_t col){
+
+    assert(_pokeyMax7219Manager);
+
+    if (enabled){
+        _pokeyMax7219Manager->addLedToMatrix( ledMatrixIndex,  ledIndex, name, description,  enabled,  row,  col);
+    }
+}
+
 uint32_t PokeyDevice::targetValue(std::string targetName, int value)
 {
     uint8_t displayNum = displayFromName(targetName);

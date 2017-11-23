@@ -472,8 +472,8 @@ bool PokeyDevicePluginStateManager::deviceLedMatrixConfiguration(libconfig::Sett
 
             try {
                 std::string matrixType = "";
-                std::string name="";
-                std::string description="";
+                std::string name = "";
+                std::string description = "";
                 int chipSelect = 0;
                 int enabled = 0;
 
@@ -483,8 +483,38 @@ bool PokeyDevicePluginStateManager::deviceLedMatrixConfiguration(libconfig::Sett
                 iter->lookupValue("description", description);
                 iter->lookupValue("name", name);
 
-                _logger(LOG_INFO, "    [%s] - Found %s [%s - CS %i]", pokeyDevice->name().c_str(), name.c_str(), matrixType.c_str(), chipSelect);
+                _logger(LOG_INFO, "    [%s]  - Found %s [%s - CS %i]", pokeyDevice->name().c_str(), name.c_str(), matrixType.c_str(), chipSelect);
                 pokeyDevice->configMatrix(ledMatrixIndex, (uint8_t)chipSelect, matrixType, (uint8_t)enabled, name, description);
+
+                if (iter->exists("leds")) {
+                    int ledIndex = 0;
+                    libconfig::Setting *leds;
+
+                    leds = &iter->lookup("leds");
+                    int ledCount = leds->getLength();
+
+                    _logger(LOG_INFO, "    [%s]    - Found %i leds", pokeyDevice->name().c_str(),ledCount);
+
+                    for (libconfig::SettingIterator led = leds->begin(); led != leds->end(); led++) {
+
+                        std::string name = "";
+                        std::string description = "";
+                        int enabled = 1;
+                        int row;
+                        int col;
+
+                        led->lookupValue("name", name);
+                        led->lookupValue("description", description);
+                        led->lookupValue("enabled", enabled);
+                        led->lookupValue("row", row);
+                        led->lookupValue("col", col);
+
+                        pokeyDevice->addLedToLedMatrix(ledMatrixIndex, ledIndex, name, description, (uint8_t)enabled, (uint8_t)row, (uint8_t)col);
+
+                        ledIndex++;
+                    }
+                }
+
                 ledMatrixIndex++;
             }
             catch (const libconfig::SettingNotFoundException &nfex) {
@@ -625,7 +655,7 @@ int PokeyDevicePluginStateManager::preflightComplete(void)
         if (iter->exists("displays"))
             deviceDisplaysConfiguration(&iter->lookup("displays"), pokeyDevice);
 
-        // check if there is an displays section in the config
+        // check if there is a led matrix section in the config
         if (iter->exists("ledMatrix"))
             deviceLedMatrixConfiguration(&iter->lookup("ledMatrix"), pokeyDevice);
 
