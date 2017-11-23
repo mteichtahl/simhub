@@ -42,6 +42,7 @@ public:
 
         PK_DigitalIOSetSingle(_pokey, _enablePin, 1);
         PK_DigitalIOGetSingle(_pokey, _pin, &_currentValue);
+        PK_DigitalIOSetSingle(_pokey, _enablePin, 0);
 
         return std::make_pair(_name, _currentValue);
     }
