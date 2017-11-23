@@ -1,5 +1,5 @@
 #include <iostream>
-#include <thread>
+
 
 #include "PokeyMAX7219Manager.h"
 
@@ -45,4 +45,13 @@ int PokeyMAX7219Manager::addLedToMatrix(int ledMatrixIndex, uint8_t ledIndex, st
     }
 
     return 0;
+}
+
+void PokeyMAX7219Manager::setLedByName(std::string name, bool value){
+   std::shared_ptr<MAX7219> retVal;
+
+    for (auto &max7219 : _max7219) {
+       std::shared_ptr<Led> led = max7219->findLedByName(name);
+       led->setState(value);
+    }
 }

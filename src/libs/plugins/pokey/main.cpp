@@ -94,6 +94,7 @@ int PokeyDevicePluginStateManager::deliverValue(GenericTLV *data)
     assert(data);
 
     int retVal = 0;
+    // printf("-----> %s %i %i\n",data->name, data->type, (int)data->value);
 
     std::shared_ptr<PokeyDevice> device = targetFromDeviceTargetList(data->name);
 
@@ -106,7 +107,7 @@ int PokeyDevicePluginStateManager::deliverValue(GenericTLV *data)
         }
     }
     else {
-        std::cout << "NO DEVICE!" << std::endl;
+        // std::cout << "no target device found" << std::endl;
     }
 
     return retVal;
@@ -146,6 +147,7 @@ void PokeyDevicePluginStateManager::enumerateDevices(void)
 
 bool PokeyDevicePluginStateManager::addTargetToDeviceTargetList(std::string target, std::shared_ptr<PokeyDevice> device)
 {
+    // printf("----> adding %s to %s\n", target.c_str(), device->name().c_str());
     _deviceMap.emplace(target, device);
     return true;
 }
@@ -510,6 +512,9 @@ bool PokeyDevicePluginStateManager::deviceLedMatrixConfiguration(libconfig::Sett
                         led->lookupValue("col", col);
 
                         pokeyDevice->addLedToLedMatrix(ledMatrixIndex, ledIndex, name, description, (uint8_t)enabled, (uint8_t)row, (uint8_t)col);
+                         _logger(LOG_INFO, "                       - %s [%i/%i] row %i / col %i] ", name.c_str(), ledIndex, ledCount, row, col );
+
+                        addTargetToDeviceTargetList(name, pokeyDevice);
 
                         ledIndex++;
                     }

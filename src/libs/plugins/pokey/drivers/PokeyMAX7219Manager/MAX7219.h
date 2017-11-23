@@ -8,6 +8,7 @@
 #include <thread>
 #include <unistd.h>
 #include <vector>
+using namespace std::chrono_literals;
 
 #define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c\n"
 #define BYTE_TO_BINARY(byte)                                                                                                                                                       \
@@ -101,6 +102,7 @@ public:
     void addLed(uint8_t ledIndex, std::string name, std::string description, uint8_t enabled, uint8_t row, uint8_t col);
 
     int id() { return _id; }
+    std::shared_ptr<Led> findLedByName(std::string name);
 };
 
 class Led
@@ -126,10 +128,14 @@ public:
         _col = col;
 
         setState(true);
+        // std::this_thread::sleep_for(150ms);
+        // setState(false);
     }
     void setState(bool val){
          _owner->setPinState( _col,  _row, val);
     }
+
+    std::string name() { return _name; }
 };
 
 #endif

@@ -518,18 +518,18 @@ void PokeyDevice::configMatrix(int id, uint8_t chipSelect, std::string type, uin
 {
     _pokeyMax7219Manager = std::make_shared<PokeyMAX7219Manager>(_pokey);
 
-    if (enabled){
+    if (enabled) {
         _pokeyMax7219Manager->addMatrix(id, chipSelect, type, enabled, name, description);
     }
-
 }
 
-void PokeyDevice::addLedToLedMatrix(int ledMatrixIndex, uint8_t ledIndex, std::string name, std::string description, uint8_t enabled, uint8_t row, uint8_t col){
+void PokeyDevice::addLedToLedMatrix(int ledMatrixIndex, uint8_t ledIndex, std::string name, std::string description, uint8_t enabled, uint8_t row, uint8_t col)
+{
 
     assert(_pokeyMax7219Manager);
 
-    if (enabled){
-        _pokeyMax7219Manager->addLedToMatrix( ledMatrixIndex,  ledIndex, name, description,  enabled,  row,  col);
+    if (enabled) {
+        _pokeyMax7219Manager->addLedToMatrix(ledMatrixIndex, ledIndex, name, description, enabled, row, col);
     }
 }
 
@@ -545,8 +545,13 @@ uint32_t PokeyDevice::targetValue(std::string targetName, bool value)
     uint32_t retValue = -1;
     uint8_t pin = pinFromName(targetName) - 1;
 
-    if (pin >= 0) {
+    if (pin >= 0 && pin <= 55) {
         retValue = PK_DigitalIOSetSingle(_pokey, pin, value);
+    }
+    else {
+        // we have output matrix - so deliver there
+        _pokeyMax7219Manager->setLedByName(targetName, value);
+        retValue = 0;
     }
 
     if (retValue == PK_ERR_TRANSFER) {
