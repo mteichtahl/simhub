@@ -89,6 +89,8 @@ PokeyDevice::PokeyDevice(PokeyDevicePluginStateManager *owner, sPoKeysNetworkDev
     _intToDisplayRow[8] = 0b11111110;
     _intToDisplayRow[9] = 0b11100110;
 
+    _switchMatrixManager = std::make_shared<PokeySwitchMatrixManager>(_pokey);
+
     loadPinConfiguration();
     _pollTimer.data = this;
     _pollLoop = uv_loop_new();
@@ -594,6 +596,25 @@ uint8_t PokeyDevice::displayNumber(uint8_t displayNumber, std::string targetName
         printf("---> could not update Maxtix LED \n");
         return -1;
     }
+
+    return 0;
+}
+
+int PokeyDevice::configSwitchMatrix(int id, std::string name, std::string type, bool enabled)
+{
+    int retVal = -1;
+
+    _switchMatrixManager->addMatrix(id, name, type, enabled);
+
+    return retVal;
+}
+
+int PokeyDevice::configSwitchMatrixSwitch(int switchMatrixId, int switchId, std::string name, int pin, int enablePin, bool invert, bool invertEnablePin)
+{
+
+    std::shared_ptr<PokeySwitchMatrix> matrix = _switchMatrixManager->matrix(switchMatrixId);
+
+    matrix->addSwitch(switchId, name, pin, enablePin, invert, invertEnablePin);
 
     return 0;
 }

@@ -3,6 +3,8 @@
 
 #include "PoKeysLib.h"
 #include "common/simhubdeviceplugin.h"
+#include "drivers/PokeySwitchMatrixManager/PokeySwitchMatrixManager.h"
+
 #include <assert.h>
 #include <cmath>
 #include <iostream>
@@ -29,6 +31,8 @@
 #define MAX_MATRIX_LED_GROUPS 8
 #define MAX_DIGITS 10
 #define MAX_PWM_CHANNELS 6
+#define MAX_SWITCH_MATRIX 10
+#define MAX_SWITCH_MATRIX_SWITCHES 256
 
 typedef struct {
     std::string pinName;
@@ -79,6 +83,22 @@ typedef struct {
     uint32_t duty;
 } device_pwm_t;
 
+
+typedef struct {
+    uint8_t id;
+    std::string name;
+    int pin;
+    int enabled;
+    bool invertEnabled;
+} device_switch_matrix_switch_t;
+typedef struct {
+    uint8_t id;
+    std::string name;
+    std::string type;
+    bool enabled;
+    device_switch_matrix_switch_t switches[MAX_SWITCH_MATRIX_SWITCHES];
+} device_switch_matrix_t;
+
 class PokeyDevicePluginStateManager;
 
 class PokeyDevice
@@ -125,6 +145,8 @@ protected:
     uint8_t displayNumber(uint8_t displayNumwber, std::string targetName, int value);
 
     void pollCallback(uv_timer_t *timer, int status);
+
+    std::shared_ptr<PokeySwitchMatrixManager> _switchMatrixManager;
 
 public:
     PokeyDevice(PokeyDevicePluginStateManager *owner, sPoKeysNetworkDeviceSummary, uint8_t);
@@ -181,6 +203,11 @@ public:
     void addMatrixLED(int id, std::string name, std::string type);
     void configMatrixLED(int id, int rows, int cols = 8, int enabled = 0);
     void addGroupToMatrixLED(int id, int displayId, std::string name, int digits, int position);
+
+    // switch matrix "handlers"
+    int configSwitchMatrix(int id, std::string name, std::string type, bool enabled);
+    int configSwitchMatrixSwitch(int switchMatrixId, int switchId, std::string name, int pin, int enablePin, bool invert, bool invertEnablePin);
+
     void startPolling();
     void stopPolling();
     std::string name();
