@@ -559,24 +559,23 @@ int PokeyDevicePluginStateManager::deviceSwitchMatrixConfiguration(libconfig::Se
         for (libconfig::SettingIterator iter = switchMatrix->begin(); iter != switchMatrix->end(); iter++) {
             std::string name = "None";
             std::string type = "direct8x8";
-            bool enabled=true;
+            bool enabled = true;
             int index = 0;
 
             try {
                 iter->lookupValue("name", name);
                 iter->lookupValue("type", type);
-                iter->lookupValue("enabled", enabled);                
-              
+                iter->lookupValue("enabled", enabled);
+
                 // create the switch matrix.
-                pokeyDevice->configSwitchMatrix(id, name,type,enabled);
-                _logger(LOG_INFO, "        [%s]  - Found switch matrix %s [%s] [%i switches]", pokeyDevice->name().c_str(), name.c_str(), type.c_str(),(&iter->lookup("switches"))->getLength());
+                pokeyDevice->configSwitchMatrix(id, name, type, enabled);
+                _logger(LOG_INFO, "        [%s]  - Found switch matrix %s [%s] [%i switches]", pokeyDevice->name().c_str(), name.c_str(), type.c_str(),
+                    (&iter->lookup("switches"))->getLength());
 
                 int switchCount = deviceSwitchMatrixSwitchConfiguration(&iter->lookup("switches"), index, pokeyDevice, name, type, enabled);
                 _logger(LOG_INFO, "      [%s]  - Added %i switches", pokeyDevice->name().c_str(), switchCount);
 
                 index++;
-                
-               
             }
             catch (const libconfig::SettingNotFoundException &nfex) {
                 _logger(LOG_ERROR, "Could not find %s. Skipping....", nfex.what());
@@ -586,10 +585,10 @@ int PokeyDevicePluginStateManager::deviceSwitchMatrixConfiguration(libconfig::Se
     }
 
     return retVal;
-
 }
 
-int PokeyDevicePluginStateManager::deviceSwitchMatrixSwitchConfiguration(libconfig::Setting *switches, int id, std::shared_ptr<PokeyDevice> pokeyDevice, std::string name, std::string type, bool enabled)
+int PokeyDevicePluginStateManager::deviceSwitchMatrixSwitchConfiguration(
+    libconfig::Setting *switches, int id, std::shared_ptr<PokeyDevice> pokeyDevice, std::string name, std::string type, bool enabled)
 {
     int retVal = -1;
 
@@ -597,34 +596,30 @@ int PokeyDevicePluginStateManager::deviceSwitchMatrixSwitchConfiguration(libconf
     int totalSwitches = 0;
 
     if (switchCount > MAX_SWITCH_MATRIX_SWITCHES) {
-        _logger(LOG_ERROR, "Invalid number of switches (%i). Minimum 0 Maximum %i", switchCount,MAX_SWITCH_MATRIX_SWITCHES);
+        _logger(LOG_ERROR, "Invalid number of switches (%i). Minimum 0 Maximum %i", switchCount, MAX_SWITCH_MATRIX_SWITCHES);
     }
     else {
         // iterate over all the switch elements and add them
         std::string name = "";
         bool enabled = true;
         int pin = 0;
-        int enablePin= 0;
-        bool invert =false;
-        bool invertEnablePin = false; 
+        int enablePin = 0;
+        bool invert = false;
+        bool invertEnablePin = false;
         int index = 0;
 
         for (libconfig::SettingIterator iter = switches->begin(); iter != switches->end(); iter++) {
-              try {
+            try {
                 iter->lookupValue("name", name);
                 iter->lookupValue("pin", pin);
                 iter->lookupValue("enablePin", enablePin);
-                iter->lookupValue("enabled", enabled);                
-                iter->lookupValue("invert", invert);                
-                iter->lookupValue("invertEnablePin", invertEnablePin);                
+                iter->lookupValue("enabled", enabled);
+                iter->lookupValue("invert", invert);
+                iter->lookupValue("invertEnablePin", invertEnablePin);
 
-                _logger(LOG_INFO, "                       - %s [pin: %i, enable pin: %i]",  name.c_str(),pin,enablePin);                           
-
+                _logger(LOG_INFO, "                       - %s [pin: %i, enable pin: %i]", name.c_str(), pin, enablePin);
                 pokeyDevice->configSwitchMatrixSwitch(id, index, name, pin, enablePin, invert, invertEnablePin);
-
                 index++;
-                
-               
             }
             catch (const libconfig::SettingNotFoundException &nfex) {
                 _logger(LOG_ERROR, "Could not find %s. Skipping....", nfex.what());
@@ -632,17 +627,9 @@ int PokeyDevicePluginStateManager::deviceSwitchMatrixSwitchConfiguration(libconf
             }
         }
         retVal = index;
-
     }
-
     return retVal;
 }
-
-
-
-
-
-
 
 int PokeyDevicePluginStateManager::preflightComplete(void)
 {

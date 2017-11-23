@@ -1,7 +1,8 @@
 
 #include "PokeySwitchMatrixManager.h"
 
-PokeySwitchMatrixManager::PokeySwitchMatrixManager(sPoKeysDevice *pokey) {
+PokeySwitchMatrixManager::PokeySwitchMatrixManager(sPoKeysDevice *pokey)
+{
     _pokey = pokey;
 }
 
@@ -35,4 +36,20 @@ std::shared_ptr<PokeySwitchMatrix> PokeySwitchMatrixManager::matrix(int id)
     }
 
     return NULL;
+}
+
+std::vector<std::pair<std::string, uint8_t>> PokeySwitchMatrixManager::readAll()
+{
+
+    std::vector<std::pair<std::string, uint8_t>> retVal;
+
+    for (auto &matrix : _switchMatrix) {    
+        std::vector<std::pair<std::string, uint8_t>> switches = matrix->readSwitches();
+
+        if (switches.size() > 0) {
+            retVal.insert(retVal.end(), switches.begin(), switches.end());
+        }
+    }
+
+    return retVal;
 }

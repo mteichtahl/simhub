@@ -10,21 +10,36 @@ class PokeySwitch
 {
 protected:
     std::string _name;
-    std::string _type;
     int _id;
+    int _enablePin;
     bool _enabled;
+    int _pin;
     sPoKeysDevice *_pokey;
 
 public:
-    PokeySwitch(sPoKeysDevice *pokey, int id, std::string name, int pin, int enablePin, bool invert, bool invertEnablePin) {
+    PokeySwitch(sPoKeysDevice *pokey, int id, std::string name, int pin, int enablePin, bool invert, bool invertEnablePin)
+    {
         _pokey = pokey;
+        _pin = pin;
+        _enablePin = enablePin;
+        _name = name;
 
-        pokey->Pins[enablePin-1].PinFunction = PK_PinCap_digitalOutput | (invertEnablePin ? PK_PinCap_invertPin : 0x00);
-        pokey->Pins[pin-1].PinFunction = PK_PinCap_digitalInput | (invert ? PK_PinCap_invertPin : 0x00);
+        pokey->Pins[enablePin - 1].PinFunction = PK_PinCap_digitalOutput | (invertEnablePin ? PK_PinCap_invertPin : 0x00);
+        pokey->Pins[pin - 1].PinFunction = PK_PinCap_digitalInput | (invert ? PK_PinCap_invertPin : 0x00);
 
         int retVal = PK_PinConfigurationSet(pokey);
 
-        printf("-----> ret: %i\n",retVal);
+        printf("-----> ret: %i\n", retVal);
+    }
+
+    auto read()
+    {
+        uint8_t pinValue;
+
+        PK_DigitalIOSetSingle(_pokey, _enablePin, 1);
+        PK_DigitalIOGetSingle(_pokey, _pin, &pinValue);
+
+        return std::make_pair(_name, pinValue);
     }
 };
 
@@ -57,6 +72,18 @@ public:
         _switches.push_back(std::make_shared<PokeySwitch>(_pokey, id, name, pin, enablePin, invert, invertEnablePin));
         return 0;
     }
+
+    std::vector<std::pair<std::string, uint8_t>> readSwitches()
+    {
+        std::vector<std::pair<std::string, uint8_t>> retVal;
+        auto end = retVal.end();
+
+        for (auto &sw : _switches) {
+            end = retVal.insert(end, sw->read());
+        }
+
+        return retVal;
+    }
 };
 
 class PokeySwitchMatrixManager
@@ -72,6 +99,8 @@ public:
     int addMatrix(int id, std::string name, std::string type, bool enabled);
     std::shared_ptr<PokeySwitchMatrix> matrix(std::string name);
     std::shared_ptr<PokeySwitchMatrix> matrix(int id);
+
+    std::vector<std::pair<std::string, uint8_t>> readAll();
 };
 
 #endif

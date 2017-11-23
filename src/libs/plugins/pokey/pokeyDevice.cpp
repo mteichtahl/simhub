@@ -280,6 +280,13 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
                     }
                 }
             }
+
+            // process all switch matrix
+            std::vector<std::pair<std::string, uint8_t>> matrixResult = self->_switchMatrixManager->readAll();
+
+            for (auto &res : matrixResult) {
+                printf("---> %s %i\n", res.first.c_str(), res.second);
+            }
         }
         self->_owner->pinRemappingMutex().unlock();
     }
