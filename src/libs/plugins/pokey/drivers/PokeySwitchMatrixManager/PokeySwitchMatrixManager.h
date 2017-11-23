@@ -15,6 +15,8 @@ protected:
     bool _enabled;
     int _pin;
     sPoKeysDevice *_pokey;
+    uint8_t _previousValue;
+    uint8_t _currentValue;
 
 public:
     PokeySwitch(sPoKeysDevice *pokey, int id, std::string name, int pin, int enablePin, bool invert, bool invertEnablePin)
@@ -28,18 +30,20 @@ public:
         pokey->Pins[pin - 1].PinFunction = PK_PinCap_digitalInput | (invert ? PK_PinCap_invertPin : 0x00);
 
         int retVal = PK_PinConfigurationSet(pokey);
-
-        printf("-----> ret: %i\n", retVal);
     }
+
+    uint8_t previousValue() { return _previousValue; }
+
+    uint8_t currentValue() { return _currentValue; }
 
     auto read()
     {
-        uint8_t pinValue;
+        _previousValue = _currentValue;
 
         PK_DigitalIOSetSingle(_pokey, _enablePin, 1);
-        PK_DigitalIOGetSingle(_pokey, _pin, &pinValue);
+        PK_DigitalIOGetSingle(_pokey, _pin, &_currentValue);
 
-        return std::make_pair(_name, pinValue);
+        return std::make_pair(_name, _currentValue);
     }
 };
 
@@ -79,7 +83,11 @@ public:
         auto end = retVal.end();
 
         for (auto &sw : _switches) {
-            end = retVal.insert(end, sw->read());
+            auto swData = sw->read();
+
+            if (sw->previousValue() != sw->currentValue()) {
+                end = retVal.insert(end, swData);
+            }
         }
 
         return retVal;
@@ -99,7 +107,6 @@ public:
     int addMatrix(int id, std::string name, std::string type, bool enabled);
     std::shared_ptr<PokeySwitchMatrix> matrix(std::string name);
     std::shared_ptr<PokeySwitchMatrix> matrix(int id);
-
     std::vector<std::pair<std::string, uint8_t>> readAll();
 };
 

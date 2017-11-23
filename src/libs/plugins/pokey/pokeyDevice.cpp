@@ -285,7 +285,15 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
             std::vector<std::pair<std::string, uint8_t>> matrixResult = self->_switchMatrixManager->readAll();
 
             for (auto &res : matrixResult) {
-                printf("---> %s %i\n", res.first.c_str(), res.second);
+                // printf("---> %s %i\n", res.first.c_str(), res.second);
+                el.ownerPlugin = self->_owner;
+                el.type = CONFIG_BOOL;
+                el.length = sizeof(uint8_t);
+                el.description = (char *)res.first.c_str();
+                el.name = (char *)res.first.c_str();
+                el.value.bool_value = (bool)res.second;
+
+                self->_enqueueCallback(self, (void *)&el, self->_callbackArg);
             }
         }
         self->_owner->pinRemappingMutex().unlock();
