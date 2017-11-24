@@ -23,11 +23,8 @@
                 </a>
                 <ul id="nav-mobile" class="right hide-on-med-and-down">
                     <li>
-                        <a href="sass.html">About</a>
-                    </li>
-                    <li>
                         <a href="#">
-                            <img height="60px" src="img/travel.png">
+                            <img height="60px" src="img/reinventLogo.png">
                         </a>
                     </li>
                 </ul>
@@ -35,69 +32,75 @@
         </nav>
         <div>
             <div class="row">
-                <div class="col s12 m12 l12 xl12">
+                <div class="col s12 m12 l3 xl3">
                     <div class="card-panel z-depth-4 white">
-                        <div class="row">
-                            <div class="col s12 m4 l3 xl3">
-                                <div class="center-align card-panel z-depth-4 white">
-                                    <h5>Heading</h5>
-                                    <h6>Degrees (true)</h6>
-                                    <span id="heading"></span>
-                                    <h4 class="dataElement" id="headingText">-</h4>
-                                </div>
-                            </div>
-                            <div class="col s12 m4 l3 xl3">
-                                <div class="center-align card-panel z-depth-4 white">
-                                    <h5>Airspeed</h5>
-                                    <h6>Knots</h6>
-                                    <span id="airspeed"></span>
-                                    <h4 class="dataElement" id="airspeedText">-</h4>
-
-                                </div>
-                            </div>
-                            <div class="col s12 m4 l3 xl3">
-                                <div class="center-align card-panel z-depth-4 white">
-                                    <h5>Altitude</h5>
-                                    <h6>Feet</h6>
-                                    <span id="altimeter"></span>
-                                    <h4 class="dataElement" id="altitudeText">-</h4>
-                                </div>
-                            </div>
-                            <div class="col s12 m4 l3 xl3">
-                                <div class="center-align card-panel z-depth-4 white">
-                                    <h5>Atitude</h5>
-                                    <h6>Pitch/Roll (Degrees)</h6>
-                                    <span id="attitude"></span>
-                                    <h4 class="dataElement" id="atitudeText">-</h4>
-                                </div>
-                            </div>
-
-                        </div>
-                        <div class="row" style="margin-top:-25px;">
-                            <div class="col s12 m4 l3 xl3">
-                                <div class="center-align card-panel z-depth-4 white">
-                                    <div id="headingSparkline"></div>
-                                </div>
-                            </div>
-                            <div class="col s12 m4 l3 xl3">
-                                <div class="center-align card-panel z-depth-4 white">
-                                    <div id="airspeedSparkline"></div>
-                                </div>
-                            </div>
-                            <div class="col s12 m4 l3 xl3">
-                                <div class="center-align card-panel z-depth-4 white">
-                                    <div id="altitudeSparkline"></div>
-                                </div>
-                            </div>
-                            <div class="col s12 m4 l3 xl3">
-                                <div class="center-align card-panel z-depth-4 white">
-                                    <div id="pitchSparkline"></div>
-                                    <div id="rollSparkline"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="center-align timeStamp" id="timeStamp">Loading...</div>
+                        <h5 class="center-align">On Track</h5>
+                        <div id="onTrackIndicator" class="center-align"></div>
                     </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col s12 m12 l12 xl12">
+                    <div class="row">
+                        <div class="col s12 m4 l3 xl3">
+                            <div class="center-align card-panel z-depth-4 white">
+                                <h5>Heading</h5>
+                                <h6>Degrees (true)</h6>
+                                <span id="heading"></span>
+                                <h4 class="dataElement" id="headingText">-</h4>
+                            </div>
+                        </div>
+                        <div class="col s12 m4 l3 xl3">
+                            <div class="center-align card-panel z-depth-4 white">
+                                <h5>Airspeed</h5>
+                                <h6>Knots</h6>
+                                <span id="airspeed"></span>
+                                <h4 class="dataElement" id="airspeedText">-</h4>
+
+                            </div>
+                        </div>
+                        <div class="col s12 m4 l3 xl3">
+                            <div class="center-align card-panel z-depth-4 white">
+                                <h5>Altitude</h5>
+                                <h6>Feet</h6>
+                                <span id="altimeter"></span>
+                                <h4 class="dataElement" id="altitudeText">-</h4>
+                            </div>
+                        </div>
+                        <div class="col s12 m4 l3 xl3">
+                            <div class="center-align card-panel z-depth-4 white">
+                                <h5>Atitude</h5>
+                                <h6>Pitch/Roll (Degrees)</h6>
+                                <span id="attitude"></span>
+                                <h4 class="dataElement" id="atitudeText">-</h4>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="row" style="margin-top:-25px;">
+                        <div class="col s12 m4 l3 xl3">
+                            <div class="center-align card-panel z-depth-4 white">
+                                <div id="headingSparkline"></div>
+                            </div>
+                        </div>
+                        <div class="col s12 m4 l3 xl3">
+                            <div class="center-align card-panel z-depth-4 white">
+                                <div id="airspeedSparkline"></div>
+                            </div>
+                        </div>
+                        <div class="col s12 m4 l3 xl3">
+                            <div class="center-align card-panel z-depth-4 white">
+                                <div id="altitudeSparkline"></div>
+                            </div>
+                        </div>
+                        <div class="col s12 m4 l3 xl3">
+                            <div class="center-align card-panel z-depth-4 white">
+                                <div id="pitchSparkline"></div>
+                                <div id="rollSparkline"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="center-align timeStamp" id="timeStamp">Loading...</div>
                 </div>
             </div>
             <div class="row">
@@ -160,7 +163,8 @@
             </div>
         </div>
         <!--Import jQuery before materialize.js-->
-        <script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+        <script type="text/javascript" src="js/jquery-3.2.1.min.js"></script>
+        <script type="text/javascript" src="js/mqttws31.min.js"></script>
         <script type="text/javascript" src="js/materialize.min.js"></script>
         <script src="http://maps.google.com/maps/api/js?key=AIzaSyDzKPB-kZwHSKTMMSU8XVJQGGuI5-_-j50"></script>
         <script type="text/javascript" src="js/gmaps.js"></script>
