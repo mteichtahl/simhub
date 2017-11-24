@@ -85,10 +85,13 @@ void MAX7219::setPinState(uint8_t col, uint8_t row, bool enabled)
     uint16_t packet = _encodeOutputPacket(colRegister, rowMask);
 
     if (SPIWrite(packet) != PK_OK) {
-         if (SPIWrite(packet) != PK_OK) {
-            printf("failed to set MAX7219 pin state col %i row %i val %i\n",col,row,enabled);
+        std::this_thread::sleep_for(50ms);
+        if (SPIWrite(packet) != PK_OK) {
+            std::this_thread::sleep_for(100ms);
+            if (SPIWrite(packet) != PK_OK) {
+                printf("failed to set MAX7219 pin state col %i row %i val %i\n", col, row, enabled);
+            }
         }
-        
     }
 }
 
@@ -131,9 +134,9 @@ std::shared_ptr<Led> MAX7219::findLedByName(std::string name)
 {
     std::shared_ptr<Led> retVal;
 
-    for (auto &led: _leds) {
+    for (auto &led : _leds) {
         if (led->name() == name) {
-            retVal= led;
+            retVal = led;
             break;
         }
     }
