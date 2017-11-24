@@ -92,6 +92,7 @@ PokeyDevice::PokeyDevice(PokeyDevicePluginStateManager *owner, sPoKeysNetworkDev
     _switchMatrixManager = std::make_shared<PokeySwitchMatrixManager>(_pokey);
 
     loadPinConfiguration();
+
     _pollTimer.data = this;
     _pollLoop = uv_loop_new();
     uv_timer_init(_pollLoop, &_pollTimer);
@@ -530,6 +531,21 @@ void PokeyDevice::configMatrixLED(int id, int rows, int cols, int enabled)
     PK_MatrixLEDUpdate(_pokey);
 }
 
+void PokeyDevice::configMatrix(int id, uint8_t chipSelect, std::string type, uint8_t enabled, std::string name, std::string description)
+{
+    _pokeyMax7219Manager = std::make_shared<PokeyMAX7219Manager>(_pokey);
+
+    if (enabled) {
+        _pokeyMax7219Manager->addMatrix(id, chipSelect, type, enabled, name, description);
+    }
+} 
+
+void PokeyDevice::addLedToLedMatrix(int ledMatrixIndex, uint8_t ledIndex, std::string name, std::string description, uint8_t enabled, uint8_t row, uint8_t col)
+{
+    assert(_pokeyMax7219Manager);
+    _pokeyMax7219Manager->addLedToMatrix(ledMatrixIndex, ledIndex, name, description, enabled, row, col);
+}
+
 uint32_t PokeyDevice::targetValue(std::string targetName, int value)
 {
     uint8_t displayNum = displayFromName(targetName);
@@ -542,8 +558,13 @@ uint32_t PokeyDevice::targetValue(std::string targetName, bool value)
     uint32_t retValue = -1;
     uint8_t pin = pinFromName(targetName) - 1;
 
-    if (pin >= 0) {
+    if (pin >= 0 && pin <= 55) {
         retValue = PK_DigitalIOSetSingle(_pokey, pin, value);
+    }
+    else {
+        // we have output matrix - so deliver there
+        _pokeyMax7219Manager->setLedByName(targetName, value);
+        retValue = 0;
     }
 
     if (retValue == PK_ERR_TRANSFER) {

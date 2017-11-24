@@ -4,7 +4,7 @@
 #include "PoKeysLib.h"
 #include "common/simhubdeviceplugin.h"
 #include "drivers/PokeySwitchMatrixManager/PokeySwitchMatrixManager.h"
-
+#include "drivers/PokeyMAX7219Manager/PokeyMAX7219Manager.h"
 #include <assert.h>
 #include <cmath>
 #include <iostream>
@@ -33,6 +33,8 @@
 #define MAX_PWM_CHANNELS 6
 #define MAX_SWITCH_MATRIX 10
 #define MAX_SWITCH_MATRIX_SWITCHES 256
+#define MAX_MATRIX 1
+
 
 typedef struct {
     std::string pinName;
@@ -122,8 +124,10 @@ protected:
     std::map<std::string, int> _encoderMap;
     std::map<std::string, int> _displayMap;
     std::map<std::string, int> _pwmMap;
+    std::map<std::string, int> _ledMatrix;
 
     PokeyDevicePluginStateManager *_owner;
+    std::shared_ptr<PokeyMAX7219Manager> _pokeyMax7219Manager;
 
     sPoKeysDevice *_pokey;
     void *_callbackArg;
@@ -133,6 +137,7 @@ protected:
     device_encoder_t _encoders[MAX_ENCODERS];
     device_matrixLED_t _matrixLED[MAX_MATRIX_LEDS];
     uint8_t _intToDisplayRow[MAX_DIGITS];
+
     EnqueueEventHandler _enqueueCallback;
 
     std::shared_ptr<std::thread> _pollThread;
@@ -208,6 +213,11 @@ public:
     int configSwitchMatrix(int id, std::string name, std::string type, bool enabled);
     int configSwitchMatrixSwitch(int switchMatrixId, int switchId, std::string name, int pin, int enablePin, bool invert, bool invertEnablePin);
 
+     // led matrix "handlers"
+    void configMatrix(int id, uint8_t chipSelect, std::string type, uint8_t enabled = 0, std::string name="", std::string description="");
+    void addLedToLedMatrix(int ledMatrixIndex, uint8_t ledIndex, std::string name, std::string description, uint8_t enabled, uint8_t row, uint8_t col);
+
+    
     void startPolling();
     void stopPolling();
     std::string name();
