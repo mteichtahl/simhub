@@ -89,6 +89,8 @@ PokeyDevice::PokeyDevice(PokeyDevicePluginStateManager *owner, sPoKeysNetworkDev
     _intToDisplayRow[8] = 0b11111110;
     _intToDisplayRow[9] = 0b11100110;
 
+    _switchMatrixManager = std::make_shared<PokeySwitchMatrixManager>(_pokey);
+
     loadPinConfiguration();
 
     _pollTimer.data = this;
@@ -278,6 +280,21 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
                         self->_enqueueCallback(self, (void *)&el, self->_callbackArg);
                     }
                 }
+            }
+
+            // process all switch matrix
+            std::vector<std::pair<std::string, uint8_t>> matrixResult = self->_switchMatrixManager->readAll();
+
+            for (auto &res : matrixResult) {
+                // printf("---> %s %i\n", res.first.c_str(), res.second);
+                el.ownerPlugin = self->_owner;
+                el.type = CONFIG_BOOL;
+                el.length = sizeof(uint8_t);
+                el.description = (char *)res.first.c_str();
+                el.name = (char *)res.first.c_str();
+                el.value.bool_value = (bool)res.second;
+
+                self->_enqueueCallback(self, (void *)&el, self->_callbackArg);
             }
         }
         self->_owner->pinRemappingMutex().unlock();
@@ -615,6 +632,25 @@ uint8_t PokeyDevice::displayNumber(uint8_t displayNumber, std::string targetName
         printf("---> could not update Maxtix LED \n");
         return -1;
     }
+
+    return 0;
+}
+
+int PokeyDevice::configSwitchMatrix(int id, std::string name, std::string type, bool enabled)
+{
+    int retVal = -1;
+
+    _switchMatrixManager->addMatrix(id, name, type, enabled);
+
+    return retVal;
+}
+
+int PokeyDevice::configSwitchMatrixSwitch(int switchMatrixId, int switchId, std::string name, int pin, int enablePin, bool invert, bool invertEnablePin)
+{
+
+    std::shared_ptr<PokeySwitchMatrix> matrix = _switchMatrixManager->matrix(switchMatrixId);
+
+    matrix->addSwitch(switchId, name, pin, enablePin, invert, invertEnablePin);
 
     return 0;
 }
