@@ -5,7 +5,7 @@ const MQTT_ENDPOINT_PORT = 1884
 const MQTT_TOPIC = '/flight/predicted'
 // const MQTT_TOPIC = '/#'
 
-const MAX_HISTORY = 60
+const MAX_HISTORY = 120
 const FREQ = 1
 
 var interval = 1000 / FREQ
@@ -31,22 +31,23 @@ var dataHistory = {
   lng: new CBuffer(MAX_HISTORY),
   vspeed: new CBuffer(MAX_HISTORY),
   prediction: new CBuffer(MAX_HISTORY),
+  confidence: new CBuffer(MAX_HISTORY),
   timestamp: undefined
 }
 
 var setOnTrackIndicatorColor = function (val) {
-  if (val != 0) {
-    $('#onTrackIndicator').css('background', '#00FF00')
+  if (val == 0) {
+    $('#onTrackIndicator').css('background', 'red')
   } else {
-    $('#onTrackIndicator').css('background', '#FF0000')
+    $('#onTrackIndicator').css('background', '#2FA779')
   }
 }
 
 var getAverageOnTrackPercentage = function () {
-  var samples = dataHistory.onTrack.size()
+  var samples = dataHistory.prediction.length
 
   var total = 0
-  dataHistory.onTrack.forEach(function (el) {
+  dataHistory.prediction.forEach(function (el) {
     total += el
   })
 
@@ -55,7 +56,7 @@ var getAverageOnTrackPercentage = function () {
 
 var processMQTT = function (data) {
   var heading = parseFloat(data.heading.true).toFixed(2)
-  var airspeed = parseFloat(data.airspeed).toFixed(2)
+  var airspeed = parseFloat(data.airspeed_raw).toFixed(2)
   var pitch = parseFloat(data.pitch).toFixed(2)
   var roll = parseFloat(data.roll).toFixed(2)
   var yaw = parseFloat(data.yaw).toFixed(2)
@@ -64,6 +65,7 @@ var processMQTT = function (data) {
   var lng = parseFloat(data.lng)
   var vs = parseFloat(data.vspeed).toFixed(2)
   var prediction = data.predicted
+  var confidence = data.confident
 
   dataHistory.airspeed.push(airspeed)
   dataHistory.altitude.push(altitude)
@@ -75,6 +77,7 @@ var processMQTT = function (data) {
   dataHistory.yaw.push(yaw)
   dataHistory.vspeed.push(vs)
   dataHistory.prediction.push(prediction)
+  dataHistory.confidence.push(confidence)
   dataHistory.timestamp = data.sts.S
 }
 
@@ -83,7 +86,9 @@ client = new Paho.MQTT.Client(MQTT_ENDPOINT, MQTT_ENDPOINT_PORT, 'clientId')
 client.connect({
   onSuccess: function () {
     console.log('connected')
-    client.subscribe(MQTT_TOPIC, { qos: 0 })
+    client.subscribe(MQTT_TOPIC, {
+      qos: 0
+    })
   },
   onFailure: function (res) {
     console.log(res)
@@ -161,7 +166,7 @@ var updateSparkLines = function () {
     })
 }
 
-var updateInstruments = function updateInstruments () {
+var updateInstruments = function updateInstruments() {
   attitudeInstrument.setPitch(dataHistory.pitch.last())
   attitudeInstrument.setRoll(dataHistory.roll.last())
   headingInstrument.setHeading(dataHistory.heading.last())
@@ -179,6 +184,9 @@ var updateText = function () {
   $('#timeStamp')
     .text(moment(dataHistory.timestamp)
       .format('hh:mm:ss.m ddd DD/MM/YYYY'))
+
+  var trendData = getAverageOnTrackPercentage()
+  $('#confidenceText').text(`${dataHistory.confidence.last()*100}%`)
 }
 
 $(document)

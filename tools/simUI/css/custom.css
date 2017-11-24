@@ -72,9 +72,27 @@
 }
 
 #onTrackIndicator {
-    background: #eeeeee;
+    background: #2FA779;
     width: 100px;
     height: 100px;
     border-radius: 50%;
     margin: auto;
+    color: white;
+}
+
+#confidenceIndicator {
+    background: #2FA779;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    margin: auto;
+    color: white;
+}
+
+#trendText {
+    margin-left: 20px;
+}
+
+#confidenceText {
+    margin-left: 20px;
 }

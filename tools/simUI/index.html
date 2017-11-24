@@ -31,11 +31,25 @@
             </div>
         </nav>
         <div>
-            <div class="row">
-                <div class="col s12 m12 l3 xl3">
+            <div class="row" style="margin-bottom: -5px; margin-top:5px;">
+                <div class="col s12 m12 l3 offset-xl3 xl3">
                     <div class="card-panel z-depth-4 white">
                         <h5 class="center-align">On Track</h5>
-                        <div id="onTrackIndicator" class="center-align"></div>
+                        <div id="onTrackIndicator" class="center-align valign-wrapper">
+                            <div id="trendTextContainer" class="center-align valign-wrapper">
+                                <h5 id="trendText">100%</h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col s12 m12 l3 xl3">
+                    <div class="card-panel z-depth-4 white">
+                        <h5 class="center-align">Confidence</h5>
+                        <div id="confidenceIndicator" class="center-align valign-wrapper">
+                            <div id="confidenceTextContainer" class="center-align valign-wrapper">
+                                <h5 id="confidenceText">100%</h5>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
