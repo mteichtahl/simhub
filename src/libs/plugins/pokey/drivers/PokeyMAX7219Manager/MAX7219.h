@@ -133,7 +133,7 @@ public:
 
         if (_enabled) {
             setState(true);
-            std::this_thread::sleep_for(150ms);
+            std::this_thread::sleep_for(80ms);
             setState(false);
         }
 
