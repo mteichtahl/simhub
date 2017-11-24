@@ -488,6 +488,10 @@ bool PokeyDevicePluginStateManager::deviceLedMatrixConfiguration(libconfig::Sett
                 _logger(LOG_INFO, "    [%s]  - Found %s [%s - CS %i]", pokeyDevice->name().c_str(), name.c_str(), matrixType.c_str(), chipSelect);
                 pokeyDevice->configMatrix(ledMatrixIndex, (uint8_t)chipSelect, matrixType, (uint8_t)enabled, name, description);
 
+                if (!enabled){
+                        return retVal;
+                }
+
                 if (iter->exists("leds")) {
                     int ledIndex = 0;
                     libconfig::Setting *leds;

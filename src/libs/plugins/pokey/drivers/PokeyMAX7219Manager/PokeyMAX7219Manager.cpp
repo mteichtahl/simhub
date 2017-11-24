@@ -1,6 +1,5 @@
 #include <iostream>
 
-
 #include "PokeyMAX7219Manager.h"
 
 using namespace std::chrono_literals;
@@ -37,21 +36,22 @@ std::shared_ptr<MAX7219> PokeyMAX7219Manager::getMax7219(int id)
 
 int PokeyMAX7219Manager::addLedToMatrix(int ledMatrixIndex, uint8_t ledIndex, std::string name, std::string description, uint8_t enabled, uint8_t row, uint8_t col)
 {
-
-    if (enabled) {
-        std::shared_ptr<MAX7219> max7219 = getMax7219(ledMatrixIndex);
-        assert(max7219);
-        max7219->addLed(ledIndex, name, description, enabled, row, col);
-    }
-
+    std::shared_ptr<MAX7219> max7219 = getMax7219(ledMatrixIndex);
+    assert(max7219);
+    max7219->addLed(ledIndex, name, description, enabled, row, col);
     return 0;
 }
 
-void PokeyMAX7219Manager::setLedByName(std::string name, bool value){
-   std::shared_ptr<MAX7219> retVal;
+void PokeyMAX7219Manager::setLedByName(std::string name, bool value)
+{
+    std::shared_ptr<MAX7219> retVal;
 
     for (auto &max7219 : _max7219) {
-       std::shared_ptr<Led> led = max7219->findLedByName(name);
-       led->setState(value);
+        std::shared_ptr<Led> led = max7219->findLedByName(name);
+        assert(led);
+
+        if (led->enabled()) {
+            led->setState(value);
+        }
     }
 }

@@ -75,7 +75,6 @@ enum eModeValues {
 
 class Led;
 
-
 class MAX7219
 {
 protected:
@@ -102,9 +101,12 @@ public:
     void addLed(uint8_t ledIndex, std::string name, std::string description, uint8_t enabled, uint8_t row, uint8_t col);
 
     int id() { return _id; }
+    std::string name() { return _name; }
     std::shared_ptr<Led> findLedByName(std::string name);
 };
 
+
+#define ALWAYS_ON 2
 class Led
 {
 protected:
@@ -114,10 +116,10 @@ protected:
     uint8_t _enabled;
     uint8_t _row;
     uint8_t _col;
-    MAX7219 *_owner;
+    std::shared_ptr<MAX7219> _owner;
 
 public:
-    Led(MAX7219 *owner, int index, std::string name, std::string description, uint8_t enabled, uint8_t row, uint8_t col)
+    Led(std::shared_ptr<MAX7219> owner, int index, std::string name, std::string description, uint8_t enabled, uint8_t row, uint8_t col)
     {
         _owner = owner;
         _index = index;
@@ -127,15 +129,22 @@ public:
         _row = row;
         _col = col;
 
-        setState(true);
-        // std::this_thread::sleep_for(150ms);
-        // setState(false);
-    }
-    void setState(bool val){
-         _owner->setPinState( _col,  _row, val);
+        setState(false);
+
+        if (_enabled) {
+            setState(true);
+            std::this_thread::sleep_for(150ms);
+            setState(false);
+        }
+
+        if (_enabled == ALWAYS_ON){
+            setState(true);
+        }
     }
 
-    std::string name() { return _name; }
+    void setState(bool val) { _owner->setPinState(_col, _row, val); }
+    bool enabled(void) { return _enabled; }
+    std::string name(void) { return _name; }
 };
 
 #endif

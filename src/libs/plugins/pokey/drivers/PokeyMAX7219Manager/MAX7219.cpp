@@ -11,6 +11,7 @@ MAX7219::MAX7219(sPoKeysDevice *pokey, int id, uint8_t chipSelect, std::string m
     _matrixType = matrixType;
     _description = description;
     _pokey = pokey;
+    _name = name;
 
     _stateMatrix = { { 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0 } };
@@ -28,7 +29,7 @@ MAX7219::MAX7219(sPoKeysDevice *pokey, int id, uint8_t chipSelect, std::string m
 
     setIntensity(MODE_INTENSITY_MED);
 
-    assert(runTest());
+    // assert(runTest());
 }
 
 MAX7219::~MAX7219(void) {}
@@ -84,8 +85,10 @@ void MAX7219::setPinState(uint8_t col, uint8_t row, bool enabled)
     uint16_t packet = _encodeOutputPacket(colRegister, rowMask);
 
     if (SPIWrite(packet) != PK_OK) {
-        //throw std::runtime_error("failed to set MAX7219 pin state");
-        printf("failed to set MAX7219 pin state col %i row %i val %i",col,row,enabled);
+         if (SPIWrite(packet) != PK_OK) {
+            printf("failed to set MAX7219 pin state col %i row %i val %i\n",col,row,enabled);
+        }
+        
     }
 }
 
@@ -120,21 +123,20 @@ bool MAX7219::runTest(bool cycleThrough)
 
 void MAX7219::addLed(uint8_t ledIndex, std::string name, std::string description, uint8_t enabled, uint8_t row, uint8_t col)
 {
-    if (enabled) {
-        std::shared_ptr<Led> led = std::make_shared<Led>(this, ledIndex, name, description, enabled, row, col);
-        _leds.push_back(led);
-    }
+    std::shared_ptr<Led> led = std::make_shared<Led>(std::shared_ptr<MAX7219>(this), ledIndex, name, description, enabled, row, col);
+    _leds.push_back(led);
 }
 
-std::shared_ptr<Led> MAX7219::findLedByName(std::string name){
-
+std::shared_ptr<Led> MAX7219::findLedByName(std::string name)
+{
     std::shared_ptr<Led> retVal;
 
-    for (auto &led : _leds) {
-        if (led->name() == name){
+    for (auto &led: _leds) {
+        if (led->name() == name) {
             retVal= led;
             break;
         }
     }
+
     return retVal;
 }
