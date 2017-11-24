@@ -143,6 +143,8 @@ bool MappingConfigManager::find(std::string key, MapEntry **retMapEntry)
         return true;
     }
     else {
-        return false;
+        // provide a default mapping
+        return true;
     }
 }
+

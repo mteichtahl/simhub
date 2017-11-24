@@ -2,6 +2,7 @@
 #define __SIMSOURCE_H
 
 #include <dlfcn.h>
+#include <stdio.h>
 
 #if defined(build_macosx)
 #define LIB_EXT ".dylib"
@@ -87,6 +88,7 @@ inline int simplug_bootstrap(const char *plugin_path, simplug_vtable *plugin_vta
     void *handle = dlopen(plugin_path, RTLD_LAZY);
 
     if (!handle) {
+        perror("COULDN'T LOAD PLUGIN!");
         return -1;
     }
 

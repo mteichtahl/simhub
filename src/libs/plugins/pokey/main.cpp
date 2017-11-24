@@ -94,6 +94,7 @@ int PokeyDevicePluginStateManager::deliverValue(GenericTLV *data)
     assert(data);
 
     int retVal = 0;
+    // printf("-----> %s %i %i\n",data->name, data->type, (int)data->value);
 
     std::shared_ptr<PokeyDevice> device = targetFromDeviceTargetList(data->name);
 
@@ -106,7 +107,7 @@ int PokeyDevicePluginStateManager::deliverValue(GenericTLV *data)
         }
     }
     else {
-        std::cout << "NO DEVICE!" << std::endl;
+        // std::cout << "no target device found" << std::endl;
     }
 
     return retVal;
@@ -146,6 +147,7 @@ void PokeyDevicePluginStateManager::enumerateDevices(void)
 
 bool PokeyDevicePluginStateManager::addTargetToDeviceTargetList(std::string target, std::shared_ptr<PokeyDevice> device)
 {
+    // printf("----> adding %s to %s\n", target.c_str(), device->name().c_str());
     _deviceMap.emplace(target, device);
     return true;
 }
@@ -408,16 +410,6 @@ bool PokeyDevicePluginStateManager::devicePWMConfiguration(libconfig::Setting *p
 
 bool PokeyDevicePluginStateManager::deviceEncodersConfiguration(libconfig::Setting *encoders, std::shared_ptr<PokeyDevice> pokeyDevice)
 {
-    /**
-    {
-        # channel 1 - Fast Encoder 1 - uses pins 1 and 2
-        encoder = 1,
-        name = "",
-        description = "",
-        default = 100
-      }
-    **/
-
     bool retVal = true;
     int encoderCount = encoders->getLength();
 
@@ -466,6 +458,84 @@ bool PokeyDevicePluginStateManager::deviceEncodersConfiguration(libconfig::Setti
     return retVal;
 }
 
+bool PokeyDevicePluginStateManager::deviceLedMatrixConfiguration(libconfig::Setting *ledMatrix, std::shared_ptr<PokeyDevice> pokeyDevice)
+{
+    bool retVal = true;
+    int ledMatrixCount = ledMatrix->getLength();
+    int ledMatrixIndex = 0;
+
+    if (ledMatrixCount > 1) {
+        retVal = false;
+        _logger(LOG_ERROR, "Invalid number of LED Matrix (%i). Maximum 1", ledMatrixCount);
+    }
+    else {
+        _logger(LOG_INFO, "    [%s]  - Found %i LED Matrix", pokeyDevice->name().c_str(), ledMatrixCount);
+        for (libconfig::SettingIterator iter = ledMatrix->begin(); iter != ledMatrix->end(); iter++) {
+
+            try {
+                std::string matrixType = "";
+                std::string name = "";
+                std::string description = "";
+                int chipSelect = 0;
+                int enabled = 0;
+
+                iter->lookupValue("type", matrixType);
+                iter->lookupValue("chipSelect", chipSelect);
+                iter->lookupValue("enabled", enabled);
+                iter->lookupValue("description", description);
+                iter->lookupValue("name", name);
+
+                _logger(LOG_INFO, "    [%s]  - Found %s [%s - CS %i]", pokeyDevice->name().c_str(), name.c_str(), matrixType.c_str(), chipSelect);
+                pokeyDevice->configMatrix(ledMatrixIndex, (uint8_t)chipSelect, matrixType, (uint8_t)enabled, name, description);
+
+                if (!enabled){
+                        return retVal;
+                }
+
+                if (iter->exists("leds")) {
+                    int ledIndex = 0;
+                    libconfig::Setting *leds;
+
+                    leds = &iter->lookup("leds");
+                    int ledCount = leds->getLength();
+
+                    _logger(LOG_INFO, "    [%s]    - Found %i leds", pokeyDevice->name().c_str(),ledCount);
+
+                    for (libconfig::SettingIterator led = leds->begin(); led != leds->end(); led++) {
+
+                        std::string name = "";
+                        std::string description = "";
+                        int enabled = 1;
+                        int row;
+                        int col;
+
+                        led->lookupValue("name", name);
+                        led->lookupValue("description", description);
+                        led->lookupValue("enabled", enabled);
+                        led->lookupValue("row", row);
+                        led->lookupValue("col", col);
+
+                        pokeyDevice->addLedToLedMatrix(ledMatrixIndex, ledIndex, name, description, (uint8_t)enabled, (uint8_t)row, (uint8_t)col);
+                         _logger(LOG_INFO, "                       - %s [%i/%i] row %i / col %i] ", name.c_str(), ledIndex, ledCount, row, col );
+
+                        addTargetToDeviceTargetList(name, pokeyDevice);
+
+                        ledIndex++;
+                    }
+                }
+
+                ledMatrixIndex++;
+            }
+            catch (const libconfig::SettingNotFoundException &nfex) {
+                _logger(LOG_ERROR, "Could not find %s. Skipping....", nfex.what());
+                continue;
+            }
+        }
+    }
+
+    return retVal;
+}
+
 bool PokeyDevicePluginStateManager::deviceDisplaysConfiguration(libconfig::Setting *displays, std::shared_ptr<PokeyDevice> pokeyDevice)
 {
     bool retVal = true;
@@ -479,8 +549,8 @@ bool PokeyDevicePluginStateManager::deviceDisplaysConfiguration(libconfig::Setti
     else {
         _logger(LOG_INFO, "    [%s]  - Found %i displays", pokeyDevice->name().c_str(), displayCount);
         for (libconfig::SettingIterator iter = displays->begin(); iter != displays->end(); iter++) {
-            std::string name = "None";
-            std::string type = "";
+            std::string type = "None";
+            std::string name = "";
             int enabled = 0;
 
             try {
@@ -582,6 +652,7 @@ int PokeyDevicePluginStateManager::preflightComplete(void)
             continue;
         }
 
+        // check if there is a pins section in the config
         if (iter->exists("pins"))
             devicePinsConfiguration(&iter->lookup("pins"), pokeyDevice);
 
@@ -593,6 +664,11 @@ int PokeyDevicePluginStateManager::preflightComplete(void)
         if (iter->exists("displays"))
             deviceDisplaysConfiguration(&iter->lookup("displays"), pokeyDevice);
 
+        // check if there is a led matrix section in the config
+        if (iter->exists("ledMatrix"))
+            deviceLedMatrixConfiguration(&iter->lookup("ledMatrix"), pokeyDevice);
+
+        // check if there is a pwm section in the config
         if (iter->exists("pwm"))
             devicePWMConfiguration(&iter->lookup("displays"), pokeyDevice);
 
