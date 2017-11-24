@@ -1,12 +1,13 @@
 #ifndef __POKEY_SWITCH_MATRIX_H
 #define __POKEY_SWITCH_MATRIX_H
 
-#include "PoKeysLib.h"
+#include <PoKeysLib.h>
+#include <memory>
 #include <iostream>
 #include <stdlib.h>
 #include <vector>
-#include "PokeySwitch.h"
 
+#include "PokeySwitch.h"
 
 class PokeySwitchMatrix
 {
