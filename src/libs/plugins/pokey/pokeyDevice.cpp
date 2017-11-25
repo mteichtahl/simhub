@@ -89,7 +89,10 @@ PokeyDevice::PokeyDevice(PokeyDevicePluginStateManager *owner, sPoKeysNetworkDev
     _intToDisplayRow[8] = 0b11111110;
     _intToDisplayRow[9] = 0b11100110;
 
+    _switchMatrixManager = std::make_shared<PokeySwitchMatrixManager>(_pokey);
+
     loadPinConfiguration();
+
     _pollTimer.data = this;
     _pollLoop = uv_loop_new();
     uv_timer_init(_pollLoop, &_pollTimer);
@@ -289,6 +292,21 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
                         self->_enqueueCallback(self, (void *)&el, self->_callbackArg);
                     }
                 }
+            }
+
+            // process all switch matrix
+            std::vector<std::pair<std::string, uint8_t>> matrixResult = self->_switchMatrixManager->readAll();
+
+            for (auto &res : matrixResult) {
+                // printf("---> %s %i\n", res.first.c_str(), res.second);
+                el.ownerPlugin = self->_owner;
+                el.type = CONFIG_BOOL;
+                el.length = sizeof(uint8_t);
+                el.description = (char *)res.first.c_str();
+                el.name = (char *)res.first.c_str();
+                el.value.bool_value = (bool)res.second;
+
+                self->_enqueueCallback(self, (void *)&el, self->_callbackArg);
             }
         }
         self->_owner->pinRemappingMutex().unlock();
@@ -527,6 +545,21 @@ void PokeyDevice::configMatrixLED(int id, int rows, int cols, int enabled)
     PK_MatrixLEDUpdate(_pokey);
 }
 
+void PokeyDevice::configMatrix(int id, uint8_t chipSelect, std::string type, uint8_t enabled, std::string name, std::string description)
+{
+    _pokeyMax7219Manager = std::make_shared<PokeyMAX7219Manager>(_pokey);
+
+    if (enabled) {
+        _pokeyMax7219Manager->addMatrix(id, chipSelect, type, enabled, name, description);
+    }
+} 
+
+void PokeyDevice::addLedToLedMatrix(int ledMatrixIndex, uint8_t ledIndex, std::string name, std::string description, uint8_t enabled, uint8_t row, uint8_t col)
+{
+    assert(_pokeyMax7219Manager);
+    _pokeyMax7219Manager->addLedToMatrix(ledMatrixIndex, ledIndex, name, description, enabled, row, col);
+}
+
 uint32_t PokeyDevice::targetValue(std::string targetName, int value)
 {
     uint8_t displayNum = displayFromName(targetName);
@@ -539,8 +572,13 @@ uint32_t PokeyDevice::targetValue(std::string targetName, bool value)
     uint32_t retValue = -1;
     uint8_t pin = pinFromName(targetName) - 1;
 
-    if (pin >= 0) {
+    if (pin >= 0 && pin <= 55) {
         retValue = PK_DigitalIOSetSingle(_pokey, pin, value);
+    }
+    else {
+        // we have output matrix - so deliver there
+        _pokeyMax7219Manager->setLedByName(targetName, value);
+        retValue = 0;
     }
 
     if (retValue == PK_ERR_TRANSFER) {
@@ -608,6 +646,25 @@ uint8_t PokeyDevice::displayNumber(uint8_t displayNumber, std::string targetName
         printf("---> could not update Maxtix LED \n");
         return -1;
     }
+
+    return 0;
+}
+
+int PokeyDevice::configSwitchMatrix(int id, std::string name, std::string type, bool enabled)
+{
+    int retVal = -1;
+
+    _switchMatrixManager->addMatrix(id, name, type, enabled);
+
+    return retVal;
+}
+
+int PokeyDevice::configSwitchMatrixSwitch(int switchMatrixId, int switchId, std::string name, int pin, int enablePin, bool invert, bool invertEnablePin)
+{
+
+    std::shared_ptr<PokeySwitchMatrix> matrix = _switchMatrixManager->matrix(switchMatrixId);
+
+    matrix->addSwitch(switchId, name, pin, enablePin, invert, invertEnablePin);
 
     return 0;
 }

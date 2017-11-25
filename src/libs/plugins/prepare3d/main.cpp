@@ -375,7 +375,7 @@ char *SimSourcePluginStateManager::getElementDataType(char identifier)
         return (char *)"float";
         break;
     default:
-        _logger(LOG_ERROR, "Missing prosim element data type %c", identifier);
+        //_logger(LOG_ERROR, "Missing prosim element data type %c", identifier);
         break;
     }
 

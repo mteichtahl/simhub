@@ -69,7 +69,7 @@ std::string ConfigManager::loadPrepare3DConfiguration(void)
         try {
             _prepare3dConfigurationFilename = (const char *)_config.lookup("prepare3dConfigurationFile");
             _prepare3dConfig.readFile(_prepare3dConfigurationFilename.c_str());
-            logger.log(LOG_INFO, " - Loading prepare3d configuration from %s", _prepare3dConfigurationFilename.c_str());
+            logger.log(LOG_INFO, "Loading prepare3d configuration from %s", _prepare3dConfigurationFilename.c_str());
         }
         catch (const libconfig::SettingNotFoundException &nfex) {
             logger.log(LOG_ERROR, "No prepare3d configuration file set in config");
@@ -84,7 +84,7 @@ std::string ConfigManager::loadPokeyConfiguration(void)
         try {
             _pokeyConfigurationFilename = (const char *)_config.lookup("pokeyConfigurationFile");
             _pokeyConfig.readFile(_pokeyConfigurationFilename.c_str());
-            logger.log(LOG_INFO, " - Loading pokey configuration from %s", _pokeyConfigurationFilename.c_str());
+            logger.log(LOG_INFO, "Loading pokey configuration from %s", _pokeyConfigurationFilename.c_str());
         }
         catch (const libconfig::SettingNotFoundException &nfex) {
             logger.log(LOG_ERROR, "No pokey configuration file set in config");
