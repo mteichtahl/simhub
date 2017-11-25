@@ -11,7 +11,6 @@ PokeyDevice::PokeyDevice(PokeyDevicePluginStateManager *owner, sPoKeysNetworkDev
     _callbackArg = NULL;
     _enqueueCallback = NULL;
     _owner = owner;
-
     _pokey = PK_ConnectToNetworkDevice(&deviceSummary);
 
     if (!_pokey) {
@@ -78,10 +77,12 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
 
     assert(self);
 
+    // only run if we have complete our preflight
     if (!self->_owner->successfulPreflightCompleted()) {
         return;
     }
 
+    // Process the encoders
     int encoderRetValue = PK_EncoderValuesGet(self->_pokey);
 
     if (encoderRetValue == PK_OK) {
@@ -146,10 +147,11 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
             }
         }
     }
+    // Finish processing the encoders
 
-    int ret = PK_DigitalIOGet(self->_pokey);
+    int retVal = PK_DigitalIOGet(self->_pokey);
 
-    if (ret == PK_OK) {
+    if (retVal == PK_OK) {
         self->_owner->pinRemappingMutex().lock();
 
         GenericTLV el;
@@ -191,11 +193,8 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
                         else {
                             if (!remappedPinInfo.first->_pins[remappedPinIndex].skipNext) {
                                 self->_owner->pinRemappingMutex().unlock();
-
                                 std::this_thread::sleep_for(250ms);
-
                                 // give any other remapped polling threads a chance to send a state change
-
                                 if (remappedPinInfo.first->_pins[remappedPinIndex].skipNext) {
                                     hackSkip = true;
                                 }
@@ -243,26 +242,35 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
                     }
                 }
             }
-
-            // process all switch matrix
-            std::vector<std::pair<std::string, uint8_t>> matrixResult = self->_switchMatrixManager->readAll();
-
-            for (auto &res : matrixResult) {
-                // printf("---> %s %i\n", res.first.c_str(), res.second);
-                el.ownerPlugin = self->_owner;
-                el.type = CONFIG_BOOL;
-                el.length = sizeof(uint8_t);
-                el.description = (char *)res.first.c_str();
-                el.name = (char *)res.first.c_str();
-                el.value.bool_value = (bool)res.second;
-
-                self->_enqueueCallback(self, (void *)&el, self->_callbackArg);
-            }
         }
+
+        // process all switch matrix
+        std::vector<std::pair<std::string, uint8_t>> matrixResult = self->_switchMatrixManager->readAll();
+
+        for (auto &res : matrixResult) {
+            el.ownerPlugin = self->_owner;
+            el.type = CONFIG_BOOL;
+            el.length = sizeof(uint8_t);
+            el.description = (char *)res.first.c_str();
+            el.name = (char *)res.first.c_str();
+            el.value.bool_value = (bool)res.second;
+
+            self->_enqueueCallback(self, (void *)&el, self->_callbackArg);
+        }
+        // end process all switch matrix
+
         self->_owner->pinRemappingMutex().unlock();
     }
     else {
-        printf("TRANSFER ERROR\n");
+        if (retVal == PK_ERR_TRANSFER) {
+            printf("----> PK_ERR_TRANSFER %i\n\n", retVal);
+        }
+        else if (retVal == PK_ERR_GENERIC) {
+            printf("----> PK_ERR_GENERIC %i\n\n", retVal);
+        }
+        else if (retVal == PK_ERR_PARAMETER) {
+            printf("----> PK_ERR_PARAMETER %i\n\n", retVal);
+        }
     }
 }
 
@@ -530,7 +538,7 @@ uint32_t PokeyDevice::targetValue(std::string targetName, bool value)
     else {
         // we have output matrix - so deliver there
         _pokeyMax7219Manager->setLedByName(targetName, value);
-        retValue = 0;
+        retValue = PK_OK;
     }
 
     if (retValue == PK_ERR_TRANSFER) {
@@ -594,12 +602,19 @@ uint8_t PokeyDevice::displayNumber(uint8_t displayNumber, std::string targetName
 
     _pokey->MatrixLED[displayNumber].RefreshFlag = 1;
 
-    if (PK_MatrixLEDUpdate(_pokey) != PK_OK) {
-        printf("---> could not update Maxtix LED \n");
-        return -1;
+    int retValue = PK_MatrixLEDUpdate(_pokey);
+
+    if (retValue == PK_ERR_TRANSFER) {
+        printf("----> PK_ERR_TRANSFER %i\n\n", retValue);
+    }
+    else if (retValue == PK_ERR_GENERIC) {
+        printf("----> PK_ERR_GENERIC %i\n\n", retValue);
+    }
+    else if (retValue == PK_ERR_PARAMETER) {
+        printf("----> PK_ERR_PARAMETER pin %i\n\n", retValue);
     }
 
-    return 0;
+    return retValue;
 }
 
 int PokeyDevice::configSwitchMatrix(int id, std::string name, std::string type, bool enabled)

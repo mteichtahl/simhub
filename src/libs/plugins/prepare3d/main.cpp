@@ -116,9 +116,6 @@ int SimSourcePluginStateManager::preflightComplete(void)
         if (iter->exists("ipAddress")) {
             iter->lookupValue("ipAddress", ipAddress);
         }
-        else {
-            ipAddress = "127.0.0.1";
-        }
 
         if (iter->exists("port")) {
             iter->lookupValue("port", port);
@@ -129,7 +126,7 @@ int SimSourcePluginStateManager::preflightComplete(void)
         }
     }
 
-    _logger(LOG_ERROR, "Connecting to simulator on %s:%d", ipAddress.c_str(), port);
+    _logger(LOG_INFO, "<SimSourcePlugin> Connecting to simulator on %s:%d", ipAddress.c_str(), port);
 
     struct sockaddr_in req_addr;
 
@@ -160,12 +157,12 @@ int SimSourcePluginStateManager::preflightComplete(void)
 
 void SimSourcePluginStateManager::loadTransforms(libconfig::Setting *transforms)
 {
-    _logger(LOG_INFO, "Loading %i transforms ", transforms->getLength());
+    _logger(LOG_INFO, "<Transforms> Found %i transforms(s)", transforms->getLength());
 
     for (libconfig::Setting const &transform : *transforms) {
         std::string transformName = transform.getName();
 
-        _logger(LOG_INFO, " - transform %s", transformName.c_str());
+        _logger(LOG_INFO, "<Transforms> Loading %s", transformName.c_str());
 
         if (transform.exists("On") && transform.exists("Off")) {
             std::string transformResultOn;
@@ -532,7 +529,7 @@ bool TCPClient::connect(std::string address, int port)
     }
 
     if (retVal)
-        _logger(LOG_INFO, " - Connected to %s", address.c_str());
+        _logger(LOG_INFO, "<SimSourcePlugin> Connected to %s:%d", address.c_str(), port);
 
     return retVal;
 }

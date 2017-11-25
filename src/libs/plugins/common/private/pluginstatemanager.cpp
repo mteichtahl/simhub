@@ -10,7 +10,9 @@ PluginStateManager::PluginStateManager(LoggingFunctionCB logger)
 {
 }
 
-PluginStateManager::~PluginStateManager(void) {}
+PluginStateManager::~PluginStateManager(void)
+{
+}
 
 //! just queue up a copy of the device settings for use in preflightComplete
 int PluginStateManager::configPassthrough(libconfig::Config *pluginConfiguration)
@@ -31,14 +33,14 @@ int PluginStateManager::deliverValue(GenericTLV *value)
 
 void PluginStateManager::commenceEventing(EnqueueEventHandler enqueueCallback, void *arg)
 {
-    _logger(LOG_INFO, "  - commence eventing");
+    _logger(LOG_INFO, "<PluginManager> Commence eventing");
     _enqueueCallback = enqueueCallback;
     _callbackArg = arg;
 }
 
 void PluginStateManager::ceaseEventing(void)
 {
-    _logger(LOG_INFO, "  - Cease eventing");
+    _logger(LOG_INFO, "<PluginManager> Cease eventing");
 }
 
 std::string PluginStateManager::transformBoolToString(std::string orginalValue, std::string transformResultOff, std::string transformResultOn)

@@ -155,7 +155,7 @@ bool PokeyDevicePluginStateManager::addTargetToDeviceTargetList(std::string targ
 std::shared_ptr<PokeyDevice> PokeyDevicePluginStateManager::targetFromDeviceTargetList(std::string key)
 {
     // std::cout << "trying to find " << key << std::endl;
-    
+
     std::map<std::string, std::shared_ptr<PokeyDevice>>::iterator it = _deviceMap.find(key);
 
     if (it != _deviceMap.end()) {
@@ -282,7 +282,7 @@ bool PokeyDevicePluginStateManager::devicePinsConfiguration(libconfig::Setting *
     int pinCount = pins->getLength();
 
     if (pinCount > 0) {
-        _logger(LOG_INFO, "    [%s]  - Found %i pins", pokeyDevice->name().c_str(), pinCount);
+        _logger(LOG_INFO, "%s | Pin | Found %i pins", pokeyDevice->name().c_str(), pinCount);
 
         int pinIndex = 0;
 
@@ -332,7 +332,7 @@ bool PokeyDevicePluginStateManager::devicePinsConfiguration(libconfig::Setting *
                             iter->lookupValue("default", defaultValue);
 
                         pokeyDevice->addPin(pinIndex, pinName, pinNumber, pinType, defaultValue, description, false);
-                        _logger(LOG_INFO, "        - [%d] Added target %s on pin %d", pinIndex, pinName.c_str(), pinNumber);
+                        _logger(LOG_INFO, "%s | Pin | %d Added target %s on pin %d", pokeyDevice->name().c_str(), pinIndex, pinName.c_str(), pinNumber);
                     }
                 }
                 else if (pinType == "DIGITAL_INPUT") {
@@ -345,12 +345,12 @@ bool PokeyDevicePluginStateManager::devicePinsConfiguration(libconfig::Setting *
 
                     pokeyDevice->addPin(pinIndex, pinName, pinNumber, pinType, defaultValue, description, invert);
 
-                    _logger(LOG_INFO, "        - [%d] Added source %s on pin %d", pinIndex, pinName.c_str(), pinNumber);
+                    _logger(LOG_INFO, "%s | Pin | [%d] Added source %s on pin %d", pokeyDevice->name().c_str(), pinIndex, pinName.c_str(), pinNumber);
                 }
                 pinIndex++;
             }
             else {
-                _logger(LOG_ERROR, "        - [%d] Invalid pin type %s on pin %d", pinIndex, pinType.c_str(), pinNumber);
+                _logger(LOG_ERROR, "%s | Pin |[%d] Invalid pin type %s on pin %d", pokeyDevice->name().c_str(), pinIndex, pinType.c_str(), pinNumber);
                 continue;
             }
         }
@@ -400,7 +400,7 @@ bool PokeyDevicePluginStateManager::devicePWMConfiguration(libconfig::Setting *p
     int pwmCount = pwm->getLength();
 
     if (pwmCount > 0) {
-        _logger(LOG_INFO, "    [%s]  - Found %i PWM Channels", pokeyDevice->name().c_str(), pwmCount);
+        _logger(LOG_INFO, "%s | PWM | Found %i PWM Channels", pokeyDevice->name().c_str(), pwmCount);
         int encoderIndex = 0;
 
         for (libconfig::SettingIterator iter = pwm->begin(); iter != pwm->end(); iter++) {
@@ -416,7 +416,7 @@ bool PokeyDevicePluginStateManager::deviceEncodersConfiguration(libconfig::Setti
     int encoderCount = encoders->getLength();
 
     if (encoderCount > 0) {
-        _logger(LOG_INFO, "    [%s]  - Found %i encoders", pokeyDevice->name().c_str(), encoderCount);
+        _logger(LOG_INFO, "%s | Encoder | Found %i encoders", pokeyDevice->name().c_str(), encoderCount);
         int encoderIndex = 0;
 
         for (libconfig::SettingIterator iter = encoders->begin(); iter != encoders->end(); iter++) {
@@ -444,13 +444,13 @@ bool PokeyDevicePluginStateManager::deviceEncodersConfiguration(libconfig::Setti
                 iter->lookupValue("type", type);
             }
             catch (const libconfig::SettingNotFoundException &nfex) {
-                _logger(LOG_ERROR, "Could not find %s. Skipping....", nfex.what());
+                _logger(LOG_ERROR, "%s | Encoder | Could not find %s. Skipping....", pokeyDevice->name().c_str(), nfex.what());
                 continue;
             }
 
             if (pokeyDevice->validateEncoder(encoderNumber)) {
-                pokeyDevice->addEncoder(encoderNumber, encoderDefault, encoderName, description, encoderMin, encoderMax, encoderStep, invertDirection, units,type);
-                _logger(LOG_INFO, "        - [%s] Added encoder %i (%s)", pokeyDevice->name().c_str(), encoderNumber, encoderName.c_str());
+                pokeyDevice->addEncoder(encoderNumber, encoderDefault, encoderName, description, encoderMin, encoderMax, encoderStep, invertDirection, units, type);
+                _logger(LOG_INFO, "%s | Encoder | Added encoder %i (%s)", pokeyDevice->name().c_str(), encoderNumber, encoderName.c_str());
                 encoderIndex++;
             }
         }
@@ -470,10 +470,10 @@ bool PokeyDevicePluginStateManager::deviceLedMatrixConfiguration(libconfig::Sett
 
     if (ledMatrixCount > 1) {
         retVal = false;
-        _logger(LOG_ERROR, "Invalid number of LED Matrix (%i). Maximum 1", ledMatrixCount);
+        _logger(LOG_ERROR, "%s | LED Matrix | Invalid number of LED Matrix (%i). Maximum 1", pokeyDevice->name().c_str(), ledMatrixCount);
     }
     else {
-        _logger(LOG_INFO, "    [%s]  - Found %i LED Matrix", pokeyDevice->name().c_str(), ledMatrixCount);
+        _logger(LOG_INFO, "%s | LED Matrix | Found %i LED Matrix", pokeyDevice->name().c_str(), ledMatrixCount);
         for (libconfig::SettingIterator iter = ledMatrix->begin(); iter != ledMatrix->end(); iter++) {
 
             try {
@@ -489,7 +489,7 @@ bool PokeyDevicePluginStateManager::deviceLedMatrixConfiguration(libconfig::Sett
                 iter->lookupValue("description", description);
                 iter->lookupValue("name", name);
 
-                _logger(LOG_INFO, "    [%s]  - Found %s [%s - CS %i]", pokeyDevice->name().c_str(), name.c_str(), matrixType.c_str(), chipSelect);
+                _logger(LOG_INFO, " %s | LED Matrix> %s (%s - CS %i)", pokeyDevice->name().c_str(), name.c_str(), matrixType.c_str(), chipSelect);
                 pokeyDevice->configMatrix(ledMatrixIndex, (uint8_t)chipSelect, matrixType, (uint8_t)enabled, name, description);
 
                 if (!enabled) {
@@ -502,12 +502,9 @@ bool PokeyDevicePluginStateManager::deviceLedMatrixConfiguration(libconfig::Sett
 
                     leds = &iter->lookup("leds");
                     int ledCount = leds->getLength();
-
-                    _logger(LOG_INFO, "    [%s]    - Found %i leds", pokeyDevice->name().c_str(), ledCount);
-
                     for (libconfig::SettingIterator led = leds->begin(); led != leds->end(); led++) {
 
-                        std::string name = "";
+                        std::string name = "Unknown";
                         std::string description = "";
                         int enabled = 1;
                         int row;
@@ -520,18 +517,17 @@ bool PokeyDevicePluginStateManager::deviceLedMatrixConfiguration(libconfig::Sett
                         led->lookupValue("col", col);
 
                         pokeyDevice->addLedToLedMatrix(ledMatrixIndex, ledIndex, name, description, (uint8_t)enabled, (uint8_t)row, (uint8_t)col);
-                        _logger(LOG_INFO, "                       - %s [%i/%i] row %i / col %i] ", name.c_str(), ledIndex, ledCount, row, col);
-
+                        _logger(LOG_INFO, "%s | LED Matrix | Led | %s (row %i / col %i)", pokeyDevice->name().c_str(), name.c_str(), row, col);
                         addTargetToDeviceTargetList(name, pokeyDevice);
-
                         ledIndex++;
                     }
+                    _logger(LOG_INFO, "<%s><LED Matrix> %s Loaded %i leds", pokeyDevice->name().c_str(), name.c_str(), ledCount);
                 }
 
                 ledMatrixIndex++;
             }
             catch (const libconfig::SettingNotFoundException &nfex) {
-                _logger(LOG_ERROR, "Could not find %s. Skipping....", nfex.what());
+                _logger(LOG_ERROR, "%s | LED Matrix | Could not find %s. Skipping....", pokeyDevice->name().c_str(), nfex.what());
                 continue;
             }
         }
@@ -548,10 +544,10 @@ bool PokeyDevicePluginStateManager::deviceDisplaysConfiguration(libconfig::Setti
 
     if (displayCount > 2) {
         retVal = false;
-        _logger(LOG_ERROR, "Invalid number of displays (%i). Maximum 2", displayCount);
+        _logger(LOG_ERROR, "<%s> | Display | Invalid number of displays (%i). Maximum 2", pokeyDevice->name().c_str(), displayCount);
     }
     else {
-        _logger(LOG_INFO, "    [%s]  - Found %i displays", pokeyDevice->name().c_str(), displayCount);
+        _logger(LOG_INFO, "<%s> | Display | Found %i display(s)", pokeyDevice->name().c_str(), displayCount);
         for (libconfig::SettingIterator iter = displays->begin(); iter != displays->end(); iter++) {
             std::string type = "None";
             std::string name = "";
@@ -562,16 +558,16 @@ bool PokeyDevicePluginStateManager::deviceDisplaysConfiguration(libconfig::Setti
                 iter->lookupValue("type", type);
                 iter->lookupValue("enabled", enabled);
 
-                _logger(LOG_INFO, "    [%s]  - %s [%s]", pokeyDevice->name().c_str(), name.c_str(), type.c_str());
+                _logger(LOG_INFO, "<%s> <Display> %s [%s]", pokeyDevice->name().c_str(), name.c_str(), type.c_str());
 
                 int matrixRows = deviceDisplaysGroupsConfiguration(&iter->lookup("groups"), displayIndex, pokeyDevice, type);
-                _logger(LOG_INFO, "    [%s]  - Added %i digits", pokeyDevice->name().c_str(), matrixRows);
+                _logger(LOG_INFO, "<%s> <Display> Added %i digit(s)", pokeyDevice->name().c_str(), matrixRows);
 
                 pokeyDevice->configMatrixLED(displayIndex, 8, 8, enabled);
                 displayIndex = displayIndex + 1;
             }
             catch (const libconfig::SettingNotFoundException &nfex) {
-                _logger(LOG_ERROR, "Could not find %s. Skipping....", nfex.what());
+                _logger(LOG_ERROR, "<%s> | Display | Could not find %s. Skipping....", pokeyDevice->name().c_str(), nfex.what());
                 continue;
             }
         }
@@ -586,10 +582,10 @@ int PokeyDevicePluginStateManager::deviceDisplaysGroupsConfiguration(libconfig::
     int totalDigits = 0;
 
     if (groupCount == 0 || groupCount > 8) {
-        _logger(LOG_ERROR, "Invalid number of display groups (%i). Minimum 1 Maximum 8", groupCount);
+        _logger(LOG_ERROR, "<%s> <%s> | Display | Group | Invalid number of display groups (%i). Minimum 1 Maximum 8", pokeyDevice->name().c_str(), groupCount);
     }
     else {
-        _logger(LOG_INFO, "    [%s]  - Found %i display groups", pokeyDevice->name().c_str(), groupCount);
+        _logger(LOG_INFO, "<%s> | Display | Group | Found %i display group(s)", pokeyDevice->name().c_str(), groupCount);
         int id = 0;
         for (libconfig::SettingIterator iter = displayGroups->begin(); iter != displayGroups->end(); iter++) {
             std::string name = "None";
@@ -601,7 +597,7 @@ int PokeyDevicePluginStateManager::deviceDisplaysGroupsConfiguration(libconfig::
                 iter->lookupValue("digits", digits);
                 iter->lookupValue("position", position);
 
-                _logger(LOG_INFO, "    [%s]    - %s %i digits / position %i", pokeyDevice->name().c_str(), name.c_str(), digits, position);
+                _logger(LOG_INFO, "<%s> | Display | Group | %s %i digits / position %i", pokeyDevice->name().c_str(), name.c_str(), digits, position);
                 pokeyDevice->addMatrixLED(displayId, name, type);
 
                 pokeyDevice->addGroupToMatrixLED(id++, displayId, name, digits, position);
@@ -609,7 +605,7 @@ int PokeyDevicePluginStateManager::deviceDisplaysGroupsConfiguration(libconfig::
                 totalDigits += digits;
             }
             catch (const libconfig::SettingNotFoundException &nfex) {
-                _logger(LOG_ERROR, "Could not find %s. Skipping....", nfex.what());
+                _logger(LOG_ERROR, "<%s> | Display | Group | Could not find %s. Skipping....", pokeyDevice->name().c_str(), nfex.what());
                 continue;
             }
         }
@@ -643,16 +639,16 @@ int PokeyDevicePluginStateManager::deviceSwitchMatrixConfiguration(libconfig::Se
 
                 // create the switch matrix.
                 pokeyDevice->configSwitchMatrix(id, name, type, enabled);
-                _logger(LOG_INFO, "        [%s]  - Found switch matrix %s [%s] [%i switches]", pokeyDevice->name().c_str(), name.c_str(), type.c_str(),
+                _logger(LOG_INFO, "%s | SwitchMatrix | Found switch matrix [%s] [%i switches]", pokeyDevice->name().c_str(), name.c_str(), type.c_str(),
                     (&iter->lookup("switches"))->getLength());
 
                 int switchCount = deviceSwitchMatrixSwitchConfiguration(&iter->lookup("switches"), index, pokeyDevice, name, type, enabled);
-                _logger(LOG_INFO, "      [%s]  - Added %i switches", pokeyDevice->name().c_str(), switchCount);
+                _logger(LOG_INFO, "%s | SwitchMatrix | Added %i switches", pokeyDevice->name().c_str(), switchCount);
 
                 index++;
             }
             catch (const libconfig::SettingNotFoundException &nfex) {
-                _logger(LOG_ERROR, "Could not find %s. Skipping....", nfex.what());
+                _logger(LOG_ERROR, "%s | SwitchMatrix | Could not find %s. Skipping....", pokeyDevice->name().c_str(), nfex.what());
                 continue;
             }
         }
@@ -670,7 +666,7 @@ int PokeyDevicePluginStateManager::deviceSwitchMatrixSwitchConfiguration(
     int totalSwitches = 0;
 
     if (switchCount > MAX_SWITCH_MATRIX_SWITCHES) {
-        _logger(LOG_ERROR, "Invalid number of switches (%i). Minimum 0 Maximum %i", switchCount, MAX_SWITCH_MATRIX_SWITCHES);
+        _logger(LOG_ERROR, "%s | SwitchMatrix | Invalid number of switches (%i). Minimum 0 Maximum %i", pokeyDevice->name().c_str(), switchCount, MAX_SWITCH_MATRIX_SWITCHES);
     }
     else {
         // iterate over all the switch elements and add them
@@ -691,12 +687,12 @@ int PokeyDevicePluginStateManager::deviceSwitchMatrixSwitchConfiguration(
                 iter->lookupValue("invert", invert);
                 iter->lookupValue("invertEnablePin", invertEnablePin);
 
-                _logger(LOG_INFO, "                       - %s [pin: %i, enable pin: %i]", name.c_str(), pin, enablePin);
+                _logger(LOG_INFO, "%s | SwitchMatrix | %s [pin: %i, enable pin: %i]", pokeyDevice->name().c_str(), name.c_str(), pin, enablePin);
                 pokeyDevice->configSwitchMatrixSwitch(id, index, name, pin, enablePin, invert, invertEnablePin);
                 index++;
             }
             catch (const libconfig::SettingNotFoundException &nfex) {
-                _logger(LOG_ERROR, "Could not find %s. Skipping....", nfex.what());
+                _logger(LOG_ERROR, "%s | SwitchMatrix | Could not find %s. Skipping....", pokeyDevice->name().c_str(), nfex.what());
                 continue;
             }
         }
@@ -771,7 +767,7 @@ int PokeyDevicePluginStateManager::preflightComplete(void)
     }
 
     if (_numberOfDevices > 0) {
-        _logger(LOG_INFO, "  - Discovered %d pokey devices", _numberOfDevices);
+        _logger(LOG_INFO, "Discovered %d pokey devices", _numberOfDevices);
         retVal = PREFLIGHT_OK;
     }
     else {

@@ -43,7 +43,7 @@ static bool ReloadRestart = false;
 // TODO: handle SIGHUP for settings reload
 void sigint_handler(int sigid)
 {
-    if (sigid == SIGINT) {        
+    if (sigid == SIGINT) {
         // tell app event loop to end on control+c
         logger.log(LOG_INFO, "Shutting down simhub, this may take a couple seconds...");
         SimHubEventController::EventControllerInstance()->ceaseEventLoop();
@@ -52,12 +52,12 @@ void sigint_handler(int sigid)
     else if (sigid == SIGHUP || sigid == SIGQUIT) {
         // tell app event loop to end on control+h
         // -- destroy and reload event controller
-		// -- cheat a little and capture SIGQUIT so we can use ctrl+\
+        // -- cheat a little and capture SIGQUIT so we can use ctrl+\
 		//    as keyboard shortcut for this
-		
+
         logger.log(LOG_INFO, "Reload simhub, this may take a couple seconds...");
         ReloadRestart = true;
-        SimHubEventController::EventControllerInstance()->ceaseEventLoop();   
+        SimHubEventController::EventControllerInstance()->ceaseEventLoop();
     }
 }
 
@@ -97,7 +97,7 @@ void run_simhub(const cmdline::parser &cli)
         }
     }
     else {
-        logger.log(LOG_ERROR, "Could not pokey plugin");
+        logger.log(LOG_ERROR, "Could not load pokey plugin");
     }
 }
 
@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
 
     do {
         run_simhub(cli);
-        SimHubEventController::DestroyEventControllerInstance();        
+        SimHubEventController::DestroyEventControllerInstance();
     } while (ReloadRestart);
 
     return 0;

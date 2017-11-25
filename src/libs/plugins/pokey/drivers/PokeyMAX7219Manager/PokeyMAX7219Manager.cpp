@@ -9,7 +9,9 @@ PokeyMAX7219Manager::PokeyMAX7219Manager(sPoKeysDevice *pokey)
     _pokey = pokey;
 }
 
-PokeyMAX7219Manager::~PokeyMAX7219Manager(void) {}
+PokeyMAX7219Manager::~PokeyMAX7219Manager(void)
+{
+}
 
 int PokeyMAX7219Manager::addMatrix(int id, uint8_t chipSelect, std::string matrixType, uint8_t enabled, std::string name, std::string description)
 {
