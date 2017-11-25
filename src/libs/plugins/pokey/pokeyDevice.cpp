@@ -6,56 +6,6 @@
 
 using namespace std::chrono_literals;
 
-//#define FAKE_POKEY
-
-#if defined(FAKE_POKEY)
-
-#define PK_EncoderValuesGet FAKE_PK_EncoderValuesGet
-#define PK_DigitalIOGet FAKE_PK_DigitalIOGet
-#define PK_ConnectToNetworkDevice FAKE_PK_ConnectToNetworkDevice
-#define PK_DisconnectDevice FAKE_PK_DisconnectDevice
-#define PK_CheckPinCapability FAKE_PK_CheckPinCapability
-
-int FAKE_PK_EncoderValuesGet(sPoKeysDevice *pokey)
-{
-    return PK_ERR_GENERIC;
-}
-
-int FAKE_PK_DigitalIOGet(sPoKeysDevice *pokey)
-{
-    static int CallCounter = 0;
-
-    if ((CallCounter % 5) == 0) {
-        // pokey->Pins[25] = !pokey->Pins[25];
-        pokey->Pins[26].DigitalValueGet = !pokey->Pins[26].DigitalValueGet;
-    }
-
-    CallCounter++;
-    return PK_OK;
-}
-
-sPoKeysDevice *FAKE_PK_ConnectToNetworkDevice(sPoKeysNetworkDeviceSummary *deviceSummary)
-{
-    sPoKeysDevice *retVal = (sPoKeysDevice *)calloc(1, sizeof(sPoKeysDevice));
-    retVal->Pins = (sPoKeysPinData *)calloc(55, sizeof(sPoKeysPinData));
-    retVal->info.iPinCount = 55;
-
-    return retVal;
-}
-
-void FAKE_PK_DisconnectDevice(sPoKeysDevice *device)
-{
-    assert(device);
-    free(device);
-}
-
-int32_t FAKE_PK_CheckPinCapability(sPoKeysDevice *device, unsigned int pin, ePK_AllPinCap cap)
-{
-    return true;
-}
-
-#endif
-
 PokeyDevice::PokeyDevice(PokeyDevicePluginStateManager *owner, sPoKeysNetworkDeviceSummary deviceSummary, uint8_t index)
 {
     _callbackArg = NULL;
@@ -428,13 +378,15 @@ bool PokeyDevice::isEncoderCapable(int pin)
     case 2:
         return (bool)PK_CheckPinCapability(_pokey, 1, PK_AllPinCap_fastEncoder1B);
     case 5:
-        return (bool)PK_CheckPinCapability(_pokey, 4, PK_AllPinCap_fastEncoder2A);
+        return true; // this is here because the pokeys library is broken
+        return (bool)PK_CheckPinCapability(_pokey, 5, PK_AllPinCap_fastEncoder2A);
     case 6:
-        return (bool)PK_CheckPinCapability(_pokey, 5, PK_AllPinCap_fastEncoder2B);
+        return true; // this is here because the pokeys library is broken
+        return (bool)PK_CheckPinCapability(_pokey, 6, PK_AllPinCap_fastEncoder2B);
     case 15:
         return (bool)PK_CheckPinCapability(_pokey, 14, PK_AllPinCap_fastEncoder3A);
     case 16:
-        return (bool)PK_CheckPinCapability(_pokey, 14, PK_AllPinCap_fastEncoder3B);
+        return (bool)PK_CheckPinCapability(_pokey, 15, PK_AllPinCap_fastEncoder3B);
     default:
         return false;
     }
@@ -552,7 +504,7 @@ void PokeyDevice::configMatrix(int id, uint8_t chipSelect, std::string type, uin
     if (enabled) {
         _pokeyMax7219Manager->addMatrix(id, chipSelect, type, enabled, name, description);
     }
-} 
+}
 
 void PokeyDevice::addLedToLedMatrix(int ledMatrixIndex, uint8_t ledIndex, std::string name, std::string description, uint8_t enabled, uint8_t row, uint8_t col)
 {

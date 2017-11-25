@@ -3,8 +3,8 @@
 
 #include "PoKeysLib.h"
 #include "common/simhubdeviceplugin.h"
-#include "drivers/PokeySwitchMatrixManager/PokeySwitchMatrixManager.h"
 #include "drivers/PokeyMAX7219Manager/PokeyMAX7219Manager.h"
+#include "drivers/PokeySwitchMatrixManager/PokeySwitchMatrixManager.h"
 #include <assert.h>
 #include <cmath>
 #include <iostream>
@@ -34,7 +34,6 @@
 #define MAX_SWITCH_MATRIX 10
 #define MAX_SWITCH_MATRIX_SWITCHES 256
 #define MAX_MATRIX 1
-
 
 typedef struct {
     std::string pinName;
@@ -85,7 +84,6 @@ typedef struct {
     uint32_t period;
     uint32_t duty;
 } device_pwm_t;
-
 
 typedef struct {
     uint8_t id;
@@ -148,7 +146,7 @@ protected:
     int pinFromName(std::string targetName);
     int pinIndexFromName(std::string targetName);
     uint8_t displayFromName(std::string targetName);
-    uint8_t displayNumber(uint8_t displayNumwber, std::string targetName, int16_t value);
+    uint8_t displayNumber(uint8_t displayNumwber, std::string targetName, int value);
 
     void pollCallback(uv_timer_t *timer, int status);
 
@@ -204,7 +202,8 @@ public:
     bool isEncoderCapable(int pin);
     void addPin(int pindex, std::string name, int pinNumber, std::string pinType, int defaultValue, std::string description, bool invert);
     void addEncoder(int encoderNumber, uint32_t defaultValue, std::string name = DEFAULT_ENCODER_NAME, std::string description = DEFAULT_ENCODER_DESCRIPTION,
-        int min = DEFAULT_ENCODER_MIN, int max = DEFAULT_ENCODER_MAX, int step = DEFAULT_ENCODER_STEP, int invertDirection = DEFAULT_ENCODER_DIRECTION, std::string units = "", std::string type="relative");
+        int min = DEFAULT_ENCODER_MIN, int max = DEFAULT_ENCODER_MAX, int step = DEFAULT_ENCODER_STEP, int invertDirection = DEFAULT_ENCODER_DIRECTION, std::string units = "",
+        std::string type = "relative");
 
     void addMatrixLED(int id, std::string name, std::string type);
     void configMatrixLED(int id, int rows, int cols = 8, int enabled = 0);
@@ -214,11 +213,10 @@ public:
     int configSwitchMatrix(int id, std::string name, std::string type, bool enabled);
     int configSwitchMatrixSwitch(int switchMatrixId, int switchId, std::string name, int pin, int enablePin, bool invert, bool invertEnablePin);
 
-     // led matrix "handlers"
-    void configMatrix(int id, uint8_t chipSelect, std::string type, uint8_t enabled = 0, std::string name="", std::string description="");
+    // led matrix "handlers"
+    void configMatrix(int id, uint8_t chipSelect, std::string type, uint8_t enabled = 0, std::string name = "", std::string description = "");
     void addLedToLedMatrix(int ledMatrixIndex, uint8_t ledIndex, std::string name, std::string description, uint8_t enabled, uint8_t row, uint8_t col);
 
-    
     void startPolling();
     void stopPolling();
     std::string name();
