@@ -126,7 +126,13 @@ bool MAX7219::runTest(bool cycleThrough)
 
 void MAX7219::addLed(uint8_t ledIndex, std::string name, std::string description, uint8_t enabled, uint8_t row, uint8_t col)
 {
-    std::shared_ptr<Led> led = std::make_shared<Led>(std::shared_ptr<MAX7219>(this), ledIndex, name, description, enabled, row, col);
+    std::shared_ptr<Led> led = std::make_shared<Led>(this,
+                                                     ledIndex,
+                                                     name,
+                                                     description,
+                                                     enabled,
+                                                     row,
+                                                     col);
     _leds.push_back(led);
 }
 

@@ -116,10 +116,15 @@ protected:
     uint8_t _enabled;
     uint8_t _row;
     uint8_t _col;
-    std::shared_ptr<MAX7219> _owner;
+    MAX7219 *_owner;
 
 public:
-    Led(std::shared_ptr<MAX7219> owner, int index, std::string name, std::string description, uint8_t enabled, uint8_t row, uint8_t col)
+    Led(MAX7219 *owner,
+        int index,
+        std::string name,
+        std::string description,
+        uint8_t enabled,
+        uint8_t row, uint8_t col)
     {
         _owner = owner;
         _index = index;

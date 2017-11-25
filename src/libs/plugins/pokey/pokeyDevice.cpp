@@ -170,8 +170,11 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
                     el.length = sizeof(uint8_t);
 
                     if (self->_owner->pinRemapped(self->_pins[i].pinName)) {
-                        // KLUDGE: as each device has its own polling thread, the logic below is a critical
-                        //         section because it can touch the state of multiple device pins
+                        // KLUDGE: as each device has its own polling
+                        //         thread, the logic below is a
+                        //         critical section because it can
+                        //         touch the state of multiple device
+                        //         pins
 
                         std::pair<std::shared_ptr<PokeyDevice>, std::string> remappedPinInfo = self->_owner->remappedPinDetails(self->_pins[i].pinName);
                         int remappedPinIndex = remappedPinInfo.first->pinIndexFromName(remappedPinInfo.second);
@@ -194,7 +197,9 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
                             if (!remappedPinInfo.first->_pins[remappedPinIndex].skipNext) {
                                 self->_owner->pinRemappingMutex().unlock();
                                 std::this_thread::sleep_for(250ms);
-                                // give any other remapped polling threads a chance to send a state change
+                                // give any other remapped polling
+                                // threads a chance to send a state
+                                // change
                                 if (remappedPinInfo.first->_pins[remappedPinIndex].skipNext) {
                                     hackSkip = true;
                                 }
@@ -529,27 +534,31 @@ uint32_t PokeyDevice::targetValue(std::string targetName, int value)
 
 uint32_t PokeyDevice::targetValue(std::string targetName, bool value)
 {
-    uint32_t retValue = -1;
+    uint32_t retValue = PK_OK;
+    uint32_t result = PK_OK;
+    
     uint8_t pin = pinFromName(targetName) - 1;
 
     if (pin >= 0 && pin <= 55) {
-        retValue = PK_DigitalIOSetSingle(_pokey, pin, value);
+        result = PK_DigitalIOSetSingle(_pokey, pin, value);
     }
     else {
         // we have output matrix - so deliver there
         _pokeyMax7219Manager->setLedByName(targetName, value);
-        retValue = PK_OK;
     }
 
-    if (retValue == PK_ERR_TRANSFER) {
-        printf("----> PK_ERR_TRANSFER pin %d --> %d %d\n\n", pin, (uint8_t)value, retValue);
+    if (result == PK_ERR_TRANSFER) {
+        printf("----> PK_ERR_TRANSFER pin %d --> %d %d\n\n", pin, (uint8_t)value, result);
     }
-    else if (retValue == PK_ERR_GENERIC) {
-        printf("----> PK_ERR_GENERIC pin %d --> %d %d\n\n", pin, (uint8_t)value, retValue);
+    else if (result == PK_ERR_GENERIC) {
+        printf("----> PK_ERR_GENERIC pin %d --> %d %d\n\n", pin, (uint8_t)value, result);
     }
-    else if (retValue == PK_ERR_PARAMETER) {
-        printf("----> PK_ERR_PARAMETER pin %d --> %d %d\n\n", pin, (uint8_t)value, retValue);
+    else if (result == PK_ERR_PARAMETER) {
+        printf("----> PK_ERR_PARAMETER pin %d --> %d %d\n\n", pin, (uint8_t)value, result);
     }
+
+    // for now always return succes as we don't want to terminate
+    // eveinting on setsingle error
 
     return retValue;
 }
