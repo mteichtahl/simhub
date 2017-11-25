@@ -412,6 +412,9 @@ int SimSourcePluginStateManager::deliverValue(GenericTLV *value)
     if (value->type == CONFIG_STRING) {
         std::cout << "::deliverValue just got value with name: " << value->name << " and value " << value->value.string_value << std::endl;
     }
+    else if (value->type == CONFIG_BOOL) {
+        std::cout << "::deliverValue just got value with name: " << value->name << " and value " << value->value.bool_value << std::endl;
+    }
 
     if (transformFunction) {
         val = transformFunction(attribute->valueToString(), "NULL", "NULL");

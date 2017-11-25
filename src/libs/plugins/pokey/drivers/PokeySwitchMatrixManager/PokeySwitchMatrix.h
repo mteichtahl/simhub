@@ -23,6 +23,9 @@ protected:
     SwitchVector _switches;
     SwitchMap _virtualPins;
 
+    bool consumePhysicalPinValue(SwitchMap &virtualPins, std::shared_ptr<PokeySwitch> pokeyPin);
+    bool isPartialPin(SwitchMap &virtualPins, std::shared_ptr<PokeySwitch> pokeyPin);
+
 public:
     PokeySwitchMatrix(sPoKeysDevice *pokey, int id, std::string name, std::string type, bool enabled);
     std::string name(void);
@@ -30,7 +33,6 @@ public:
     int addSwitch(int id, std::string name, int pin, int enablePin, bool invert, bool invertEnablePin);
     std::vector<std::shared_ptr<GenericTLV>> readSwitches(void);
     void addVirtualPin(std::string virtualPinName, bool invert, PinMaskMap &virtualPinMask, std::map<int, std::string> &valueTransforms);
-    bool consumePhysicalPinValue(SwitchMap &virtualPins, std::shared_ptr<PokeySwitch> pokeyPin);
 };
 
 #endif

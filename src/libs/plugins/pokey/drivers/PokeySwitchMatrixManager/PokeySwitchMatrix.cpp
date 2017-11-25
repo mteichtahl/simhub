@@ -39,6 +39,9 @@ int PokeySwitchMatrix::addSwitch(int id,
                                                       invert,
                                                       invertEnablePin));
 
+
+    std::cout << "/// JUST ADDED SWITCH: " << name << std::endl;
+
     return 0;
 }
 
@@ -67,23 +70,44 @@ bool PokeySwitchMatrix::consumePhysicalPinValue(SwitchMap &virtualPins, std::sha
     return retVal;
 }
 
+bool PokeySwitchMatrix::isPartialPin(SwitchMap &virtualPins, std::shared_ptr<PokeySwitch> pokeyPin)
+{
+    bool retVal = false;
+
+    // give all virtual pins a chance to use the value of this physical pin
+    for (SwitchMap::iterator iter = virtualPins.begin(); iter != virtualPins.end(); iter++) {
+        if ((*iter).second->isVirtualPinMember(pokeyPin)) {
+            retVal = true;
+        }
+    }
+
+    return retVal;
+}
+
 std::vector<std::shared_ptr<GenericTLV>> PokeySwitchMatrix::readSwitches(void)
 {
     std::vector<std::shared_ptr<GenericTLV>> retVal;
     auto end = retVal.end();
 
     for (auto &sw : _switches) {
+        if (isPartialPin(_virtualPins, sw)) {
+            sw->setIsPartialPin(true);
+        }
+
         std::pair<std::string, uint8_t> swData = sw->read();
 
-
-        if (!consumePhysicalPinValue(_virtualPins, sw)) {        
-            if (sw->previousValue() != sw->currentValue()) {
+        if (sw->previousValue() != sw->currentValue()) {
+            if (!consumePhysicalPinValue(_virtualPins, sw)) {        
                 std::shared_ptr<GenericTLV> el = std::make_shared<GenericTLV>();
                 el->type = CONFIG_BOOL;
                 el->name = (char *)calloc(sw->name().size() + 1, 1);
                 strncpy(el->name, (char *)sw->name().c_str(), sw->name().size() + 1);
-                el->value.int_value = (int)swData.second;
+                el->value.bool_value = (int)swData.second;
                 end = retVal.insert(end, el);
+                std::cout << "// GOT CHANGE FOR " << el->name << ", VALUE: " << el->value.bool_value << std::endl;
+            }
+            else {
+                std::cout << "/// CONSUMED: " << sw->name() << std::endl;
             }
         }
     }

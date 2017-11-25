@@ -155,12 +155,11 @@ bool PokeyDevicePluginStateManager::addTargetToDeviceTargetList(std::string targ
 
 std::shared_ptr<PokeyDevice> PokeyDevicePluginStateManager::targetFromDeviceTargetList(std::string key)
 {
-    std::map<std::string, std::shared_ptr<PokeyDevice>>::iterator it = _deviceMap.find(key);
+    std::cout << "/// LOOKING FOR: " << key << std::endl;
 
-    if (it != _deviceMap.end()) {
-        return (*it).second;
+    if (mapContains(_deviceMap, key)) {
+        return _deviceMap[key];
     }
-
     return NULL;
 }
 

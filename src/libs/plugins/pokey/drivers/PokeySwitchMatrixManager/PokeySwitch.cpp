@@ -8,6 +8,7 @@
 
 PokeySwitch::PokeySwitch(sPoKeysDevice *pokey, int id, std::string name, int pin, int enablePin, bool invert, bool invertEnablePin)
 {
+    _isPartialPin = false;
     _pokey = pokey;
     _pin = pin;
     _enablePin = enablePin;
@@ -48,12 +49,12 @@ void PokeySwitch::addVirtualPin(std::string name, size_t position)
 std::string PokeySwitch::transformedValue(void)
 {
     if (!mapContains(_valueTransforms, (int)_currentValue)) {
-	std::cout << "/// NO TRANSFORM FOR: " << (int)_currentValue << std::endl;
-	return "INVALID";
+        std::cout << "/// NO TRANSFORM FOR: " << (int)_currentValue << std::endl;
+        return "INVALID";
     }
     else {
-	std::cout << "/// TRANSFORM FOR: " << (int)_currentValue << std::endl;
-        return _valueTransforms[_currentValue];
+        std::cout << "/// TRANSFORM FOR: " << (int)_currentValue << std::endl;
+            return _valueTransforms[_currentValue];
     }
 }
 
@@ -78,18 +79,24 @@ std::pair<std::string, uint8_t> PokeySwitch::read(void)
     
     uint32_t result = PK_OK;
 
-    for (int i = 0; i < 8; i++) {
-        _pokey->Pins[i].DigitalValueSet = (i == (_enablePin - 1)) ? 1 : 0;
+    if (false && _isPartialPin) {
+        for (int i = 0; i < 8; i++) {
+            _pokey->Pins[i].DigitalValueSet = (i == (_enablePin - 1)) ? 1 : 0;
+        }
+        
+        result = PK_DigitalIOSetGet(_pokey);
+        std::this_thread::sleep_for(5ms);
+        
+        if (result != PK_OK) {
+            printf("PK_DigitalIOSetGet(_pokey) returned err %i\n", result);
+        }
+        _currentValue = _pokey->Pins[_pin - 1].DigitalValueGet;
     }
-    
-    result = PK_DigitalIOSetGet(_pokey);
-    std::this_thread::sleep_for(5ms);
-
-    if (result != PK_OK) {
-        printf("PK_DigitalIOSetGet(_pokey) returned err %i\n", result);
+    else {
+        PK_DigitalIOSetSingle(_pokey, _enablePin, 1);
+        PK_DigitalIOGetSingle(_pokey, _pin, &_currentValue);
+        PK_DigitalIOSetSingle(_pokey, _enablePin, 0);
     }
-
-    _currentValue = _pokey->Pins[_pin - 1].DigitalValueGet;
 
     return std::make_pair(_name, _currentValue);
 }
@@ -111,6 +118,11 @@ void PokeySwitch::updateVirtualValue(void)
     if (_currentValue != _previousValue) {
         std::cout << "/// currentValue: " << transformedValue() << std::endl;
     }
+}
+
+bool PokeySwitch::isVirtualPinMember(std::shared_ptr<PokeySwitch> pokeyPin)
+{
+    return mapContains(_physPinMask, pokeyPin->name());
 }
 
 bool PokeySwitch::updateVirtualPinMask(std::shared_ptr<PokeySwitch> pokeyPin)

@@ -24,6 +24,7 @@ protected:
     uint8_t _previousValue;
     uint8_t _currentValue;
     PinMaskMap _physPinMask;
+    bool _isPartialPin;
     std::map<int, std::string> _valueTransforms;
 
     std::string transformedValue(void);
@@ -47,9 +48,11 @@ public:
     void setVirtualPinMask(PinMaskMap &mask) { _physPinMask = mask; };
     void addVirtualPin(std::string name, size_t position);
     bool updateVirtualPinMask(std::shared_ptr<PokeySwitch> pokeyPin);
+    bool isVirtualPinMember(std::shared_ptr<PokeySwitch> pokeyPin);
     void updateVirtualValue(void);
     std::shared_ptr<GenericTLV> valueAsGeneric(void);
     void setValueTransforms(std::map<int, std::string> &valueTransforms) { _valueTransforms = valueTransforms; };
+    void setIsPartialPin(bool isPartialPin) { _isPartialPin = isPartialPin; };
 };
 
 #endif
