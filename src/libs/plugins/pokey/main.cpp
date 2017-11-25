@@ -125,7 +125,7 @@ void PokeyDevicePluginStateManager::commenceEventing(EnqueueEventHandler enqueue
 
 void PokeyDevicePluginStateManager::enumerateDevices(void)
 {
-    _numberOfDevices = PK_EnumerateNetworkDevices(_devices, 800);
+    _numberOfDevices = PK_EnumerateNetworkDevices(_devices, 850);
 
     for (int i = 0; i < _numberOfDevices; i++) {
         try {
@@ -488,8 +488,8 @@ bool PokeyDevicePluginStateManager::deviceLedMatrixConfiguration(libconfig::Sett
                 _logger(LOG_INFO, "    [%s]  - Found %s [%s - CS %i]", pokeyDevice->name().c_str(), name.c_str(), matrixType.c_str(), chipSelect);
                 pokeyDevice->configMatrix(ledMatrixIndex, (uint8_t)chipSelect, matrixType, (uint8_t)enabled, name, description);
 
-                if (!enabled){
-                        return retVal;
+                if (!enabled) {
+                    return retVal;
                 }
 
                 if (iter->exists("leds")) {
@@ -499,7 +499,7 @@ bool PokeyDevicePluginStateManager::deviceLedMatrixConfiguration(libconfig::Sett
                     leds = &iter->lookup("leds");
                     int ledCount = leds->getLength();
 
-                    _logger(LOG_INFO, "    [%s]    - Found %i leds", pokeyDevice->name().c_str(),ledCount);
+                    _logger(LOG_INFO, "    [%s]    - Found %i leds", pokeyDevice->name().c_str(), ledCount);
 
                     for (libconfig::SettingIterator led = leds->begin(); led != leds->end(); led++) {
 
@@ -516,7 +516,7 @@ bool PokeyDevicePluginStateManager::deviceLedMatrixConfiguration(libconfig::Sett
                         led->lookupValue("col", col);
 
                         pokeyDevice->addLedToLedMatrix(ledMatrixIndex, ledIndex, name, description, (uint8_t)enabled, (uint8_t)row, (uint8_t)col);
-                         _logger(LOG_INFO, "                       - %s [%i/%i] row %i / col %i] ", name.c_str(), ledIndex, ledCount, row, col );
+                        _logger(LOG_INFO, "                       - %s [%i/%i] row %i / col %i] ", name.c_str(), ledIndex, ledCount, row, col);
 
                         addTargetToDeviceTargetList(name, pokeyDevice);
 
