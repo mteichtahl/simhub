@@ -420,7 +420,7 @@ int SimSourcePluginStateManager::deliverValue(GenericTLV *value)
         oss << attribute->name() << "=" << prosimValueString(attribute) << "\n";
     }
 
-    printf("SimSourcePluginStateManager::deliverValue %s %s\n", oss.str().c_str(), val.c_str());
+    // printf("SimSourcePluginStateManager::deliverValue %s %s\n", oss.str().c_str(), val.c_str());
 
     _sendSocketClient.sendData(oss.str());
 

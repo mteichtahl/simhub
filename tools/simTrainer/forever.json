@@ -1,0 +1,7 @@
+{
+    "uid": "simTrainer",
+    "append": true,
+    "watch": true,
+    "script": "client.js",
+    "sourceDir": "."
+}

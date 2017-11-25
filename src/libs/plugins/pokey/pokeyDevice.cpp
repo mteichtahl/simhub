@@ -150,22 +150,34 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
 
                 if (newEncoderValue < previousEncoderValue) {
                     // values are decreasing
-                    if (currentValue <= min) {
-                        self->_encoders[i].previousValue = min;
-                        self->_encoders[i].value = min;
+                    // absolute encoders send 1 or -1
+                    if (self->_encoders[i].type == "absolute") {
+                        self->_encoders[i].value = 1;
                     }
                     else {
-                        self->_encoders[i].value = currentValue - step;
+                        if (currentValue <= min) {
+                            self->_encoders[i].previousValue = min;
+                            self->_encoders[i].value = min;
+                        }
+                        else {
+                            self->_encoders[i].value = currentValue - step;
+                        }
                     }
                 }
                 else {
                     // values are increasing
-                    if (currentValue >= max) {
-                        self->_encoders[i].previousValue = max;
-                        self->_encoders[i].value = max;
+                    if (self->_encoders[i].type == "absolute") {
+                        // absolute encoders send 1 or -1
+                        self->_encoders[i].value = -1;
                     }
                     else {
-                        self->_encoders[i].value = currentValue + step;
+                        if (currentValue >= max) {
+                            self->_encoders[i].previousValue = max;
+                            self->_encoders[i].value = max;
+                        }
+                        else {
+                            self->_encoders[i].value = currentValue + step;
+                        }
                     }
                 }
 
@@ -431,7 +443,7 @@ bool PokeyDevice::isEncoderCapable(int pin)
 }
 
 void PokeyDevice::addEncoder(
-    int encoderNumber, uint32_t defaultValue, std::string name, std::string description, int min, int max, int step, int invertDirection, std::string units)
+    int encoderNumber, uint32_t defaultValue, std::string name, std::string description, int min, int max, int step, int invertDirection, std::string units, std::string type)
 {
     assert(encoderNumber >= 1);
 
@@ -478,11 +490,13 @@ void PokeyDevice::addEncoder(
     _encoders[encoderIndex].value = defaultValue;
     _encoders[encoderIndex].previousValue = defaultValue;
     _encoders[encoderIndex].previousEncoderValue = defaultValue;
+
     _encoders[encoderIndex].min = min;
     _encoders[encoderIndex].max = max;
     _encoders[encoderIndex].step = step;
     _encoders[encoderIndex].units = units;
     _encoders[encoderIndex].description = description;
+    _encoders[encoderIndex].type = type;
 
     int val = PK_EncoderConfigurationSet(_pokey);
 
