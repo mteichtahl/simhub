@@ -38,13 +38,12 @@ std::shared_ptr<PokeySwitchMatrix> PokeySwitchMatrixManager::matrix(int id)
     return NULL;
 }
 
-std::vector<std::pair<std::string, uint8_t>> PokeySwitchMatrixManager::readAll()
+std::vector<std::shared_ptr<GenericTLV>> PokeySwitchMatrixManager::readAll(void)
 {
+    std::vector<std::shared_ptr<GenericTLV>> retVal;
 
-    std::vector<std::pair<std::string, uint8_t>> retVal;
-
-    for (auto &matrix : _switchMatrix) {    
-        std::vector<std::pair<std::string, uint8_t>> switches = matrix->readSwitches();
+    for (auto &matrix: _switchMatrix) {    
+        std::vector<std::shared_ptr<GenericTLV>> switches = matrix->readSwitches();
 
         if (switches.size() > 0) {
             retVal.insert(retVal.end(), switches.begin(), switches.end());

@@ -154,8 +154,6 @@ bool PokeyDevicePluginStateManager::addTargetToDeviceTargetList(std::string targ
 
 std::shared_ptr<PokeyDevice> PokeyDevicePluginStateManager::targetFromDeviceTargetList(std::string key)
 {
-    // std::cout << "trying to find " << key << std::endl;
-
     std::map<std::string, std::shared_ptr<PokeyDevice>>::iterator it = _deviceMap.find(key);
 
     if (it != _deviceMap.end()) {
@@ -638,7 +636,7 @@ int PokeyDevicePluginStateManager::deviceSwitchMatrixConfiguration(libconfig::Se
                 iter->lookupValue("enabled", enabled);
 
                 // create the switch matrix.
-                pokeyDevice->configSwitchMatrix(id, name, type, enabled);
+                pokeyDevice->configSwitchMatrix(id++, name, type, enabled);
                 _logger(LOG_INFO, "%s | SwitchMatrix | Found switch matrix [%s] [%i switches]", pokeyDevice->name().c_str(), name.c_str(), type.c_str(),
                     (&iter->lookup("switches"))->getLength());
 
@@ -681,14 +679,47 @@ int PokeyDevicePluginStateManager::deviceSwitchMatrixSwitchConfiguration(
         for (libconfig::SettingIterator iter = switches->begin(); iter != switches->end(); iter++) {
             try {
                 iter->lookupValue("name", name);
-                iter->lookupValue("pin", pin);
-                iter->lookupValue("enablePin", enablePin);
                 iter->lookupValue("enabled", enabled);
                 iter->lookupValue("invert", invert);
-                iter->lookupValue("invertEnablePin", invertEnablePin);
 
-                _logger(LOG_INFO, "%s | SwitchMatrix | %s [pin: %i, enable pin: %i]", pokeyDevice->name().c_str(), name.c_str(), pin, enablePin);
-                pokeyDevice->configSwitchMatrixSwitch(id, index, name, pin, enablePin, invert, invertEnablePin);
+                if (iter->exists("vpins")) {
+                    PinMaskMap virtualPinMask;
+                    libconfig::Setting &vpins = iter->lookup("vpins");
+
+                    for (libconfig::SettingIterator pinInfoIter = vpins.begin(); pinInfoIter != vpins.end(); pinInfoIter++) {
+                        virtualPinMask[pinInfoIter->getName()] = std::make_shared<std::pair<size_t, int>>((unsigned int)*pinInfoIter, 0);
+                    }
+
+                    assert(iter->exists("valueTransforms"));
+
+                    libconfig::Setting &transforms = iter->lookup("valueTransforms");
+                    std::map<int, std::string> valueTransforms;
+
+                    char valueNameBuffer[64];
+                    char SEPCHAR = '_';
+                    for (libconfig::SettingIterator transformIter = transforms.begin(); transformIter != transforms.end(); transformIter++) {
+                        int nameLen = strlen(transformIter->getName());
+                        strncpy(valueNameBuffer, transformIter->getName(), nameLen + 1);
+                        for (int i = 0; i < nameLen; i++) {
+                            if (valueNameBuffer[i] == SEPCHAR) {
+                                valueNameBuffer[i] = ' ';
+                            }
+                        }
+                        
+                        valueTransforms[(int)*transformIter] = valueNameBuffer;
+                    }
+
+                    pokeyDevice->configSwitchMatrixVirtualPin(id, name, invert, virtualPinMask, valueTransforms);
+                }
+                else {
+                    iter->lookupValue("pin", pin);
+                    iter->lookupValue("enablePin", enablePin);
+                    iter->lookupValue("invertEnablePin", invertEnablePin);
+
+                    _logger(LOG_INFO, "                       - %s [pin: %i, enable pin: %i]", name.c_str(), pin, enablePin);
+                    pokeyDevice->configSwitchMatrixSwitch(id, index, name, pin, enablePin, invert, invertEnablePin);
+                }
+
                 index++;
             }
             catch (const libconfig::SettingNotFoundException &nfex) {

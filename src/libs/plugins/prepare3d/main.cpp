@@ -409,6 +409,10 @@ int SimSourcePluginStateManager::deliverValue(GenericTLV *value)
     TransformFunction transformFunction = transform(attribute->name());
     std::string val = "";
 
+    if (value->type == CONFIG_STRING) {
+        std::cout << "::deliverValue just got value with name: " << value->name << " and value " << value->value.string_value << std::endl;
+    }
+
     if (transformFunction) {
         val = transformFunction(attribute->valueToString(), "NULL", "NULL");
         oss << attribute->name() << "=" << val << "\n";

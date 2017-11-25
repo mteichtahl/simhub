@@ -9,6 +9,9 @@
 
 #include "PokeySwitch.h"
 
+typedef std::map<std::string, std::shared_ptr<PokeySwitch>> SwitchMap;
+typedef std::vector<std::shared_ptr<PokeySwitch>> SwitchVector;
+
 class PokeySwitchMatrix
 {
 protected:
@@ -17,15 +20,17 @@ protected:
     int _id;
     bool _enabled;
     sPoKeysDevice *_pokey;
-
-    std::vector<std::shared_ptr<PokeySwitch>> _switches;
+    SwitchVector _switches;
+    SwitchMap _virtualPins;
 
 public:
     PokeySwitchMatrix(sPoKeysDevice *pokey, int id, std::string name, std::string type, bool enabled);
-    std::string name();
-    int id();
+    std::string name(void);
+    int id(void);
     int addSwitch(int id, std::string name, int pin, int enablePin, bool invert, bool invertEnablePin);
-    std::vector<std::pair<std::string, uint8_t>> readSwitches();
+    std::vector<std::shared_ptr<GenericTLV>> readSwitches(void);
+    void addVirtualPin(std::string virtualPinName, bool invert, PinMaskMap &virtualPinMask, std::map<int, std::string> &valueTransforms);
+    bool consumePhysicalPinValue(SwitchMap &virtualPins, std::shared_ptr<PokeySwitch> pokeyPin);
 };
 
 #endif

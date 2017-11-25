@@ -11,6 +11,7 @@ PokeyDevice::PokeyDevice(PokeyDevicePluginStateManager *owner, sPoKeysNetworkDev
     _callbackArg = NULL;
     _enqueueCallback = NULL;
     _owner = owner;
+
     _pokey = PK_ConnectToNetworkDevice(&deviceSummary);
 
     if (!_pokey) {
@@ -249,20 +250,14 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
             }
         }
 
-        // process all switch matrix
-        std::vector<std::pair<std::string, uint8_t>> matrixResult = self->_switchMatrixManager->readAll();
+        // -- process all switch matrix
+        std::vector<std::shared_ptr<GenericTLV>> matrixResult = self->_switchMatrixManager->readAll();
 
         for (auto &res : matrixResult) {
-            el.ownerPlugin = self->_owner;
-            el.type = CONFIG_BOOL;
-            el.length = sizeof(uint8_t);
-            el.description = (char *)res.first.c_str();
-            el.name = (char *)res.first.c_str();
-            el.value.bool_value = (bool)res.second;
-
-            self->_enqueueCallback(self, (void *)&el, self->_callbackArg);
+            res->ownerPlugin = self->_owner;
+            self->_enqueueCallback(self, (void *)res.get(), self->_callbackArg);
         }
-        // end process all switch matrix
+        // -- end process all switch matrix
 
         self->_owner->pinRemappingMutex().unlock();
     }
@@ -547,14 +542,15 @@ uint32_t PokeyDevice::targetValue(std::string targetName, bool value)
         _pokeyMax7219Manager->setLedByName(targetName, value);
     }
 
+    
     if (result == PK_ERR_TRANSFER) {
-        printf("----> PK_ERR_TRANSFER pin %d --> %d %d\n\n", pin, (uint8_t)value, result);
+        printf("----> PK_ERR_TRANSFER pin %d --> %d %d (pokey: %s)\n\n", pin, (uint8_t)value, result, name().c_str());
     }
     else if (result == PK_ERR_GENERIC) {
-        printf("----> PK_ERR_GENERIC pin %d --> %d %d\n\n", pin, (uint8_t)value, result);
+        printf("----> PK_ERR_GENERIC pin %d --> %d %d (pokey: %s)\n\n", pin, (uint8_t)value, result, name().c_str());
     }
     else if (result == PK_ERR_PARAMETER) {
-        printf("----> PK_ERR_PARAMETER pin %d --> %d %d\n\n", pin, (uint8_t)value, result);
+        printf("----> PK_ERR_PARAMETER pin %d --> %d %d (pokey: %s)\n\n", pin, (uint8_t)value, result, name().c_str());
     }
 
     // for now always return succes as we don't want to terminate
@@ -637,11 +633,15 @@ int PokeyDevice::configSwitchMatrix(int id, std::string name, std::string type, 
 
 int PokeyDevice::configSwitchMatrixSwitch(int switchMatrixId, int switchId, std::string name, int pin, int enablePin, bool invert, bool invertEnablePin)
 {
-
     std::shared_ptr<PokeySwitchMatrix> matrix = _switchMatrixManager->matrix(switchMatrixId);
-
     matrix->addSwitch(switchId, name, pin, enablePin, invert, invertEnablePin);
+    return 0;
+}
 
+int PokeyDevice::configSwitchMatrixVirtualPin(int switchMatrixId, std::string name, bool invert, PinMaskMap &virtualPinMask, std::map<int, std::string> &valueTransforms)
+{
+    std::shared_ptr<PokeySwitchMatrix> matrix = _switchMatrixManager->matrix(switchMatrixId);
+    matrix->addVirtualPin(name, invert, virtualPinMask, valueTransforms);
     return 0;
 }
 
