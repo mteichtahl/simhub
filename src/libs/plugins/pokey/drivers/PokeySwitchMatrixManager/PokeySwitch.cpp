@@ -1,6 +1,7 @@
 #include <utility>
 #include <assert.h>
 #include <thread>
+#include <string.h>
 
 #include "PokeySwitch.h"
 #include "plugins/common/utils.h"
@@ -14,8 +15,13 @@ PokeySwitch::PokeySwitch(sPoKeysDevice *pokey, int id, std::string name, int pin
     _currentValue = 0;
     _previousValue = 0;
 
-    pokey->Pins[enablePin - 1].PinFunction = PK_PinCap_digitalOutput | (invertEnablePin ? PK_PinCap_invertPin : 0x00);
-    pokey->Pins[pin - 1].PinFunction = PK_PinCap_digitalInput | (invert ? PK_PinCap_invertPin : 0x00);
+    if (enablePin > 1) {
+        pokey->Pins[enablePin - 1].PinFunction = PK_PinCap_digitalOutput | (invertEnablePin ? PK_PinCap_invertPin : 0x00);
+    }
+
+    if (pin > 1) {
+        pokey->Pins[pin - 1].PinFunction = PK_PinCap_digitalInput | (invert ? PK_PinCap_invertPin : 0x00);
+    }
 
     int retVal = PK_PinConfigurationSet(pokey);
 }
@@ -41,7 +47,14 @@ void PokeySwitch::addVirtualPin(std::string name, size_t position)
 
 std::string PokeySwitch::transformedValue(void)
 {
-    return _valueTransforms[_currentValue];
+    if (!mapContains(_valueTransforms, (int)_currentValue)) {
+	std::cout << "/// NO TRANSFORM FOR: " << (int)_currentValue << std::endl;
+	return "INVALID";
+    }
+    else {
+	std::cout << "/// TRANSFORM FOR: " << (int)_currentValue << std::endl;
+        return _valueTransforms[_currentValue];
+    }
 }
 
 std::shared_ptr<GenericTLV> PokeySwitch::valueAsGeneric(void)

@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "PokeySwitchMatrix.h"
 
 PokeySwitchMatrix::PokeySwitchMatrix(sPoKeysDevice *pokey, 

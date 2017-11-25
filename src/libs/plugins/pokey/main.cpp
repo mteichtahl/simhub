@@ -4,6 +4,7 @@
 #include <memory>
 #include <uv.h>
 #include <vector>
+#include <string.h>
 
 #include "main.h"
 #include "plugins/common/simhubdeviceplugin.h"
