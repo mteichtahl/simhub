@@ -5,12 +5,13 @@
 
 PokeySwitch::PokeySwitch(sPoKeysDevice *pokey, int id, std::string name, int pin, int enablePin, bool invert, bool invertEnablePin)
 {
+    _previousValue = -1;
     _pokey = pokey;
     _pin = pin;
     _enablePin = enablePin;
     _name = name;
     _invertEnablePin = invertEnablePin;
-    
+
     if (enablePin > 1) {
         pokey->Pins[enablePin - 1].PinFunction = PK_PinCap_digitalOutput | (invertEnablePin ? PK_PinCap_invertPin : 0x00);
     }
@@ -40,7 +41,6 @@ void PokeySwitch::addVirtualPin(std::string name, size_t position)
     _physPinMask[name] = std::make_shared<std::pair<size_t, int>>(position, 0);
 }
 
-
 std::string PokeySwitch::transformedValue(void)
 {
     if (!mapContains(_valueTransforms, (int)_currentValue)) {
@@ -49,7 +49,7 @@ std::string PokeySwitch::transformedValue(void)
     }
     else {
         std::cout << "/// TRANSFORM FOR: " << (int)_currentValue << std::endl;
-            return _valueTransforms[_currentValue];
+        return _valueTransforms[_currentValue];
     }
 }
 
@@ -61,7 +61,7 @@ GenericTLV *PokeySwitch::valueAsGeneric(void)
     if (value.size() > 0) {
         el = make_string_generic(name().c_str(), "pokey switch input", value.c_str());
     }
-    
+
     return el;
 }
 
@@ -73,18 +73,19 @@ std::pair<std::string, uint8_t> PokeySwitch::read(void)
 
     uint32_t result = PK_OK;
 
+    std::this_thread::sleep_for(10ms);
+
     for (int i = 0; i < 8; i++) {
-		// ALL HIGH EXCEPT DESIRED READ LOW
-        _pokey->Pins[i].DigitalValueSet = (i == (_enablePin - 1)) ? 1  : 0;
-        _pokey->Pins[i].preventUpdate = 0;//(i == (_enablePin - 1)) ? 0 : 0;
+        // ALL HIGH EXCEPT DESIRED READ LOW
+        _pokey->Pins[i].DigitalValueSet = (i == (_enablePin - 1)) ? 1 : 0;
+        _pokey->Pins[i].preventUpdate = 0; //(i == (_enablePin - 1)) ? 0 : 0;
     }
-	
+
     for (int i = 8; i < 16; i++) {
         _pokey->Pins[i].preventUpdate = 1;
     }
 
     result = PK_DigitalIOSetGet(_pokey);
-	std::this_thread::sleep_for(10ms);
 
     if (result != PK_OK) {
         printf("PK_DigitalIOSetGet(_pokey) returned err %i\n", result);
@@ -94,7 +95,6 @@ std::pair<std::string, uint8_t> PokeySwitch::read(void)
 
     return std::make_pair(_name, _currentValue);
 }
-
 
 void PokeySwitch::updateVirtualValue(void)
 {
@@ -131,4 +131,3 @@ bool PokeySwitch::updateVirtualPinMask(std::shared_ptr<PokeySwitch> pokeyPin)
 
     return retVal;
 }
-
