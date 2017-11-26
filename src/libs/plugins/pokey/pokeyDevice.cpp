@@ -157,7 +157,7 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
         self->_owner->pinRemappingMutex().lock();
 
         for (int i = 0; i < self->_pokey->info.iPinCount; i++) {
-            GenericTLV *el = make_generic((const char*)"", (const char *)"");
+            GenericTLV *el = make_generic((const char*)"-", (const char *)"-");
 
             if (self->_pins[i].type == "DIGITAL_INPUT") {
                 int sourcePinNumber = self->_pins[i].pinNumber;

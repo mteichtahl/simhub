@@ -77,7 +77,7 @@ std::vector<GenericTLV *> PokeySwitchMatrix::readSwitches()
 
         if (sw->previousValue() != sw->currentValue()) {
             if (!consumePhysicalPinValue(_virtualPins, sw)) {        
-                GenericTLV *el = make_generic(sw->name().c_str(), "no_description");
+                GenericTLV *el = make_generic(sw->name().c_str(), "-");
                 el->type = CONFIG_BOOL;
                 el->value.bool_value = (int)swData.second;
                 end = retVal.insert(end, el);

@@ -7,7 +7,7 @@
 //! marshals C++ Attribute instance to C generic struct
 GenericTLV *AttributeToCGeneric(std::shared_ptr<Attribute> value)
 {
-    GenericTLV *retVal = make_generic(value->name().c_str(), (const char *)"none");
+    GenericTLV *retVal = make_generic(value->name().c_str(), (const char *)"-");
 
     // strncpy(retVal->description, value->description().c_str(), value->description().size());
     // strncpy(retVal->units, value->units().c_str(), value->units().size());
@@ -35,7 +35,7 @@ GenericTLV *AttributeToCGeneric(std::shared_ptr<Attribute> value)
 
     case STRING_ATTRIBUTE:
         free(retVal);
-        retVal = make_string_generic(value->name().c_str(), (const char *)"none", value->value<std::string>().c_str());
+        retVal = make_string_generic(value->name().c_str(), (const char *)"-", value->value<std::string>().c_str());
         break;
 
     default:

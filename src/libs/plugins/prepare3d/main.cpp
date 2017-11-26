@@ -292,7 +292,7 @@ void SimSourcePluginStateManager::processElement(char *element)
     char *type = getElementDataType(name[0]);
 
     if (type != NULL) {
-        GenericTLV *el = make_generic(name, "");
+        GenericTLV *el = make_generic(name, "-");
 
         el->ownerPlugin = this;
 
@@ -303,7 +303,7 @@ void SimSourcePluginStateManager::processElement(char *element)
         }
         else if (strncmp(type, "char", sizeof(&type)) == 0) {
             el->type = CONFIG_STRING;
-            el->value.string_value = value;
+            dupe_string(&(el->value.string_value), value);
             el->length = strlen(value);
         }
         else if (strncmp(type, "int", sizeof(&type)) == 0) {

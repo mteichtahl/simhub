@@ -50,15 +50,23 @@ typedef struct {
 inline void dupe_string(char **dest, const char *source)
 {
     int string_size = strlen(source);
-    *dest = (char *)calloc(string_size, 0);
-    strncpy(*dest, source, string_size);
+    assert(string_size > 0);
+    *dest = (char *)calloc(string_size + 2, 1);
+    //*dest = (char *)malloc(string_size + 1);
+    strncpy(*dest, source, string_size + 1);
 }
 
 inline GenericTLV *make_generic(const char *name, const char *description) 
 { 
     GenericTLV *retVal = (GenericTLV *)calloc(sizeof(GenericTLV), 1); 
+
+    retVal->name = NULL;
+    retVal->description = NULL;
+    retVal->type = CONFIG_INT;
+   
     dupe_string(&(retVal->name), name);
     dupe_string(&(retVal->description), description);
+
     return retVal;
 }
 
