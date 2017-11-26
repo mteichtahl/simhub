@@ -110,6 +110,10 @@ int SimSourcePluginStateManager::preflightComplete(void)
     catch (const libconfig::SettingNotFoundException &nfex) {
         _logger(LOG_ERROR, "Config file parse error at %s. Skipping....", nfex.getPath());
     }
+    catch (const libconfig::ParseException &pex) {
+        _logger(LOG_INFO, "Config file parse error at %s:%d  - %s", pex.getFile(), pex.getLine(), pex.getError());
+        throw std::runtime_error("Config file parse error - See log file");
+    }
 
     for (libconfig::SettingIterator iter = devicesConfiguraiton->begin(); iter != devicesConfiguraiton->end(); iter++) {
 
@@ -157,12 +161,12 @@ int SimSourcePluginStateManager::preflightComplete(void)
 
 void SimSourcePluginStateManager::loadTransforms(libconfig::Setting *transforms)
 {
-    _logger(LOG_INFO, "<Transforms> Found %i transforms(s)", transforms->getLength());
+    _logger(LOG_INFO, "Transforms | Found %i transforms(s)", transforms->getLength());
 
     for (libconfig::Setting const &transform : *transforms) {
         std::string transformName = transform.getName();
 
-        _logger(LOG_INFO, "<Transforms> Loading %s", transformName.c_str());
+        _logger(LOG_INFO, "Transforms | %s loaded", transformName.c_str());
 
         if (transform.exists("On") && transform.exists("Off")) {
             std::string transformResultOn;

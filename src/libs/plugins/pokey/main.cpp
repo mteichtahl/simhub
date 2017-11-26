@@ -191,8 +191,6 @@ bool PokeyDevicePluginStateManager::validateConfig(libconfig::SettingIterator it
     return retValue;
 }
 
-//#define FAKE_POKEY
-
 bool PokeyDevicePluginStateManager::deviceConfiguration(libconfig::SettingIterator iter, std::shared_ptr<PokeyDevice> pokeyDevice)
 {
     bool retVal = true;
@@ -521,7 +519,7 @@ bool PokeyDevicePluginStateManager::deviceLedMatrixConfiguration(libconfig::Sett
                         addTargetToDeviceTargetList(name, pokeyDevice);
                         ledIndex++;
                     }
-                    _logger(LOG_INFO, "<%s><LED Matrix> %s Loaded %i leds", pokeyDevice->name().c_str(), name.c_str(), ledCount);
+                    _logger(LOG_INFO, "%s | LED Matrix | %s Loaded %i leds", pokeyDevice->name().c_str(), name.c_str(), ledCount);
                 }
 
                 ledMatrixIndex++;
@@ -544,10 +542,10 @@ bool PokeyDevicePluginStateManager::deviceDisplaysConfiguration(libconfig::Setti
 
     if (displayCount > 2) {
         retVal = false;
-        _logger(LOG_ERROR, "<%s> | Display | Invalid number of displays (%i). Maximum 2", pokeyDevice->name().c_str(), displayCount);
+        _logger(LOG_ERROR, "%s | Display | Invalid number of displays (%i). Maximum 2", pokeyDevice->name().c_str(), displayCount);
     }
     else {
-        _logger(LOG_INFO, "<%s> | Display | Found %i display(s)", pokeyDevice->name().c_str(), displayCount);
+        _logger(LOG_INFO, "%s | Display | Found %i display(s)", pokeyDevice->name().c_str(), displayCount);
         for (libconfig::SettingIterator iter = displays->begin(); iter != displays->end(); iter++) {
             std::string type = "None";
             std::string name = "";
@@ -558,17 +556,21 @@ bool PokeyDevicePluginStateManager::deviceDisplaysConfiguration(libconfig::Setti
                 iter->lookupValue("type", type);
                 iter->lookupValue("enabled", enabled);
 
-                _logger(LOG_INFO, "<%s> <Display> %s [%s]", pokeyDevice->name().c_str(), name.c_str(), type.c_str());
+                _logger(LOG_INFO, "%s | Display | %s [%s]", pokeyDevice->name().c_str(), name.c_str(), type.c_str());
 
                 int matrixRows = deviceDisplaysGroupsConfiguration(&iter->lookup("groups"), displayIndex, pokeyDevice, type);
-                _logger(LOG_INFO, "<%s> <Display> Added %i digit(s)", pokeyDevice->name().c_str(), matrixRows);
+                _logger(LOG_INFO, "%s | Display | Added %i digit(s)", pokeyDevice->name().c_str(), matrixRows);
 
                 pokeyDevice->configMatrixLED(displayIndex, 8, 8, enabled);
                 displayIndex = displayIndex + 1;
             }
             catch (const libconfig::SettingNotFoundException &nfex) {
-                _logger(LOG_ERROR, "<%s> | Display | Could not find %s. Skipping....", pokeyDevice->name().c_str(), nfex.what());
+                _logger(LOG_ERROR, "%s | Display | Could not find %s. Skipping....", pokeyDevice->name().c_str(), nfex.what());
                 continue;
+            }
+            catch (const libconfig::ParseException &pex) {
+                _logger(LOG_INFO, "Config file parse error at %s:%d  - %s", pex.getFile(), pex.getLine(), pex.getError());
+                throw std::runtime_error("Config file parse error - See log file");
             }
         }
     }
@@ -582,10 +584,10 @@ int PokeyDevicePluginStateManager::deviceDisplaysGroupsConfiguration(libconfig::
     int totalDigits = 0;
 
     if (groupCount == 0 || groupCount > 8) {
-        _logger(LOG_ERROR, "<%s> <%s> | Display | Group | Invalid number of display groups (%i). Minimum 1 Maximum 8", pokeyDevice->name().c_str(), groupCount);
+        _logger(LOG_ERROR, "%s | Display | Group | Invalid number of display groups (%i). Minimum 1 Maximum 8", pokeyDevice->name().c_str(), groupCount);
     }
     else {
-        _logger(LOG_INFO, "<%s> | Display | Group | Found %i display group(s)", pokeyDevice->name().c_str(), groupCount);
+        _logger(LOG_INFO, "%s | Display | Group | Found %i display group(s)", pokeyDevice->name().c_str(), groupCount);
         int id = 0;
         for (libconfig::SettingIterator iter = displayGroups->begin(); iter != displayGroups->end(); iter++) {
             std::string name = "None";
@@ -597,7 +599,7 @@ int PokeyDevicePluginStateManager::deviceDisplaysGroupsConfiguration(libconfig::
                 iter->lookupValue("digits", digits);
                 iter->lookupValue("position", position);
 
-                _logger(LOG_INFO, "<%s> | Display | Group | %s %i digits / position %i", pokeyDevice->name().c_str(), name.c_str(), digits, position);
+                _logger(LOG_INFO, "%s | Display | Group | %s %i digits / position %i", pokeyDevice->name().c_str(), name.c_str(), digits, position);
                 pokeyDevice->addMatrixLED(displayId, name, type);
 
                 pokeyDevice->addGroupToMatrixLED(id++, displayId, name, digits, position);
@@ -605,7 +607,7 @@ int PokeyDevicePluginStateManager::deviceDisplaysGroupsConfiguration(libconfig::
                 totalDigits += digits;
             }
             catch (const libconfig::SettingNotFoundException &nfex) {
-                _logger(LOG_ERROR, "<%s> | Display | Group | Could not find %s. Skipping....", pokeyDevice->name().c_str(), nfex.what());
+                _logger(LOG_ERROR, "%s | Display | Group | Could not find %s. Skipping....", pokeyDevice->name().c_str(), nfex.what());
                 continue;
             }
         }
@@ -716,19 +718,23 @@ int PokeyDevicePluginStateManager::preflightComplete(void)
     catch (const libconfig::SettingNotFoundException &nfex) {
         _logger(LOG_ERROR, "Config file parse error at %s. Skipping....", nfex.getPath());
     }
+    catch (const libconfig::ParseException &pex) {
+        _logger(LOG_INFO, "Config file parse error at %s:%d  - %s", pex.getFile(), pex.getLine(), pex.getError());
+        throw std::runtime_error("Config file parse error - See log file");
+    }
 
     for (libconfig::SettingIterator iter = devicesConfiguraiton->begin(); iter != devicesConfiguraiton->end(); iter++) {
 
         std::string serialNumber = "";
+
+        if (iter->exists("enabled")) {
+            bool enabled;
+            iter->lookupValue("enabled", enabled);
+            if (!enabled)
+                continue;
+        }
         iter->lookupValue("serialNumber", serialNumber);
 
-#if defined FAKE_POKEY
-        sPoKeysNetworkDeviceSummary dummyData;
-        std::shared_ptr<PokeyDevice> dev = std::make_shared<PokeyDevice>(this, dummyData, 0);
-        dev->setSerialNumber(serialNumber);
-        _deviceMap.emplace(dev->serialNumber(), dev);
-        _numberOfDevices++;
-#endif
         std::shared_ptr<PokeyDevice> pokeyDevice = device(serialNumber);
 
         // check that the configuration has the required config sections

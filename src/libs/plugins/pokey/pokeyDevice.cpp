@@ -331,10 +331,6 @@ PokeyDevice::~PokeyDevice()
 
 std::string PokeyDevice::name()
 {
-#if defined(FAKE_POKEY)
-    return "test" + _serialNumber;
-#endif
-
     std::string tmp((char *)deviceData().DeviceName);
     return tmp;
 }
@@ -391,7 +387,7 @@ bool PokeyDevice::isEncoderCapable(int pin)
     case 2:
         return (bool)PK_CheckPinCapability(_pokey, 1, PK_AllPinCap_fastEncoder1B);
     case 5:
-        return true; // this is here because the pokeys library is broken
+        return true; //! this is here because the pokeys library is broken
         return (bool)PK_CheckPinCapability(_pokey, 5, PK_AllPinCap_fastEncoder2A);
     case 6:
         return true; // this is here because the pokeys library is broken
@@ -536,7 +532,7 @@ uint32_t PokeyDevice::targetValue(std::string targetName, bool value)
 {
     uint32_t retValue = PK_OK;
     uint32_t result = PK_OK;
-    
+
     uint8_t pin = pinFromName(targetName) - 1;
 
     if (pin >= 0 && pin <= 55) {

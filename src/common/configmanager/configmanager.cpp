@@ -58,6 +58,10 @@ std::string ConfigManager::mappingConfigFilename(void)
         catch (const libconfig::SettingNotFoundException &nfex) {
             logger.log(LOG_ERROR, "No mapping file set in config");
         }
+        catch (const libconfig::ParseException &pex) {
+            logger.log(LOG_INFO, "Config file parse error at %s:%d  - %s", pex.getFile(), pex.getLine(), pex.getError());
+            throw std::runtime_error("Config file parse error - See log file");
+        }
     }
 
     return _mappingConfigFilename;
@@ -101,12 +105,15 @@ int ConfigManager::init(std::shared_ptr<SimHubEventController> simhubController)
         _config.readFile(_configFilename.c_str());
     }
     catch (const libconfig::FileIOException &fioex) {
-        logger.log(LOG_ERROR, "Config file I/O error while reading file.");
+        logger.log(LOG_INFO, "Config file I/O error while reading file.");
         throw std::runtime_error("Config I/O error - See log file");
     }
     catch (const libconfig::ParseException &pex) {
-        logger.log(LOG_ERROR, "Config file parse error at %s:%d  - %s", pex.getFile(), pex.getLine(), pex.getError());
+        logger.log(LOG_INFO, "Config file parse error at %s:%d  - %s", pex.getFile(), pex.getLine(), pex.getError());
         throw std::runtime_error("Config file parse error - See log file");
+    }
+    catch (...) {
+        printf("fdfdfd\n");
     }
 
     logger.log(LOG_INFO, "Loading configuration file: %s - %s (v%s) (v%d.%d.%d)", _configFilename.c_str(), name().c_str(), version().c_str(), LIBCONFIGXX_VER_MAJOR,
@@ -124,6 +131,10 @@ int ConfigManager::init(std::shared_ptr<SimHubEventController> simhubController)
 
         _mappingConfigManager.reset(new MappingConfigManager(mappingConfigFilename()));
     }
+    catch (const libconfig::ParseException &pex) {
+        logger.log(LOG_INFO, "Config file parse error at %s:%d  - %s", pex.getFile(), pex.getLine(), pex.getError());
+        throw std::runtime_error("Config file parse error - See log file");
+    }
     catch (std::exception &e) {
         logger.log(LOG_ERROR, "%s", e.what());
         return RETURN_ERROR;
@@ -132,6 +143,10 @@ int ConfigManager::init(std::shared_ptr<SimHubEventController> simhubController)
     /** load the mapping configuration mapping file **/
     try {
         _mappingConfigManager->init();
+    }
+    catch (const libconfig::ParseException &pex) {
+        logger.log(LOG_INFO, "Config file parse error at %s:%d  - %s", pex.getFile(), pex.getLine(), pex.getError());
+        throw std::runtime_error("Config file parse error - See log file");
     }
     catch (std::exception &e) {
         logger.log(LOG_ERROR, "%s", e.what());
@@ -180,8 +195,7 @@ std::string ConfigManager::httpListenAddress(void)
 
 size_t ConfigManager::httpListenPort(void)
 {
-    int port = 0;    
+    int port = 0;
     config()->lookupValue("httpListenPort", port);
     return port;
 }
-
