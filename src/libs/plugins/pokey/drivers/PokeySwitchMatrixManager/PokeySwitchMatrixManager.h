@@ -21,7 +21,7 @@ public:
     int addMatrix(int id, std::string name, std::string type, bool enabled);
     std::shared_ptr<PokeySwitchMatrix> matrix(std::string name);
     std::shared_ptr<PokeySwitchMatrix> matrix(int id);
-    std::vector<std::pair<std::string, uint8_t>> readAll();
+    std::vector<GenericTLV *> readAll();
 };
 
 #endif
