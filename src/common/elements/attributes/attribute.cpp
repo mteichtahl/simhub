@@ -2,16 +2,13 @@
 #include <string.h>
 
 #include "attribute.h"
+#include "plugins/common/simhubdeviceplugin.h"
 
 //! marshals C++ Attribute instance to C generic struct
 GenericTLV *AttributeToCGeneric(std::shared_ptr<Attribute> value)
 {
-    GenericTLV *retVal = (GenericTLV *)malloc(sizeof(GenericTLV));
+    GenericTLV *retVal = make_generic(value->name().c_str(), (const char *)"none");
 
-    retVal->name = (char *)calloc(value->name().size() + 1, 1);
-    retVal->ownerPlugin = value->ownerPlugin();
-
-    strncpy(retVal->name, value->name().c_str(), value->name().size());
     // strncpy(retVal->description, value->description().c_str(), value->description().size());
     // strncpy(retVal->units, value->units().c_str(), value->units().size());
 
@@ -37,15 +34,16 @@ GenericTLV *AttributeToCGeneric(std::shared_ptr<Attribute> value)
         break;
 
     case STRING_ATTRIBUTE:
-        retVal->type = CONFIG_STRING;
-        retVal->value.string_value = (char *)calloc(value->value<std::string>().size() + 1, 1);
-        strncpy(retVal->value.string_value, value->value<std::string>().c_str(), value->value<std::string>().size());
+        free(retVal);
+        retVal = make_string_generic(value->name().c_str(), (const char *)"none", value->value<std::string>().c_str());
         break;
 
     default:
         assert(false);
         break;
     }
+
+    retVal->ownerPlugin = value->ownerPlugin();
 
     return retVal;
 }

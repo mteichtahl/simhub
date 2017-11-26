@@ -3,7 +3,8 @@
 
 #include <dlfcn.h>
 #include <stdio.h>
-
+#include <memory.h>
+#include <assert.h>
 #if defined(build_macosx)
 #define LIB_EXT ".dylib"
 #endif
@@ -43,6 +44,58 @@ typedef struct {
     char *units;
     SPHANDLE ownerPlugin;
 } GenericTLV;
+
+// -- begin GenericTLV helper methods
+
+inline void dupe_string(char **dest, const char *source)
+{
+    int string_size = strlen(source);
+    *dest = (char *)calloc(string_size, 0);
+    strncpy(*dest, source, string_size);
+}
+
+inline GenericTLV *make_generic(const char *name, const char *description) 
+{ 
+    GenericTLV *retVal = (GenericTLV *)calloc(sizeof(GenericTLV), 1); 
+    dupe_string(&(retVal->name), name);
+    dupe_string(&(retVal->description), description);
+    return retVal;
+}
+
+inline GenericTLV *make_string_generic(const char *name, const char *description, const char *string_value) 
+{ 
+    assert(string_value);
+    GenericTLV *retVal = make_generic(name, description);
+    retVal->type = CONFIG_STRING;
+    dupe_string(&(retVal->value.string_value), string_value);
+    return retVal;
+}
+
+inline void release_generic(GenericTLV *generic)
+{
+    assert(generic);
+
+    if (generic->name) {
+        free(generic->name);
+    }
+
+    if (generic->description) {
+        free(generic->description);
+    }
+
+    if (generic->type == CONFIG_STRING) {
+        assert(generic->value.string_value);
+        free(generic->value.string_value);
+    }
+
+    if (generic->units) {
+        free(generic->units);
+    }
+
+    free(generic);
+}
+
+// -- end GenericTLV helper methods
 
 //! basic block of function pointers
 typedef struct {
