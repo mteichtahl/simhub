@@ -3,10 +3,13 @@
 #include <memory>
 #include <sstream>
 #include <vector>
+#include <thread>
 
 #include "common/simhubdeviceplugin.h"
 #include "elements/attributes/attribute.h"
 #include "main.h"
+
+using namespace std::chrono_literals;
 
 // -- public C FFI
 
@@ -288,54 +291,59 @@ void SimSourcePluginStateManager::processElement(char *element)
 {
     char *name = strtok(element, "=");
     char *value = strtok(NULL, " =");
-    name[strlen(name) - 1] = '\0';
 
-    if (value == NULL)
+    if (value == NULL) {
         return;
+    }
 
+    name[strlen(name) - 1] = '\0';
+    
+    if (strlen(name) == 0) {
+        return;
+    }
+    
     char *type = getElementDataType(name[0]);
 
     if (type != NULL) {
-        GenericTLV el;
+        GenericTLV *el = make_generic(name, "-");
 
-        el.name = name;
-        el.ownerPlugin = this;
+        el->ownerPlugin = this;
 
         if (strncmp(type, "float", sizeof(&type)) == 0) {
-            el.type = CONFIG_FLOAT;
-            el.value.float_value = atof(value);
-            el.length = sizeof(float);
+            el->type = CONFIG_FLOAT;
+            el->value.float_value = atof(value);
+            el->length = sizeof(float);
         }
         else if (strncmp(type, "char", sizeof(&type)) == 0) {
-            el.type = CONFIG_STRING;
-            el.value.string_value = value;
-            el.length = strlen(value);
+            el->type = CONFIG_STRING;
+            dupe_string(&(el->value.string_value), value);
+            el->length = strlen(value);
         }
         else if (strncmp(type, "int", sizeof(&type)) == 0) {
-            el.type = CONFIG_INT;
-            el.value.int_value = atoi(value);
-            el.length = sizeof(int);
+            el->type = CONFIG_INT;
+            el->value.int_value = atoi(value);
+            el->length = sizeof(int);
         }
         else if (strncmp(type, "uint", sizeof(&type)) == 0) {
-            el.type = CONFIG_UINT;
-            el.value.int_value = (uint)atoi(value);
-            el.length = sizeof(int);
+            el->type = CONFIG_UINT;
+            el->value.int_value = (uint)atoi(value);
+            el->length = sizeof(int);
         }
         else if (strncmp(type, "bool", sizeof(&type)) == 0) {
-            el.type = CONFIG_BOOL;
-            el.length = sizeof(uint8_t);
-            if (strncmp(value, "0", sizeof(el.value)) == 0) {
-                el.value.bool_value = 0;
+            el->type = CONFIG_BOOL;
+            el->length = sizeof(uint8_t);
+            if (strncmp(value, "0", sizeof(el->value)) == 0) {
+                el->value.bool_value = 0;
             }
             else {
-                el.value.bool_value = 1;
+                el->value.bool_value = 1;
             }
         }
         else {
             _logger(LOG_ERROR, "Missing prosim type mapping %s %s %s", name, value, type);
         }
 
-        _enqueueCallback(this, (void *)&el, _callbackArg);
+        _enqueueCallback(this, (void *)el, _callbackArg);
 
         // TODO remove this echo test - or make it a configuartion switch
         // deliverValue(&el);
@@ -413,6 +421,13 @@ int SimSourcePluginStateManager::deliverValue(GenericTLV *value)
     TransformFunction transformFunction = transform(attribute->name());
     std::string val = "";
 
+    if (value->type == CONFIG_STRING) {
+        std::cout << "::deliverValue just got value with name: " << value->name << " and value " << value->value.string_value << std::endl;
+    }
+    else if (value->type == CONFIG_BOOL) {
+        std::cout << "::deliverValue just got value with name: " << value->name << " and value " << value->value.bool_value << std::endl;
+    }
+
     if (transformFunction) {
         val = transformFunction(attribute->valueToString(), "NULL", "NULL");
         oss << attribute->name() << "=" << val << "\n";
@@ -422,7 +437,6 @@ int SimSourcePluginStateManager::deliverValue(GenericTLV *value)
     }
 
     // printf("SimSourcePluginStateManager::deliverValue %s %s\n", oss.str().c_str(), val.c_str());
-
     _sendSocketClient.sendData(oss.str());
 
     return 0;
@@ -548,6 +562,7 @@ bool TCPClient::sendData(std::string data)
         perror("Send failed : ");
         return false;
     }
+
     return true;
 }
 

@@ -306,13 +306,6 @@ bool SimHubEventController::deliverValue(std::shared_ptr<Attribute> value)
         retVal = !_pokeyMethods.simplug_deliver_value(_pokeyMethods.plugin_instance, c_value);
     }
 
-    if (c_value->type == CONFIG_STRING) {
-        free(c_value->value.string_value);
-    }
-
-    free(c_value->name);
-    free(c_value);
-
     return retVal;
 }
 
@@ -333,6 +326,8 @@ void SimHubEventController::prepare3dEventCallback(SPHANDLE eventSource, void *e
         if (_configManager->mapManager()->find(data->name, &mapEntry)) {
             _eventQueue.push(attribute);
         }
+
+        release_generic(data);
     }
     else {
         ceaseEventLoop();
@@ -352,6 +347,8 @@ void SimHubEventController::pokeyEventCallback(SPHANDLE eventSource, void *event
         if (_configManager->mapManager()->find(data->name, &mapEntry)) {
             _eventQueue.push(attribute);
         }
+
+        release_generic(data);
     }
     else {
         ceaseEventLoop();

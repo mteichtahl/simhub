@@ -147,7 +147,9 @@ protected:
     int pinIndexFromName(std::string targetName);
     uint8_t displayFromName(std::string targetName);
     uint8_t displayNumber(uint8_t displayNumwber, std::string targetName, int value);
-
+    void processPokeyPhysicalInputPin(int i);
+    void processEncoderInputValues(void);
+    void processMatrixInputValues(void);
     void pollCallback(uv_timer_t *timer, int status);
 
     std::shared_ptr<PokeySwitchMatrixManager> _switchMatrixManager;
@@ -212,6 +214,7 @@ public:
     // switch matrix "handlers"
     int configSwitchMatrix(int id, std::string name, std::string type, bool enabled);
     int configSwitchMatrixSwitch(int switchMatrixId, int switchId, std::string name, int pin, int enablePin, bool invert, bool invertEnablePin);
+    int configSwitchMatrixVirtualPin(int switchMatrixId, std::string name, bool invert, PinMaskMap &virtualPinMask, std::map<int, std::string> &valueTransforms);
 
     // led matrix "handlers"
     void configMatrix(int id, uint8_t chipSelect, std::string type, uint8_t enabled = 0, std::string name = "", std::string description = "");
