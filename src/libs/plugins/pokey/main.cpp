@@ -210,10 +210,10 @@ bool PokeyDevicePluginStateManager::deviceConfiguration(libconfig::SettingIterat
             if (configName != pokeyDevice->name().c_str()) {
                 uint32_t retValue = pokeyDevice->name(configName);
                 if (retValue == PK_OK) {
-                    _logger(LOG_INFO, "      - Device name set (%s)", configName.c_str());
+                    _logger(LOG_INFO, "%s | Device name set to %s", pokeyDevice->name().c_str(), configName.c_str());
                 }
                 else {
-                    _logger(LOG_INFO, "      - Error setting device name (%s)", configName.c_str());
+                    _logger(LOG_INFO, "%s | Error setting device name (%s)", pokeyDevice->name().c_str(), configName.c_str());
                 }
             }
         }
@@ -228,7 +228,7 @@ bool PokeyDevicePluginStateManager::deviceConfiguration(libconfig::SettingIterat
 
 void PokeyDevicePluginStateManager::loadTransform(std::string pinName, libconfig::Setting *transform)
 {
-    _logger(LOG_INFO, " - transform %s", pinName.c_str());
+    _logger(LOG_INFO, "Transform | %s added", pinName.c_str());
 
     if (transform->exists("On") && transform->exists("Off")) {
         std::string transformResultOn;
@@ -315,7 +315,10 @@ bool PokeyDevicePluginStateManager::devicePinsConfiguration(libconfig::Setting *
 
                     std::shared_ptr<PokeyDevice> remapTargetDevice = deviceForPin(mapTo);
 
-                    assert(remapTargetDevice);
+                    if (!remapTargetDevice) {
+                        _logger(LOG_INFO, "%s | Remap | ERROR - Cannot remap to non-existant pin (%s)", pokeyDevice->name().c_str(), pinName.c_str());
+                        assert(remapTargetDevice);
+                    }
 
                     // NOTE: the fact config entries that mapTo must be defined *after* the
                     //       device to which they refer is an explicit limitation
@@ -330,7 +333,7 @@ bool PokeyDevicePluginStateManager::devicePinsConfiguration(libconfig::Setting *
                             iter->lookupValue("default", defaultValue);
 
                         pokeyDevice->addPin(pinIndex, pinName, pinNumber, pinType, defaultValue, description, false);
-                        _logger(LOG_INFO, "%s | Pin | %d Added target %s on pin %d", pokeyDevice->name().c_str(), pinIndex, pinName.c_str(), pinNumber);
+                        _logger(LOG_INFO, "%s | Pin | %s to pin %d", pokeyDevice->name().c_str(), pinName.c_str(), pinNumber);
                     }
                 }
                 else if (pinType == "DIGITAL_INPUT") {
@@ -343,12 +346,12 @@ bool PokeyDevicePluginStateManager::devicePinsConfiguration(libconfig::Setting *
 
                     pokeyDevice->addPin(pinIndex, pinName, pinNumber, pinType, defaultValue, description, invert);
 
-                    _logger(LOG_INFO, "%s | Pin | [%d] Added source %s on pin %d", pokeyDevice->name().c_str(), pinIndex, pinName.c_str(), pinNumber);
+                    _logger(LOG_INFO, "%s | Pin | Added transform %s to pin %d", pokeyDevice->name().c_str(), pinName.c_str(), pinNumber);
                 }
                 pinIndex++;
             }
             else {
-                _logger(LOG_ERROR, "%s | Pin |[%d] Invalid pin type %s on pin %d", pokeyDevice->name().c_str(), pinIndex, pinType.c_str(), pinNumber);
+                _logger(LOG_ERROR, "%s | Pin | Invalid pin type %s on pin %d", pokeyDevice->name().c_str(), pinType.c_str(), pinNumber);
                 continue;
             }
         }
@@ -487,7 +490,7 @@ bool PokeyDevicePluginStateManager::deviceLedMatrixConfiguration(libconfig::Sett
                 iter->lookupValue("description", description);
                 iter->lookupValue("name", name);
 
-                _logger(LOG_INFO, " %s | LED Matrix> %s (%s - CS %i)", pokeyDevice->name().c_str(), name.c_str(), matrixType.c_str(), chipSelect);
+                _logger(LOG_INFO, "%s | LED Matrix %s (%s - CS %i)", pokeyDevice->name().c_str(), name.c_str(), matrixType.c_str(), chipSelect);
                 pokeyDevice->configMatrix(ledMatrixIndex, (uint8_t)chipSelect, matrixType, (uint8_t)enabled, name, description);
 
                 if (!enabled) {
@@ -728,11 +731,12 @@ int PokeyDevicePluginStateManager::preflightComplete(void)
         std::string serialNumber = "";
 
         if (iter->exists("enabled")) {
-            bool enabled;
+            bool enabled = true;
             iter->lookupValue("enabled", enabled);
             if (!enabled)
-                continue;
+                break;
         }
+
         iter->lookupValue("serialNumber", serialNumber);
 
         std::shared_ptr<PokeyDevice> pokeyDevice = device(serialNumber);

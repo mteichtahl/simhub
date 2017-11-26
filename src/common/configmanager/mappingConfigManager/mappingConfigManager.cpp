@@ -23,7 +23,7 @@ MappingConfigManager::MappingConfigManager(std::string filename)
  */
 MappingConfigManager::~MappingConfigManager()
 {
-    logger.log(LOG_INFO, "<Mapping> Closing mapping configuration");
+    logger.log(LOG_INFO, "Mapping | Closing mapping configuration");
 }
 
 /**
@@ -64,7 +64,7 @@ int MappingConfigManager::init(void)
 
     try {
         _mappingConfig = &_config.lookup("mapping");
-        logger.log(LOG_INFO, "<Mapping> Found %d mapping(s)", _mappingConfig->getLength());
+        logger.log(LOG_INFO, "Mapping | %d mapping(s)", _mappingConfig->getLength());
 
         // no need to continue if there are no mappings to be processed
         if (_mappingConfig->getLength() == 0) {
@@ -82,31 +82,31 @@ int MappingConfigManager::init(void)
                 (*_mappingConfig)[i].lookupValue("sustain", sustain);
             }
             catch (const libconfig::SettingNotFoundException &nfex) {
-                logger.log(LOG_ERROR, "<Mapping> <WARNING> Config file parse error at %s. Skipping....", nfex.getPath());
+                logger.log(LOG_ERROR, "Mapping | WARNING | Config file parse error at %s. Skipping....", nfex.getPath());
                 continue;
             }
             catch (const libconfig::SettingTypeException &nfex) {
-                logger.log(LOG_ERROR, "<Mapping> <WARNING> Setting type error for %s. Skipping....", nfex.getPath());
+                logger.log(LOG_ERROR, "Mapping | WARNING | Setting type error for %s. Skipping....", nfex.getPath());
                 continue;
             }
 
             if (mapContains(_mapping, source)) {
-                logger.log(LOG_INFO, "<Mapping> <WARNING> Skipping duplicate source %s ", source.c_str());
+                logger.log(LOG_INFO, "Mapping | WARNING | Skipping duplicate source %s ", source.c_str());
                 continue;
             }
             else {
                 _mapping[source] = std::make_pair(source, target);
-                logger.log(LOG_INFO, "<Mapping> %s --> %s", source.c_str(), target.c_str());
+                logger.log(LOG_INFO, "Mapping | %s to %s", source.c_str(), target.c_str());
             }
 
             if (sustain > 0 && !mapContains(_sustainMap, source)) {
                 _sustainMap[source] = sustain;
             }
         }
-        logger.log(LOG_INFO, "<Mapping> Loaded (%i)", _mapping.size());
+        logger.log(LOG_INFO, "Mapping | %i Mappings", _mapping.size());
     }
     catch (std::exception &e) {
-        logger.log(LOG_ERROR, "<Mapping> %s", e.what());
+        logger.log(LOG_ERROR, "Mapping | %s", e.what());
         return RETURN_ERROR;
     }
 
