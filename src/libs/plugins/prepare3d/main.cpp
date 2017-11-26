@@ -3,10 +3,13 @@
 #include <memory>
 #include <sstream>
 #include <vector>
+#include <thread>
 
 #include "common/simhubdeviceplugin.h"
 #include "elements/attributes/attribute.h"
 #include "main.h"
+
+using namespace std::chrono_literals;
 
 // -- public C FFI
 
@@ -284,11 +287,17 @@ void SimSourcePluginStateManager::processElement(char *element)
 {
     char *name = strtok(element, "=");
     char *value = strtok(NULL, " =");
-    name[strlen(name) - 1] = '\0';
 
-    if (value == NULL)
+    if (value == NULL) {
         return;
+    }
 
+    name[strlen(name) - 1] = '\0';
+    
+    if (strlen(name) == 0) {
+        return;
+    }
+    
     char *type = getElementDataType(name[0]);
 
     if (type != NULL) {
@@ -424,7 +433,6 @@ int SimSourcePluginStateManager::deliverValue(GenericTLV *value)
     }
 
     // printf("SimSourcePluginStateManager::deliverValue %s %s\n", oss.str().c_str(), val.c_str());
-
     _sendSocketClient.sendData(oss.str());
 
     return 0;
@@ -550,6 +558,7 @@ bool TCPClient::sendData(std::string data)
         perror("Send failed : ");
         return false;
     }
+
     return true;
 }
 

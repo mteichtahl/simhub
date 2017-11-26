@@ -90,9 +90,11 @@ std::vector<GenericTLV *> PokeySwitchMatrix::readSwitches()
 
     for (auto vpin: _virtualPins) {
         vpin.second->updateVirtualValue();
-
         if (vpin.second->currentValue() != vpin.second->previousValue()) {
-            end = retVal.insert(end, vpin.second->valueAsGeneric());
+	    GenericTLV *generic = vpin.second->valueAsGeneric();
+	    if (generic) {
+                end = retVal.insert(end, generic);
+	    }
         }
     }
 

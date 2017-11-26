@@ -60,6 +60,11 @@ inline GenericTLV *make_generic(const char *name, const char *description)
 { 
     GenericTLV *retVal = (GenericTLV *)calloc(sizeof(GenericTLV), 1); 
 
+    assert(name);
+    assert(strlen(name) > 0);
+    assert(description);
+    assert(strlen(description) > 0);
+    
     retVal->name = NULL;
     retVal->description = NULL;
     retVal->type = CONFIG_INT;
@@ -73,9 +78,12 @@ inline GenericTLV *make_generic(const char *name, const char *description)
 inline GenericTLV *make_string_generic(const char *name, const char *description, const char *string_value) 
 { 
     assert(string_value);
+    assert(strlen(string_value) > 0);
+    
     GenericTLV *retVal = make_generic(name, description);
     retVal->type = CONFIG_STRING;
     dupe_string(&(retVal->value.string_value), string_value);
+    
     return retVal;
 }
 

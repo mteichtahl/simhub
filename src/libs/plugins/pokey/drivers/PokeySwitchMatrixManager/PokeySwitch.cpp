@@ -45,7 +45,7 @@ std::string PokeySwitch::transformedValue(void)
 {
     if (!mapContains(_valueTransforms, (int)_currentValue)) {
         std::cout << "/// NO TRANSFORM FOR: " << (int)_currentValue << std::endl;
-        return "INVALID";
+        return "";
     }
     else {
         std::cout << "/// TRANSFORM FOR: " << (int)_currentValue << std::endl;
@@ -55,8 +55,13 @@ std::string PokeySwitch::transformedValue(void)
 
 GenericTLV *PokeySwitch::valueAsGeneric(void)
 {
+    GenericTLV *el = NULL;
     std::string value = transformedValue();
-	GenericTLV *el = make_string_generic(name().c_str(), "pokey switch input", value.c_str());
+
+    if (value.size() > 0) {
+        el = make_string_generic(name().c_str(), "pokey switch input", value.c_str());
+    }
+    
     return el;
 }
 
