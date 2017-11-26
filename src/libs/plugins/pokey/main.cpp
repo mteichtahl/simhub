@@ -734,7 +734,7 @@ int PokeyDevicePluginStateManager::preflightComplete(void)
             bool enabled = true;
             iter->lookupValue("enabled", enabled);
             if (!enabled)
-                break;
+                continue;
         }
 
         iter->lookupValue("serialNumber", serialNumber);
