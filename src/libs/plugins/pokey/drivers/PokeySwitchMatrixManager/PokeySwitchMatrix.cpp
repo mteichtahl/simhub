@@ -7,6 +7,31 @@ PokeySwitchMatrix::PokeySwitchMatrix(sPoKeysDevice *pokey, int id, std::string n
     _id = id;
     _enabled = enabled;
     _pokey = pokey;
+
+    // _pokey->matrixKB.matrixKBconfiguration = 1;
+    // _pokey->matrixKB.matrixKBwidth = 8;
+    // _pokey->matrixKB.matrixKBheight = 8;
+
+    // int squareKBMatrixDim = 8;
+    // _pokey->info.iMatrixKeyboard = 1;
+
+    // for (int i = 0; i < squareKBMatrixDim; i++) {
+    //     _pokey->matrixKB.matrixKBrowsPins[i] = i;
+    //     _pokey->matrixKB.matrixKBcolumnsPins[i + squareKBMatrixDim] = i + squareKBMatrixDim;
+    // }
+
+    // memset(_pokey->matrixKB.keyMappingKeyCode, 0, squareKBMatrixDim * squareKBMatrixDim);
+    // memset(_pokey->matrixKB.keyMappingKeyModifier, 0, squareKBMatrixDim * squareKBMatrixDim);
+    // memset(_pokey->matrixKB.keyMappingTriggeredKey, 0, squareKBMatrixDim * squareKBMatrixDim);
+    // memset(_pokey->matrixKB.keyMappingKeyCodeUp, 0, squareKBMatrixDim * squareKBMatrixDim);
+    // memset(_pokey->matrixKB.keyMappingKeyModifierUp, 0, squareKBMatrixDim * squareKBMatrixDim);
+    // memset(_pokey->matrixKB.matrixKBvalues, 0, squareKBMatrixDim * squareKBMatrixDim);
+    
+    // int32_t result = PK_MatrixKBConfigurationSet(_pokey);
+
+    // if (result != PK_OK) {
+    //     printf("---> ERR setting keyboard %i\n", result);
+    // }
 }
 
 std::string PokeySwitchMatrix::name()
@@ -65,21 +90,50 @@ std::vector<GenericTLV *> PokeySwitchMatrix::readSwitches()
     std::vector<GenericTLV *> retVal;
     auto end = retVal.end();
 
+
+    int keyboardMatrixDim = 8;
+    int32_t result = PK_MatrixKBStatusGet(_pokey);
+
+    static uint8_t *PrevValues = 0;
+
+    if (!PrevValues) {
+        PrevValues = (uint8_t *)calloc(64, 1);
+    }
+
+    for (int i = 0; i < 64; i++) {
+        if (PrevValues[i] != _pokey->matrixKB.matrixKBvalues[i]) {
+            printf("%i, %i\n", i, _pokey->matrixKB.matrixKBvalues[i]);
+            PrevValues[i] = _pokey->matrixKB.matrixKBvalues[i];
+        }
+    }
+
     // scan aggregate pins first
 
     for (auto &sw : _switches) {
-        if (isPartialPin(_virtualPins, sw)) {
-            std::pair<std::string, uint8_t> swData = sw->read();
-            if (sw->previousValue() != sw->currentValue()) {
-                if (consumePhysicalPinValue(_virtualPins, sw)) {
-                    std::cout << "/// CONSUMED: " << sw->name() << std::endl;
-                }
-                else {
-                    std::cout << "/// AGGREGATE PIN MEMBER ISSUE: " << sw->name() << std::endl;
-                }
+        uint8_t value = _pokey->matrixKB.matrixKBvalues[sw->pin()];
+
+        if (sw->invert()) {
+            value = !value;
+        }
+        
+        sw->setCurrentValue(value);
+
+        if (sw->previousValue() != sw->currentValue()) {
+
+            sw->setPreviousValue(value);
+            if (consumePhysicalPinValue(_virtualPins, sw)) {
+                std::cout << "/// CONSUMED: " << sw->name() << std::endl;
+            }
+            else {
+                GenericTLV *generic = make_generic(sw->name().c_str(), sw->name().c_str());
+                generic->type = CONFIG_BOOL;
+                generic->value.bool_value = value;
+                std::cout << "/// AGGREGATE PIN MEMBER ISSUE: " << sw->name() << ", " << value << std::endl;
+                end = retVal.insert(end, generic);
             }
         }
     }
+    /*
 
     // now scan stand-alone pins
 
@@ -98,6 +152,7 @@ std::vector<GenericTLV *> PokeySwitchMatrix::readSwitches()
             end = retVal.insert(end, el);
         }
     }
+    */
 
     // now send aggregate values
 
@@ -110,6 +165,5 @@ std::vector<GenericTLV *> PokeySwitchMatrix::readSwitches()
             }
         }
     }
-
     return retVal;
 }

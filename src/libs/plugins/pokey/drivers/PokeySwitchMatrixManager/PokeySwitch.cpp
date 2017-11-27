@@ -13,6 +13,7 @@ PokeySwitch::PokeySwitch(sPoKeysDevice *pokey, int id, std::string name, int pin
     _invertEnablePin = invertEnablePin;
     _previousValue = -1;
     _currentValue = 0;
+    _invert = invert;
 
     if (enablePin > 1) {
         pokey->Pins[enablePin - 1].PinFunction = PK_PinCap_digitalOutput | (invertEnablePin ? PK_PinCap_invertPin : 0x00);
@@ -21,8 +22,7 @@ PokeySwitch::PokeySwitch(sPoKeysDevice *pokey, int id, std::string name, int pin
     if (pin > 1) {
         pokey->Pins[pin - 1].PinFunction = PK_PinCap_digitalInput | (invert ? PK_PinCap_invertPin : 0x00);
     }
-
-    int retVal = PK_PinConfigurationSet(pokey);
+    //int retVal = PK_PinConfigurationSet(pokey);
 }
 
 PokeySwitch::~PokeySwitch(void)
@@ -71,6 +71,7 @@ using namespace std::chrono_literals;
 
 std::pair<std::string, uint8_t> PokeySwitch::read(void)
 {
+    /*
     _previousValue = _currentValue;
 
     uint32_t result = PK_OK;
@@ -102,7 +103,7 @@ std::pair<std::string, uint8_t> PokeySwitch::read(void)
     }
     std::this_thread::sleep_for(10ms);
     result = PK_DigitalIOSet(_pokey);
-    
+    */    
 
     return std::make_pair(_name, _currentValue);
 }

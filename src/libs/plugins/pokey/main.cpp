@@ -703,11 +703,16 @@ int PokeyDevicePluginStateManager::deviceSwitchMatrixSwitchConfiguration(
                     libconfig::Setting &transforms = iter->lookup("valueTransforms");
                     std::map<int, std::string> valueTransforms;
 
-                    char valueNameBuffer[64];
                     char SEPCHAR = '_';
                     for (libconfig::SettingIterator transformIter = transforms.begin(); transformIter != transforms.end(); transformIter++) {
                         int nameLen = strlen(transformIter->getName());
+                        char *valueNameBuffer = (char *)calloc(nameLen, 1);
                         strncpy(valueNameBuffer, transformIter->getName(), nameLen + 1);
+                        if (valueNameBuffer[0] == 'x') {
+                            valueNameBuffer++;
+                            std::cout << "---> ADDING HACK DIGIT TRANSFORM: " << valueNameBuffer << std::endl;
+                        }
+                        
                         for (int i = 0; i < nameLen; i++) {
                             if (valueNameBuffer[i] == SEPCHAR) {
                                 valueNameBuffer[i] = ' ';

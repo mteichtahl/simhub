@@ -20,6 +20,7 @@ protected:
     int _enablePin;
 	bool _invertEnablePin;
     bool _enabled;
+    bool _invert;
     int _pin;
     sPoKeysDevice *_pokey;
     uint8_t _previousValue;
@@ -41,11 +42,13 @@ public:
 
     virtual ~PokeySwitch(void);
     uint8_t previousValue(void);
+    void setPreviousValue(uint8_t previousValue) { _previousValue = previousValue; }
     uint8_t currentValue(void);
+    void setCurrentValue(uint8_t currentValue) { _currentValue = currentValue; };
     std::string name(void) { return _name; };
     std::pair<std::string, uint8_t> read(void);
     int pin(void) { return _pin; };
-
+    bool invert(void) { return _invert; };
     void setVirtualPinMask(PinMaskMap &mask) { _physPinMask = mask; };
     void addVirtualPin(std::string name, size_t position);
     bool updateVirtualPinMask(std::shared_ptr<PokeySwitch> pokeyPin);
