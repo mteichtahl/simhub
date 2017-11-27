@@ -24,10 +24,7 @@ int PokeySwitchMatrix::addSwitch(int id, std::string name, int pin, int enablePi
     return 0;
 }
 
-void PokeySwitchMatrix::addVirtualPin(std::string virtualPinName, 
-                                      bool invert, 
-                                      PinMaskMap &virtualPinMask,
-                                      std::map<int, std::string> &valueTransforms)
+void PokeySwitchMatrix::addVirtualPin(std::string virtualPinName, bool invert, PinMaskMap &virtualPinMask, std::map<int, std::string> &valueTransforms)
 {
     std::shared_ptr<PokeySwitch> pin = std::make_shared<PokeySwitch>(_pokey, 0, virtualPinName, 0, 0, invert, false);
     pin->setVirtualPinMask(virtualPinMask);
@@ -68,36 +65,51 @@ std::vector<GenericTLV *> PokeySwitchMatrix::readSwitches()
     std::vector<GenericTLV *> retVal;
     auto end = retVal.end();
 
+    // scan aggregate pins first
+
+    for (auto &sw : _switches) {
+        if (isPartialPin(_virtualPins, sw)) {
+            std::pair<std::string, uint8_t> swData = sw->read();
+            if (sw->previousValue() != sw->currentValue()) {
+                if (consumePhysicalPinValue(_virtualPins, sw)) {
+                    std::cout << "/// CONSUMED: " << sw->name() << std::endl;
+                }
+                else {
+                    std::cout << "/// AGGREGATE PIN MEMBER ISSUE: " << sw->name() << std::endl;
+                }
+            }
+        }
+    }
+
+    // now scan stand-alone pins
+
     for (auto &sw : _switches) {
         if (isPartialPin(_virtualPins, sw)) {
             sw->setIsPartialPin(true);
+            continue;
         }
 
         std::pair<std::string, uint8_t> swData = sw->read();
 
         if (sw->previousValue() != sw->currentValue()) {
-            if (!consumePhysicalPinValue(_virtualPins, sw)) {        
-                GenericTLV *el = make_generic(sw->name().c_str(), "-");
-                el->type = CONFIG_BOOL;
-                el->value.bool_value = (int)swData.second;
-                end = retVal.insert(end, el);
-            }
-            else {
-                std::cout << "/// CONSUMED: " << sw->name() << std::endl;
-            }
+            GenericTLV *el = make_generic(sw->name().c_str(), "-");
+            el->type = CONFIG_BOOL;
+            el->value.bool_value = (int)swData.second;
+            end = retVal.insert(end, el);
         }
     }
 
-    for (auto vpin: _virtualPins) {
+    // now send aggregate values
+
+    for (auto vpin : _virtualPins) {
         vpin.second->updateVirtualValue();
         if (vpin.second->currentValue() != vpin.second->previousValue()) {
-	    GenericTLV *generic = vpin.second->valueAsGeneric();
-	    if (generic) {
+            GenericTLV *generic = vpin.second->valueAsGeneric();
+            if (generic) {
                 end = retVal.insert(end, generic);
-	    }
+            }
         }
     }
 
     return retVal;
 }
-
