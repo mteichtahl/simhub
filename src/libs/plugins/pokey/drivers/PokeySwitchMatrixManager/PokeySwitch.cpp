@@ -10,6 +10,8 @@ PokeySwitch::PokeySwitch(sPoKeysDevice *pokey, int id, std::string name, int pin
     _enablePin = enablePin;
     _name = name;
     _invertEnablePin = invertEnablePin;
+    _previousValue = -1;
+    _currentValue = 0;
     
     if (enablePin > 1) {
         pokey->Pins[enablePin - 1].PinFunction = PK_PinCap_digitalOutput | (invertEnablePin ? PK_PinCap_invertPin : 0x00);

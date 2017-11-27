@@ -39,6 +39,15 @@ PokeyDevice::PokeyDevice(PokeyDevicePluginStateManager *owner, sPoKeysNetworkDev
     _intToDisplayRow[8] = 0b11111110;
     _intToDisplayRow[9] = 0b11100110;
 
+    // TODO: finish the initial restoration work
+    
+    /*
+    for (int i = 0; i < 16; i++) {
+        _pokey->Encoders[i].encoderValue = -1;
+        _encoders[i].previousEncoderValue = -1;
+    }
+    */
+
     _switchMatrixManager = std::make_shared<PokeySwitchMatrixManager>(_pokey);
 
     loadPinConfiguration();
