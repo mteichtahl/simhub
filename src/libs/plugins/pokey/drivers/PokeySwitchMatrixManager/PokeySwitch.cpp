@@ -80,7 +80,7 @@ std::pair<std::string, uint8_t> PokeySwitch::read(void)
     for (int i = 0; i < 8; i++) {
         // ALL HIGH EXCEPT DESIRED READ LOW
         _pokey->Pins[i].DigitalValueSet = (i == (_enablePin - 1)) ? 1 : 0;
-        _pokey->Pins[i].preventUpdate = 0; //(i == (_enablePin - 1)) ? 0 : 0;
+        _pokey->Pins[i].preventUpdate = 0; //(i == (_enablePin - 1)) ? 0 : 1;
     }
 
     for (int i = 8; i < 16; i++) {
@@ -94,6 +94,15 @@ std::pair<std::string, uint8_t> PokeySwitch::read(void)
     }
 
     _currentValue = _pokey->Pins[_pin - 1].DigitalValueGet;
+
+    for (int i = 0; i < 8; i++) {
+        // ALL HIGH EXCEPT DESIRED READ LOW
+        _pokey->Pins[i].DigitalValueSet = 0;
+        _pokey->Pins[i].preventUpdate = 0;
+    }
+    std::this_thread::sleep_for(10ms);
+    result = PK_DigitalIOSet(_pokey);
+    
 
     return std::make_pair(_name, _currentValue);
 }
