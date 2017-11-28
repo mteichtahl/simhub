@@ -74,6 +74,7 @@ SimSourcePluginStateManager::SimSourcePluginStateManager(LoggingFunctionCB logge
 
     assert(!_StateManagerInstance);
 
+    _restartUVLoop = true;
     _StateManagerInstance = this;
     _processedElementCount = 0;
     _name = "prepar3d";
@@ -88,6 +89,7 @@ SimSourcePluginStateManager::SimSourcePluginStateManager(LoggingFunctionCB logge
 
 SimSourcePluginStateManager::~SimSourcePluginStateManager(void)
 {
+    std::cout << ">>>> about to cease eventing" << std::endl;
     ceaseEventing();
 
     if (_rawBuffer != NULL) {
@@ -100,7 +102,7 @@ SimSourcePluginStateManager::~SimSourcePluginStateManager(void)
 int SimSourcePluginStateManager::preflightComplete(void)
 {
     int retVal = PREFLIGHT_OK;
-    int port = 8091;
+    _prosimPort = 8091;
 
     libconfig::Setting *devicesConfiguraiton = NULL;
 
@@ -122,10 +124,11 @@ int SimSourcePluginStateManager::preflightComplete(void)
 
         if (iter->exists("ipAddress")) {
             iter->lookupValue("ipAddress", ipAddress);
+            _prosimIPAddress = ipAddress;
         }
 
         if (iter->exists("port")) {
-            iter->lookupValue("port", port);
+            iter->lookupValue("port", _prosimPort);
         }
 
         if (iter->exists("transforms")) {
@@ -133,8 +136,25 @@ int SimSourcePluginStateManager::preflightComplete(void)
         }
     }
 
-    _logger(LOG_INFO, "<SimSourcePlugin> Connecting to simulator on %s:%d", ipAddress.c_str(), port);
+    _logger(LOG_INFO, "<SimSourcePlugin> Connecting to simulator on %s:%d", ipAddress.c_str(), _prosimPort);
 
+
+    if (!startReadListenConnection()) {
+        retVal = PREFLIGHT_FAIL;
+    }
+
+    // connect to simulated prosim listener
+    _sendSocketClient.setLogger(_logger);
+    if (retVal != PREFLIGHT_FAIL && !_sendSocketClient.connect(ipAddress, _prosimPort)) {
+        retVal = PREFLIGHT_FAIL;
+    }
+
+
+    return retVal;
+}
+
+bool SimSourcePluginStateManager::startReadListenConnection(void)
+{
     struct sockaddr_in req_addr;
 
     _eventLoop = uv_default_loop();
@@ -142,24 +162,13 @@ int SimSourcePluginStateManager::preflightComplete(void)
     check_uv(uv_tcp_init(_eventLoop, &_tcpClient));
     uv_tcp_keepalive(&_tcpClient, 1, 60);
 
-    uv_ip4_addr(ipAddress.c_str(), port, &req_addr);
+    uv_ip4_addr(_prosimIPAddress.c_str(), _prosimPort, &req_addr);
 
     // so the callback can see member values
     _connectReq.data = this;
 
     int connectErr = uv_tcp_connect(&_connectReq, &_tcpClient, (struct sockaddr *)&req_addr, &SimSourcePluginStateManager::OnConnect);
-
-    if (connectErr < 0) {
-        retVal = PREFLIGHT_FAIL;
-    }
-
-    // connect to simulated prosim listener
-    _sendSocketClient.setLogger(_logger);
-    if (retVal != PREFLIGHT_FAIL && !_sendSocketClient.connect(ipAddress, port)) {
-        retVal = PREFLIGHT_FAIL;
-    }
-
-    return retVal;
+    return connectErr >= 0;
 }
 
 void SimSourcePluginStateManager::loadTransforms(libconfig::Setting *transforms)
@@ -170,7 +179,6 @@ void SimSourcePluginStateManager::loadTransforms(libconfig::Setting *transforms)
         std::string transformName = transform.getName();
 
         _logger(LOG_INFO, "Transforms | %s loaded", transformName.c_str());
-
         if (transform.exists("On") && transform.exists("Off")) {
             std::string transformResultOn;
             std::string transformResultOff;
@@ -226,6 +234,12 @@ void SimSourcePluginStateManager::OnClose(uv_handle_t *handle)
     SimSourcePluginStateManager::StateManagerInstance()->instanceCloseHandler(handle);
 }
 
+void SimSourcePluginStateManager::OnRestart(uv_handle_t *handle)
+{
+    assert(SimSourcePluginStateManager::StateManagerInstance());
+    SimSourcePluginStateManager::StateManagerInstance()->instanceRestartHandler(handle);
+}
+
 void SimSourcePluginStateManager::instanceConnectionHandler(uv_connect_t *req, int status)
 {
     if (uv_is_readable(req->handle)) {
@@ -238,12 +252,22 @@ void SimSourcePluginStateManager::instanceConnectionHandler(uv_connect_t *req, i
 
 void SimSourcePluginStateManager::instanceReadHandler(uv_stream_t *server, ssize_t nread, const uv_buf_t *buf)
 {
+    static int Counter = 0;
+    
     if (nread > 0) {
         uv_buf_t buffer = uv_buf_init((char *)malloc(nread), nread);
         memcpy(buffer.base, buf->base, nread);
         buffer.base[nread - 1] = '\0';
         processData(buffer.base, nread);
         free(buffer.base);
+
+        if (Counter > 10) {
+            Counter = 0;
+            uv_close((uv_handle_t *)server, &SimSourcePluginStateManager::OnRestart);
+        }
+        else {
+            Counter++;
+        }
     }
     else if (nread < 0) {
         if (nread == UV_EOF) {
@@ -281,6 +305,7 @@ void SimSourcePluginStateManager::processData(char *data, int len)
         }
 
         for (int i = 0; i < elementCount; ++i) {
+            std::cout << ">>>> element: " << array[i] << std::endl;
             processElement(array[i]);
             free(array[i]);
         }
@@ -449,6 +474,16 @@ void SimSourcePluginStateManager::instanceCloseHandler(uv_handle_t *handle)
     }
 }
 
+void SimSourcePluginStateManager::instanceRestartHandler(uv_handle_t *handle)
+{
+    std::cout << ">>>> RESTARTING" << std::endl;
+
+    if (!_eventLoop->active_handles) {
+        stopUVLoop();
+        startReadListenConnection();
+    }
+}
+
 void SimSourcePluginStateManager::stopUVLoop(void)
 {
     if (_eventLoop) {
@@ -461,6 +496,7 @@ void SimSourcePluginStateManager::stopUVLoop(void)
 void SimSourcePluginStateManager::ceaseEventing(void)
 {
     if (_pluginThread) {
+        _restartUVLoop = false;
         stopUVLoop();
 
         if (_pluginThread->joinable()) {
@@ -473,7 +509,13 @@ void SimSourcePluginStateManager::commenceEventing(EnqueueEventHandler enqueueCa
 {
     _enqueueCallback = enqueueCallback;
     _callbackArg = arg;
-    _pluginThread = std::make_shared<std::thread>([=] { check_uv(uv_run(_eventLoop, UV_RUN_DEFAULT)); });
+    _pluginThread = std::make_shared<std::thread>([=]
+            {
+                // make the loop restartable via an atomic member signal
+                while (_restartUVLoop) {
+                    check_uv(uv_run(_eventLoop, UV_RUN_DEFAULT));
+                }
+            });
 }
 
 // -- simple socket send/receive wrapper

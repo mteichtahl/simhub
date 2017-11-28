@@ -14,6 +14,8 @@
 #include <thread>
 #include <uv.h>
 
+#include "../common/support/threadmanager.h"
+
 #define BUFFER_LEN 4096
 #define MAX_ELEMENTS_PER_UPDATE 1024
 #define GAUGE_IDENTIFIER 'G'
@@ -85,10 +87,12 @@ private:
     // wraps C style for instance methods instance*
     static void OnRead(uv_stream_t *server, ssize_t nread, const uv_buf_t *buf);
     static void OnClose(uv_handle_t *handle);
+    static void OnRestart(uv_handle_t *handle);
     static void OnConnect(uv_connect_t *req, int status);
 
     void instanceReadHandler(uv_stream_t *server, ssize_t nread, const uv_buf_t *buf);
     void instanceCloseHandler(uv_handle_t *handle);
+    void instanceRestartHandler(uv_handle_t *handle);
     void instanceConnectionHandler(uv_connect_t *req, int status);
 
     // data element processing
@@ -99,9 +103,14 @@ private:
 
 protected:
     TransformMap _transformMap;
+    std::string _prosimIPAddress;
+    std::atomic<bool> _restartUVLoop;
+    int _prosimPort;
+    CancelableThreadManager _restartThreadManager;
     void loadTransforms(libconfig::Setting *transforms);
     TransformFunction transform(std::string transformName);
     virtual void stopUVLoop(void);
+    bool startReadListenConnection(void);
 
 public:
     SimSourcePluginStateManager(LoggingFunctionCB logger);
