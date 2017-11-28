@@ -710,7 +710,7 @@ int PokeyDevicePluginStateManager::deviceSwitchMatrixSwitchConfiguration(
                         strncpy(valueNameBuffer, transformIter->getName(), nameLen + 1);
                         if (valueNameBuffer[0] == 'x') {
                             valueNameBuffer++;
-                            std::cout << "---> ADDING HACK DIGIT TRANSFORM: " << valueNameBuffer << std::endl;
+                            //std::cout << "---> ADDING HACK DIGIT TRANSFORM: " << valueNameBuffer << std::endl;
                         }
                         
                         for (int i = 0; i < nameLen; i++) {

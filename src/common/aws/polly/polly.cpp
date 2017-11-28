@@ -3,8 +3,6 @@
 #include "../../log/clog.h"
 #include "polly.h"
 
-using namespace std::chrono_literals;
-
 Polly::Polly()
 {
     _pollyCanTalk = false; ///< No talking while we instantiate

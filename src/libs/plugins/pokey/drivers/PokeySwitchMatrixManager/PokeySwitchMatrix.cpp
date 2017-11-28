@@ -115,44 +115,24 @@ std::vector<GenericTLV *> PokeySwitchMatrix::readSwitches()
         if (sw->invert()) {
             value = !value;
         }
-        
+
         sw->setCurrentValue(value);
 
         if (sw->previousValue() != sw->currentValue()) {
 
             sw->setPreviousValue(value);
             if (consumePhysicalPinValue(_virtualPins, sw)) {
-                std::cout << "/// CONSUMED: " << sw->name() << std::endl;
+                //std::cout << "/// CONSUMED: " << sw->name() << std::endl;
             }
             else {
                 GenericTLV *generic = make_generic(sw->name().c_str(), sw->name().c_str());
                 generic->type = CONFIG_BOOL;
                 generic->value.bool_value = value;
-                std::cout << "/// AGGREGATE PIN MEMBER ISSUE: " << sw->name() << ", " << value << std::endl;
+                //std::cout << "/// AGGREGATE PIN MEMBER ISSUE: " << sw->name() << ", " << value << std::endl;
                 end = retVal.insert(end, generic);
             }
         }
     }
-    /*
-
-    // now scan stand-alone pins
-
-    for (auto &sw : _switches) {
-        if (isPartialPin(_virtualPins, sw)) {
-            sw->setIsPartialPin(true);
-            continue;
-        }
-
-        std::pair<std::string, uint8_t> swData = sw->read();
-
-        if (sw->previousValue() != sw->currentValue()) {
-            GenericTLV *el = make_generic(sw->name().c_str(), "-");
-            el->type = CONFIG_BOOL;
-            el->value.bool_value = (int)swData.second;
-            end = retVal.insert(end, el);
-        }
-    }
-    */
 
     // now send aggregate values
 

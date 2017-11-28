@@ -46,11 +46,11 @@ void PokeySwitch::addVirtualPin(std::string name, size_t position)
 std::string PokeySwitch::transformedValue(void)
 {
     if (!mapContains(_valueTransforms, (int)_currentValue)) {
-        std::cout << "/// NO TRANSFORM FOR: " << (int)_currentValue << std::endl;
+        //std::cout << "/// NO TRANSFORM FOR: " << (int)_currentValue << std::endl;
         return "";
     }
     else {
-        std::cout << "/// TRANSFORM FOR: " << (int)_currentValue << std::endl;
+        //std::cout << "/// TRANSFORM FOR: " << (int)_currentValue << std::endl;
         return _valueTransforms[_currentValue];
     }
 }
@@ -122,7 +122,7 @@ void PokeySwitch::updateVirtualValue(void)
     }
 
     if (_currentValue != _previousValue) {
-        std::cout << "/// currentValue: " << transformedValue() << std::endl;
+        //std::cout << "/// currentValue: " << transformedValue() << std::endl;
     }
 }
 

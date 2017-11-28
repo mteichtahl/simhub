@@ -12,6 +12,8 @@ PokeyDevice::PokeyDevice(PokeyDevicePluginStateManager *owner, sPoKeysNetworkDev
     _enqueueCallback = NULL;
     _owner = owner;
 
+    deviceSummary.useUDP = 1;
+
     _pokey = PK_ConnectToNetworkDevice(&deviceSummary);
 
     if (!_pokey) {
@@ -46,6 +48,8 @@ PokeyDevice::PokeyDevice(PokeyDevicePluginStateManager *owner, sPoKeysNetworkDev
         _pokey->Encoders[i].encoderValue = -1;
         _encoders[i].previousEncoderValue = -1;
     }
+
+    
     */
 
     _switchMatrixManager = std::make_shared<PokeySwitchMatrixManager>(_pokey);
