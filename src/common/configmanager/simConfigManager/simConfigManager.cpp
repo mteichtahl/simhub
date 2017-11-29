@@ -77,9 +77,14 @@ const std::string SimConfigManager::IPAddress(void)
     return _simConfig->lookup("ipAddress").c_str();
 }
 
-const int SimConfigManager::port(void)
+const int SimConfigManager::ingressPort(void)
 {
-    return _simConfig->lookup("port");
+    return _simConfig->lookup("ingressPort");
+}
+
+const int SimConfigManager::egressPort(void)
+{
+    return _simConfig->lookup("egressPort");
 }
 
 const std::string SimConfigManager::type(void)

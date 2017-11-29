@@ -26,7 +26,7 @@
 class SimConfigManager
 {
 protected:
-    std::vector<std::string> _requiredSimulatorConfigurationFields = { "ipAddress", "port", "type" };
+    std::vector<std::string> _requiredSimulatorConfigurationFields = { "ipAddress", "ingressPort", "egressPort", "type" };
 
     bool isValidConfig;
     libconfig::Setting *_simConfig;
@@ -42,7 +42,8 @@ public:
     bool validateConfig(void);
     bool fileExists(std::string filename);
     const std::string IPAddress(void);
-    const int port(void);
+    const int ingressPort(void);
+    const int egressPort(void);
     const std::string type(void);
 };
 

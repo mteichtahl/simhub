@@ -100,7 +100,8 @@ SimSourcePluginStateManager::~SimSourcePluginStateManager(void)
 int SimSourcePluginStateManager::preflightComplete(void)
 {
     int retVal = PREFLIGHT_OK;
-    int port = 8091;
+    int ingressPort = 9090;
+    int egressPort = 8091;
 
     libconfig::Setting *devicesConfiguraiton = NULL;
 
@@ -118,14 +119,20 @@ int SimSourcePluginStateManager::preflightComplete(void)
         throw std::runtime_error("Config file parse error - See log file");
     }
 
-    for (libconfig::SettingIterator iter = devicesConfiguraiton->begin(); iter != devicesConfiguraiton->end(); iter++) {
+    for (libconfig::SettingIterator iter = devicesConfiguraiton->begin(); 
+         iter != devicesConfiguraiton->end(); 
+         iter++) {
 
         if (iter->exists("ipAddress")) {
             iter->lookupValue("ipAddress", ipAddress);
         }
 
-        if (iter->exists("port")) {
-            iter->lookupValue("port", port);
+        if (iter->exists("ingressPort")) {
+            iter->lookupValue("ingressPort", ingressPort);
+        }
+
+        if (iter->exists("egressPort")) {
+            iter->lookupValue("egressPort", egressPort);
         }
 
         if (iter->exists("transforms")) {
@@ -133,7 +140,7 @@ int SimSourcePluginStateManager::preflightComplete(void)
         }
     }
 
-    _logger(LOG_INFO, "<SimSourcePlugin> Connecting to simulator on %s:%d", ipAddress.c_str(), port);
+    _logger(LOG_INFO, "<SimSourcePlugin> Connecting to simulator on %s:%d:%d", ipAddress.c_str(), ingressPort, egressPort);
 
     struct sockaddr_in req_addr;
 
@@ -142,7 +149,7 @@ int SimSourcePluginStateManager::preflightComplete(void)
     check_uv(uv_tcp_init(_eventLoop, &_tcpClient));
     uv_tcp_keepalive(&_tcpClient, 1, 60);
 
-    uv_ip4_addr(ipAddress.c_str(), port, &req_addr);
+    uv_ip4_addr(ipAddress.c_str(), egressPort, &req_addr);
 
     // so the callback can see member values
     _connectReq.data = this;
@@ -155,7 +162,7 @@ int SimSourcePluginStateManager::preflightComplete(void)
 
     // connect to simulated prosim listener
     _sendSocketClient.setLogger(_logger);
-    if (retVal != PREFLIGHT_FAIL && !_sendSocketClient.connect(ipAddress, port)) {
+    if (retVal != PREFLIGHT_FAIL && !_sendSocketClient.connect(ipAddress, ingressPort)) {
         retVal = PREFLIGHT_FAIL;
     }
 
@@ -545,9 +552,9 @@ bool TCPClient::connect(std::string address, int port)
         perror("connect failed. Error");
         retVal = false;
     }
-
-    if (retVal)
+    else {
         _logger(LOG_INFO, "<SimSourcePlugin> Connected to %s:%d", address.c_str(), port);
+    }
 
     return retVal;
 }
