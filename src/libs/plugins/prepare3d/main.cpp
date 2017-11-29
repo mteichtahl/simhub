@@ -140,7 +140,7 @@ int SimSourcePluginStateManager::preflightComplete(void)
         }
     }
 
-    _logger(LOG_INFO, "<SimSourcePlugin> Connecting to simulator on %s:%d:%d", ipAddress.c_str(), ingressPort, egressPort);
+    _logger(LOG_INFO, "<SimSourcePlugin> Connecting to simulator feed on %s:%d", ipAddress.c_str(), egressPort);
 
     struct sockaddr_in req_addr;
 
@@ -289,6 +289,7 @@ void SimSourcePluginStateManager::processData(char *data, int len)
 
         for (int i = 0; i < elementCount; ++i) {
             processElement(array[i]);
+            std::cout << ">>>> PROCESSED ELEMENT: " << array[i] << std::endl;
             free(array[i]);
         }
     }
@@ -428,12 +429,12 @@ int SimSourcePluginStateManager::deliverValue(GenericTLV *value)
     TransformFunction transformFunction = transform(attribute->name());
     std::string val = "";
 
-    if (value->type == CONFIG_STRING) {
-        std::cout << "::deliverValue just got value with name: " << value->name << " and value " << value->value.string_value << std::endl;
-    }
-    else if (value->type == CONFIG_BOOL) {
-        std::cout << "::deliverValue just got value with name: " << value->name << " and value " << value->value.bool_value << std::endl;
-    }
+    // if (value->type == CONFIG_STRING) {
+    //     std::cout << "::deliverValue just got value with name: " << value->name << " and value " << value->value.string_value << std::endl;
+    // }
+    // else if (value->type == CONFIG_BOOL) {
+    //     std::cout << "::deliverValue just got value with name: " << value->name << " and value " << value->value.bool_value << std::endl;
+    // }
 
     if (transformFunction) {
         val = transformFunction(attribute->valueToString(), "NULL", "NULL");
@@ -568,6 +569,9 @@ bool TCPClient::sendData(std::string data)
     if (send(_sock, data.c_str(), data.size(), 0) < 0) {
         perror("Send failed : ");
         return false;
+    }
+    else {
+        std::cout << ">>>> SENT: " << data << std::endl;
     }
 
     return true;
