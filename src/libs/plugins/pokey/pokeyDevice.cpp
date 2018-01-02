@@ -42,16 +42,19 @@ PokeyDevice::PokeyDevice(PokeyDevicePluginStateManager *owner, sPoKeysNetworkDev
     _switchMatrixManager = std::make_shared<PokeySwitchMatrixManager>(_pokey);
 
     loadPinConfiguration();
-    makeAllPinsInactive();
+    if (makeAllPinsInactive()) {
+        _pollTimer.data = this;
+        _pollLoop = uv_loop_new();
+        uv_timer_init(_pollLoop, &_pollTimer);
 
-    _pollTimer.data = this;
-    _pollLoop = uv_loop_new();
-    uv_timer_init(_pollLoop, &_pollTimer);
+        int ret = uv_timer_start(&_pollTimer, (uv_timer_cb)&PokeyDevice::DigitalIOTimerCallback, DEVICE_START_DELAY, DEVICE_READ_INTERVAL);
 
-    int ret = uv_timer_start(&_pollTimer, (uv_timer_cb)&PokeyDevice::DigitalIOTimerCallback, DEVICE_START_DELAY, DEVICE_READ_INTERVAL);
-
-    if (ret == 0) {
-        _pollThread = std::make_shared<std::thread>([=] { uv_run(_pollLoop, UV_RUN_DEFAULT); });
+        if (ret == 0) {
+            _pollThread = std::make_shared<std::thread>([=] { uv_run(_pollLoop, UV_RUN_DEFAULT); });
+        }
+    }
+    else {
+        printf("Failed to make all pins inactive - pokey polling loop inactive");
     }
 }
 
