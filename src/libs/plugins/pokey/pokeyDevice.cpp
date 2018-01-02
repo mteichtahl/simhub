@@ -42,6 +42,7 @@ PokeyDevice::PokeyDevice(PokeyDevicePluginStateManager *owner, sPoKeysNetworkDev
     _switchMatrixManager = std::make_shared<PokeySwitchMatrixManager>(_pokey);
 
     loadPinConfiguration();
+    makeAllPinsInactive();
 
     _pollTimer.data = this;
     _pollLoop = uv_loop_new();
@@ -63,6 +64,20 @@ bool PokeyDevice::ownsPin(std::string pinName)
     }
 
     return false;
+}
+
+bool PokeyDevice::makeAllPinsInactive()
+{
+    bool retVal = true;
+
+    for (int i = 0; i < _pokey->info.iPinCount; i++) {
+        int ret = inactivePin(i);
+        if (ret != PK_OK) {
+            retVal = -1;
+        }
+    }
+
+    return retVal;
 }
 
 void PokeyDevice::setCallbackInfo(EnqueueEventHandler enqueueCallback, void *callbackArg, SPHANDLE pluginInstance)
@@ -157,7 +172,7 @@ void PokeyDevice::DigitalIOTimerCallback(uv_timer_t *timer, int status)
         self->_owner->pinRemappingMutex().lock();
 
         for (int i = 0; i < self->_pokey->info.iPinCount; i++) {
-            GenericTLV *el = make_generic((const char*)"-", (const char *)"-");
+            GenericTLV *el = make_generic((const char *)"-", (const char *)"-");
 
             if (self->_pins[i].type == "DIGITAL_INPUT") {
                 int sourcePinNumber = self->_pins[i].pinNumber;
@@ -660,6 +675,12 @@ uint32_t PokeyDevice::inputPin(uint8_t pin, bool invert)
     }
 
     _pokey->Pins[--pin].PinFunction = pinSetting;
+    return PK_PinConfigurationSet(_pokey);
+}
+
+uint32_t PokeyDevice::inactivePin(uint8_t pin)
+{
+    int pinSetting = PK_PinCap_pinRestricted;
     return PK_PinConfigurationSet(_pokey);
 }
 
