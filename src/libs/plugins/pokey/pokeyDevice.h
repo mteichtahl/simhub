@@ -144,7 +144,7 @@ protected:
     uv_timer_t _pollTimer;
 
     int pinFromName(std::string targetName);
-    bool makeAllPinsInactive();
+    bool makeAllPinsInactive(); // disable all pins
     int pinIndexFromName(std::string targetName);
     uint8_t displayFromName(std::string targetName);
     uint8_t displayNumber(uint8_t displayNumwber, std::string targetName, int value);
@@ -170,7 +170,7 @@ public:
     uint32_t targetValue(std::string targetName, int value);
     uint32_t inputPin(uint8_t pin, bool invert = false);
     uint32_t outputPin(uint8_t pin);
-    uint32_t inactivePin(uint8_t pin);
+    uint32_t inactivePin(uint8_t pin); // make a pin inactive
 
     int32_t name(std::string name);
 

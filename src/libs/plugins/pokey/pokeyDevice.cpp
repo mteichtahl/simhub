@@ -76,7 +76,8 @@ bool PokeyDevice::makeAllPinsInactive()
     for (int i = 0; i < _pokey->info.iPinCount; i++) {
         int ret = inactivePin(i);
         if (ret != PK_OK) {
-            retVal = -1;
+            retVal = false;
+            break;
         }
     }
 
