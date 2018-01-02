@@ -2,9 +2,9 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <string.h>
 #include <uv.h>
 #include <vector>
-#include <string.h>
 
 #include "main.h"
 #include "plugins/common/simhubdeviceplugin.h"
@@ -179,16 +179,36 @@ std::shared_ptr<PokeyDevice> PokeyDevicePluginStateManager::device(std::string s
 
 bool PokeyDevicePluginStateManager::validateConfig(libconfig::SettingIterator iter)
 {
+    // check for duplicate names
     bool retValue = true;
 
-    try {
-        iter->lookup("pins");
-    }
-    catch (const libconfig::SettingNotFoundException &nfex) {
-        _logger(LOG_ERROR, "Config file parse error at %s. Skipping....", nfex.getPath());
-        retValue = false;
-    }
+    if (iter->exists("pins")) {
+        std::vector<std::string> pinNames;
 
+        libconfig::Setting *pins = &iter->lookup("pins");
+        int pinCount = pins->getLength();
+
+        if (pinCount >= 55) {
+            _logger(LOG_ERROR, "Number of pins must <= 55", pinCount);
+            retValue = false;
+        }
+        else {
+
+            for (libconfig::SettingIterator pin = pins->begin(); pin != pins->end(); pin++) {
+                std::string pinName;
+                pin->lookupValue("name", pinName);
+
+                if (std::find(pinNames.begin(), pinNames.end(), pinName) == pinNames.end()) {
+                    pinNames.push_back(pinName);
+                }
+                else {
+                    uint lineNumber = pin->getSourceLine();
+                    _logger(LOG_ERROR, "Found duplicate pin name %s line %i", pinName.c_str(), lineNumber);
+                    retValue = false;
+                }
+            }
+        }
+    }
     return retValue;
 }
 
@@ -713,7 +733,7 @@ int PokeyDevicePluginStateManager::deviceSwitchMatrixSwitchConfiguration(
                                 valueNameBuffer[i] = ' ';
                             }
                         }
-                        
+
                         valueTransforms[(int)*transformIter] = valueNameBuffer;
                     }
 
@@ -777,6 +797,7 @@ int PokeyDevicePluginStateManager::preflightComplete(void)
 
         // check that the configuration has the required config sections
         if (!validateConfig(iter)) {
+            printf("\n do something here - didnt validate\n");
             continue;
         }
 
