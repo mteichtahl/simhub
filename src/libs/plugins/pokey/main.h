@@ -15,6 +15,7 @@
 
 #define PREFLIGHT_OK 0
 #define PREFLIGHT_FAIL 1
+#define MAXPINS 55
 
 typedef std::pair<std::string, std::shared_ptr<PokeyDevice>> pokeyDevicePair;
 typedef std::map<std::string, std::shared_ptr<PokeyDevice>> PokeyDeviceMap; ///< a list of unique device pointers
@@ -59,6 +60,7 @@ protected:
     TransformMap _pinValueTransforms;
     std::map<std::string, std::pair<std::shared_ptr<PokeyDevice>, std::string>> _remappedPins;
     std::mutex _pinRemappingMutex;
+    std::vector<std::string> _pinNames;
 
 public:
     PokeyDevicePluginStateManager(LoggingFunctionCB logger);
