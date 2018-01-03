@@ -187,7 +187,7 @@ bool PokeyDevicePluginStateManager::validateConfig(libconfig::SettingIterator it
         libconfig::Setting *pins = &iter->lookup("pins");
         int pinCount = pins->getLength();
 
-        if (pinCount >= 55) {
+        if (pinCount >= MAXPINS) {
             _logger(LOG_ERROR, "Number of pins must <= 55", pinCount);
             retValue = false;
         }
@@ -225,7 +225,6 @@ bool PokeyDevicePluginStateManager::validateConfig(libconfig::SettingIterator it
     }
     // clear the vector so its empty when we reload the configuration.
     _pinNames.clear();
-    pinNumbers.clear();
     return retValue;
 }
 

@@ -15,6 +15,7 @@
 
 #define PREFLIGHT_OK 0
 #define PREFLIGHT_FAIL 1
+#define MAXPINS 55
 
 typedef std::pair<std::string, std::shared_ptr<PokeyDevice>> pokeyDevicePair;
 typedef std::map<std::string, std::shared_ptr<PokeyDevice>> PokeyDeviceMap; ///< a list of unique device pointers
