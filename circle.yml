@@ -3,10 +3,11 @@ dependencies:
     - sudo apt-get update
     - sudo apt-get wget
     - sudo apt-get install premake
+    - sudo apt-get install libusb-1.0-0-dev
 compile:
   override:
     - premake gmake
-    - make
+    - make config=debug_aws simhub prepare3d_plugin pokey_plugin
 tests:
   override:
     - bin/simhub_tests
