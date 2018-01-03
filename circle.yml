@@ -1,7 +1,7 @@
 dependencies:
   pre:
     - sudo apt-get update
-    - sudo apt-get install premake
+    - sudo apt-get install premake5
 compile:
   override:
     - premake gmake
