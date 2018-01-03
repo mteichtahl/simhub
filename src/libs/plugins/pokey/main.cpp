@@ -225,6 +225,7 @@ bool PokeyDevicePluginStateManager::validateConfig(libconfig::SettingIterator it
     }
     // clear the vector so its empty when we reload the configuration.
     _pinNames.clear();
+    pinNumbers.clear();
     return retValue;
 }
 
