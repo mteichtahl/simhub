@@ -59,6 +59,7 @@ protected:
     TransformMap _pinValueTransforms;
     std::map<std::string, std::pair<std::shared_ptr<PokeyDevice>, std::string>> _remappedPins;
     std::mutex _pinRemappingMutex;
+    std::vector<std::string> _pinNames;
 
 public:
     PokeyDevicePluginStateManager(LoggingFunctionCB logger);

@@ -183,7 +183,6 @@ bool PokeyDevicePluginStateManager::validateConfig(libconfig::SettingIterator it
     bool retValue = true;
 
     if (iter->exists("pins")) {
-        std::vector<std::string> pinNames;
 
         libconfig::Setting *pins = &iter->lookup("pins");
         int pinCount = pins->getLength();
@@ -193,22 +192,39 @@ bool PokeyDevicePluginStateManager::validateConfig(libconfig::SettingIterator it
             retValue = false;
         }
         else {
+            std::vector<uint8_t> pinNumbers;
 
             for (libconfig::SettingIterator pin = pins->begin(); pin != pins->end(); pin++) {
                 std::string pinName;
-                pin->lookupValue("name", pinName);
+                int pinNumber;
 
-                if (std::find(pinNames.begin(), pinNames.end(), pinName) == pinNames.end()) {
-                    pinNames.push_back(pinName);
+                pin->lookupValue("name", pinName);
+                pin->lookupValue("pin", pinNumber);
+
+                // check for duplicate pin name
+                if (std::find(_pinNames.begin(), _pinNames.end(), pinName) == _pinNames.end()) {
+                    _pinNames.push_back(pinName);
                 }
                 else {
                     uint lineNumber = pin->getSourceLine();
                     _logger(LOG_ERROR, "Found duplicate pin name %s line %i", pinName.c_str(), lineNumber);
                     retValue = false;
                 }
+
+                // check for duplicate pin number
+                if (std::find(pinNumbers.begin(), pinNumbers.end(), pinNumber) == pinNumbers.end()) {
+                    pinNumbers.push_back(pinNumber);
+                }
+                else {
+                    uint lineNumber = pin->getSourceLine();
+                    _logger(LOG_ERROR, "Found duplicate pin number %i for %s line %i", pinNumber, pinName.c_str(), lineNumber);
+                    retValue = false;
+                }
             }
         }
     }
+    // clear the vector so its empty when we reload the configuration.
+    _pinNames.clear();
     return retValue;
 }
 
@@ -797,8 +813,7 @@ int PokeyDevicePluginStateManager::preflightComplete(void)
 
         // check that the configuration has the required config sections
         if (!validateConfig(iter)) {
-            printf("\n do something here - didnt validate\n");
-            continue;
+            throw std::runtime_error("Config file parse error - See log file");
         }
 
         if (deviceConfiguration(iter, pokeyDevice) == 0) {
